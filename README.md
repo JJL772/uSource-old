@@ -1,25 +1,22 @@
-# Xash3D FWGS Engine [![Build Status](https://travis-ci.org/FWGS/xash3d.svg)](https://travis-ci.org/FWGS/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/FWGS/xash3d?svg=true)](https://ci.appveyor.com/project/a1batross/xash3d)
+# Xash4D
+This is a fork of FWGS's Xash3D fork of Xash3D. A mouthful right?
+All work is theirs unless otherwise stated. (Big thanks to them for this open source gold source!)
 
-Latest version of the engine is available at:
-https://github.com/FWGS/xash3d
-
+FWGS Xash3D: [Xash3d FWGS on Github](https://github.com/FWGS/xash3d)
 Orignal project: [Xash3D on ModDB](http://www.moddb.com/engines/xash3d-engine)
 
-Xash3D Engine is a custom Gold Source engine rewritten from scratch. Xash3D
-is compatible with many of the Gold Source games and mods and should be
-able to run almost any existing singleplayer Half-Life mod without a hitch.
-The multiplayer part is not yet completed, multiplayer mods should work just
-fine, but bear in mind that some features may not work at all or work not
-exactly the way they do in Gold Source Engine.
+This fork of Xash3D isn't really meant to maintain compatibility with gold source games, 
+rather, it aims to upgrade the engine majorly, possibly even up to a Source engine level.
+As such, the engine will not be compatible with source or even gold Source games.
+While writing this, I will try to maintain the basic structure of the Source engine.
+For example, I will include things like Tier0, Tier1, VPhysics, etc.
 
-Xash3D FWGS is a fork of Xash3D Engine, which aims on crossplatform and compatibility
-with original Xash3D and Gold Source.
-
-- [Building and running Xash3D FWGS](https://github.com/FWGS/xash3d/wiki/Building-and-running)
-- [Installing and setting up the server on Debian/Ubuntu Linux](https://github.com/FWGS/xash3d/wiki/How-to-set-up-a-Xash3D-Dedicated-Server-on-Debian-Ubuntu-Linux)
+I am just a single person working on this fork, so I do NOT plan on major cross platform support
+like the FWGS fork of Xash3D has. PC platforms like Windows and Linux will be supported only, no
+more Android, iOS, etc. support.
 
 # License
-
+Since this is a fork of Xash3D, it retains its initial licesne:
 The library is licensed under GPLv3 license, see [COPYING](https://github.com/FWGS/xash3d/blob/master/COPYING) for details.
 CMakeLists.txt files are licensed under MIT license, you will find it's text
 in every CMakeLists.txt header.
