@@ -33,6 +33,12 @@ include(FWGSLib)
 include(CMakeDependentOption)
 include(CPack)
 
+
+# Subprojects go here
+add_subdirectory(Tier0)
+add_subdirectory(Tier1)
+add_subdirectory(Mathlib)
+
 #--------------
 # USER DEFINES \
 ################\
