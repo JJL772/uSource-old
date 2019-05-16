@@ -4,7 +4,7 @@
 #
 #
 
-project(Tier0)
+project(Tier0 C CXX ASM_NASM)
 
 
 set(TIER0_SOURCES	Tier0.h
@@ -13,9 +13,9 @@ set(TIER0_SOURCES	Tier0.h
 			SystemInfo.cpp
 )
 
-add_library(Tier0 SHARED TIER0_SOURCES)
+add_library(Tier0 SHARED ${TIER0_SOURCES})
 
-target_include_directories(Tier0 ./)
+target_include_directories(Tier0 PRIVATE ./)
 
 if(DEFINED PLATFORM_64BITS)
 	target_compile_definitions(Tier0 PRIVATE -DPLATFORM_64BITS -D_X64_)
