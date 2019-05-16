@@ -313,3 +313,7 @@ CMakeSettings.json
 
 # rpmbuild
 RPMS/
+
+build32/
+build/
+build64/
