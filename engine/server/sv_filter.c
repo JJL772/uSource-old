@@ -26,7 +26,7 @@ typedef struct ipfilter_s
 	uint ip;
 } ipfilter_t;
 
-ipfilter_t *ipfilter = NULL;
+static ipfilter_t *ipfilter = NULL;
 
 
 // TODO: Is IP filter really needed?
@@ -39,9 +39,9 @@ typedef struct cidfilter_s
 	string id;
 } cidfilter_t;
 
-cidfilter_t *cidfilter = NULL;
+static cidfilter_t *cidfilter = NULL;
 
-void SV_RemoveID( const char *id )
+static void SV_RemoveID( const char *id )
 {
 	cidfilter_t *filter, *prevfilter = NULL;
 
@@ -67,7 +67,7 @@ void SV_RemoveID( const char *id )
 	}
 }
 
-void SV_RemoveIP( uint ip, uint mask )
+static void SV_RemoveIP( uint ip, uint mask )
 {
 	ipfilter_t *filter, *prevfilter = NULL;
 
@@ -150,10 +150,10 @@ qboolean SV_CheckIP( netadr_t *addr )
 	return ret;
 }
 
-void SV_BanID_f( void )
+static void SV_BanID_f( void )
 {
 	float time = Q_atof( Cmd_Argv( 1 ) );
-	char *id = Cmd_Argv( 2 );
+	const char *id = Cmd_Argv( 2 );
 	sv_client_t *cl = NULL;
 	cidfilter_t *filter;
 
@@ -162,7 +162,7 @@ void SV_BanID_f( void )
 
 	if( !id[0] )
 	{
-		Msg( "Usage: banid <minutes> <#userid or unique id>\n0 minutes for permanent ban\n");
+		Con_Reportf( "Usage: banid <minutes> <#userid or unique id>\n0 minutes for permanent ban\n" );
 		return;
 	}
 
@@ -182,37 +182,39 @@ void SV_BanID_f( void )
 			sv_client_t *cl1;
 			int len = Q_strlen( id );
 
-			for( i = 0, cl1 = svs.clients; i < sv_maxclients->integer; i++, cl1++ )
+			for( i = 0, cl1 = svs.clients; i < sv_maxclients->value; i++, cl1++ )
+			{
 				if( !Q_strncmp( id, Info_ValueForKey( cl1->useragent, "i" ), len ) )
 				{
 					cl = cl1;
 					break;
 				}
+			}
 		}
 
 		if( !cl )
 		{
-			MsgDev( D_WARN, "banid: no such player\n");
+			Con_DPrintf( S_WARN "banid: no such player\n" );
 		}
 		else
 			id = Info_ValueForKey( cl->useragent, "i" );
 
 		if( !id[0] )
 		{
-			MsgDev( D_ERROR, "Could not ban, not implemented yet\n");
+			Con_DPrintf( S_ERROR "Could not ban, not implemented yet\n" );
 			return;
 		}
 	}
 
 	if( !id[0] || id[0] == '#' )
 	{
-		MsgDev( D_ERROR, "banid: bad id\n");
+		Con_DPrintf( S_ERROR "banid: bad id\n" );
 		return;
 	}
 
 	SV_RemoveID( id );
 
-	filter = Mem_Alloc( host.mempool, sizeof( cidfilter_t ) );
+	filter = Mem_Malloc( host.mempool, sizeof( cidfilter_t ) );
 	filter->endTime = time;
 	filter->next = cidfilter;
 	Q_strncpy( filter->id, id, sizeof( filter->id ) );
@@ -222,12 +224,12 @@ void SV_BanID_f( void )
 		Cbuf_AddText( va( "kick #%d \"Kicked and banned\"\n", cl->userid ) );
 }
 
-void SV_ListID_f( void )
+static void SV_ListID_f( void )
 {
 	cidfilter_t *filter;
 
-	Msg( "id ban list\n" );
-	Msg( "-----------\n" );
+	Con_Reportf( "id ban list\n" );
+	Con_Reportf( "-----------\n" );
 
 	for( filter = cidfilter; filter; filter = filter->next )
 	{
@@ -235,20 +237,21 @@ void SV_ListID_f( void )
 			continue; // no negative time
 
 		if( filter->endTime )
-			Msg( "%s expries in %f minutes\n", filter->id, ( filter->endTime - host.realtime ) / 60.0f );
+			Con_Reportf( "%s expries in %f minutes\n", filter->id, ( filter->endTime - host.realtime ) / 60.0f );
 		else
-			Msg( "%s permanent\n", filter->id );
+			Con_Reportf( "%s permanent\n", filter->id );
 	}
 }
-void SV_RemoveID_f( void )
+
+static void SV_RemoveID_f( void )
 {
-	char *id = Cmd_Argv( 1 );
+	const char *id = Cmd_Argv( 1 );
 
 	if( id[0] == '#' && svs.clients )
 	{
 		int num = Q_atoi( id + 1 );
 
-		if( num >= sv_maxclients->integer || num < 0 )
+		if( num >= sv_maxclients->value || num < 0 )
 			return;
 
 		id = Info_ValueForKey( svs.clients[num].useragent, "i" );
@@ -256,20 +259,21 @@ void SV_RemoveID_f( void )
 
 	if( !id[0] )
 	{
-		Msg("Usage: removeid <#slotnumber or uniqueid>\n");
+		Con_Reportf("Usage: removeid <#slotnumber or uniqueid>\n");
 		return;
 	}
 
 	SV_RemoveID( id );
 }
-void SV_WriteID_f( void )
+
+static void SV_WriteID_f( void )
 {
 	file_t *f = FS_Open( Cvar_VariableString( "bannedcfgfile" ), "w", false );
 	cidfilter_t *filter;
 
 	if( !f )
 	{
-		MsgDev( D_ERROR, "Could not write %s\n", Cvar_VariableString( "bannedcfgfile" ) );
+		Con_DPrintf( S_ERROR "Could not write %s\n", Cvar_VariableString( "bannedcfgfile" ) );
 		return;
 	}
 
@@ -335,12 +339,13 @@ end:
 
 	return true;
 }
+
 #define IPARGS(ip) (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF
-void SV_AddIP_f( void )
+static void SV_AddIP_f( void )
 {
 	float time = Q_atof( Cmd_Argv( 1 ) );
-	char *ipstr = Cmd_Argv( 2 );
-	char *maskstr = Cmd_Argv( 3 );
+	const char *ipstr = Cmd_Argv( 2 );
+	const char *maskstr = Cmd_Argv( 3 );
 	uint ip, mask;
 	ipfilter_t *filter;
 
@@ -349,13 +354,13 @@ void SV_AddIP_f( void )
 
 	if( !StringToIP( ipstr, maskstr, &ip, &mask ) )
 	{
-		Msg( "Usage: addip <minutes> <ip> [mask]\n0 minutes for permanent ban\n");
+		Con_Reportf( "Usage: addip <minutes> <ip> [mask]\n0 minutes for permanent ban\n");
 		return;
 	}
 
 	SV_RemoveIP( ip, mask );
 
-	filter = Mem_Alloc( host.mempool, sizeof( ipfilter_t ) );
+	filter = Mem_Malloc( host.mempool, sizeof( ipfilter_t ) );
 	filter->endTime = time;
 	filter->ip = ip;
 	filter->mask = mask;
@@ -364,12 +369,12 @@ void SV_AddIP_f( void )
 	ipfilter = filter;
 }
 
-void SV_ListIP_f( void )
+static void SV_ListIP_f( void )
 {
 	ipfilter_t *filter;
 
-	Msg( "ip ban list\n" );
-	Msg( "-----------\n" );
+	Con_Reportf( "ip ban list\n" );
+	Con_Reportf( "-----------\n" );
 
 	for( filter = ipfilter; filter; filter = filter->next )
 	{
@@ -377,32 +382,33 @@ void SV_ListIP_f( void )
 			continue; // no negative time
 
 		if( filter->endTime )
-			Msg( "%d.%d.%d.%d %d.%d.%d.%d expries in %f minutes\n", IPARGS( filter->ip ), IPARGS( filter->mask ), ( filter->endTime - host.realtime ) / 60.0f );
+			Con_Reportf( "%d.%d.%d.%d %d.%d.%d.%d expries in %f minutes\n", IPARGS( filter->ip ), IPARGS( filter->mask ), ( filter->endTime - host.realtime ) / 60.0f );
 		else
-			Msg( "%d.%d.%d.%d %d.%d.%d.%d permanent\n", IPARGS( filter->ip ), IPARGS( filter->mask ) );
+			Con_Reportf( "%d.%d.%d.%d %d.%d.%d.%d permanent\n", IPARGS( filter->ip ), IPARGS( filter->mask ) );
 	}
 }
-void SV_RemoveIP_f( void )
+
+static void SV_RemoveIP_f( void )
 {
 	uint ip, mask;
 
 	if( !StringToIP( Cmd_Argv(1), Cmd_Argv(2), &ip, &mask ) )
 	{
-		Msg( "Usage: removeip <ip> [mask]\n" );
+		Con_Reportf( "Usage: removeip <ip> [mask]\n" );
 		return;
 	}
 
 	SV_RemoveIP( ip, mask );
 }
 
-void SV_WriteIP_f( void )
+static void SV_WriteIP_f( void )
 {
 	file_t *f = FS_Open( Cvar_VariableString( "listipcfgfile" ), "w", false );
 	ipfilter_t *filter;
 
 	if( !f )
 	{
-		MsgDev( D_ERROR, "Could not write %s\n", Cvar_VariableString( "listipcfgfile" ) );
+		Con_DPrintf( S_ERROR "Could not write %s\n", Cvar_VariableString( "listipcfgfile" ) );
 		return;
 	}
 

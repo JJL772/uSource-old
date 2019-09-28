@@ -206,8 +206,8 @@ qboolean ID_ValidateNetDevice( const char *dev )
 	int assignType;
 
 	// These devices are fake, their mac address is generated each boot, while assign_type is 0
-	if( Q_strnicmp( dev, "ccmni", sizeof( "ccmni" ) ) ||
-		Q_strnicmp( dev, "ifb", sizeof( "ifb" ) ) )
+	if( !Q_strnicmp( dev, "ccmni", sizeof( "ccmni" ) ) ||
+		!Q_strnicmp( dev, "ifb", sizeof( "ifb" ) ) )
 		return false;
 
 	pfile = FS_LoadDirectFile( va( "%s/%s/addr_assign_type", prefix, dev ), NULL );
@@ -640,12 +640,7 @@ void ID_Init( void )
 	}
 #else
 	{
-#ifndef __HAIKU__
 		const char *home = getenv( "HOME" );
-#else
-		char home[MAX_SYSPATH];
-		find_directory( B_USER_SETTINGS_DIRECTORY, -1, false, home, MAX_SYSPATH );
-#endif
 		if( home )
 		{
 			FILE *cfg = fopen( va( "%s/.config/.xash_id", home ), "r" );
@@ -695,12 +690,7 @@ void ID_Init( void )
 	}
 #else
 	{
-#ifndef __HAIKU__
 		const char *home = getenv( "HOME" );
-#else
-		char home[MAX_SYSPATH];
-		find_directory( B_USER_SETTINGS_DIRECTORY, -1, false, home, MAX_SYSPATH );
-#endif
 		if( home )
 		{
 			FILE *cfg = fopen( va( "%s/.config/.xash_id", home ), "w" );

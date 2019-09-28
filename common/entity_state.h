@@ -28,7 +28,7 @@ struct entity_state_s
 // Fields which are filled in by routines outside of delta compression
 	int		entityType;
 	// Index into cl_entities array for this entity.
-	int		number;      
+	int		number;
 	float		msg_time;
 
 	// Message number last time the player/entity state was updated.
@@ -71,7 +71,7 @@ struct entity_state_s
 	int		owner; 
 
 	// Friction, for prediction.
-	float		friction;       
+	float		friction;
 	// Gravity multiplier
 	float		gravity;				
 
@@ -87,7 +87,7 @@ struct entity_state_s
 	// Use the crouched hull, or the regular player hull.
 	int		usehull;		
 	// Latched buttons last time state updated.
-	int		oldbuttons;     
+	int		oldbuttons;
 	// -1 = in air, else pmove entity number
 	int		onground;		
 	int		iStepLeft;
@@ -176,11 +176,13 @@ typedef struct clientdata_s
 
 #include "weaponinfo.h"
 
+#define MAX_LOCAL_WEAPONS	64	// max weapons that can be predicted on the client
+
 typedef struct local_state_s
 {
 	entity_state_t	playerstate;
 	clientdata_t	client;
-	weapon_data_t	weapondata[64];
+	weapon_data_t	weapondata[MAX_LOCAL_WEAPONS];
 } local_state_t;
 
 #endif//ENTITY_STATE_H

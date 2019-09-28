@@ -12,35 +12,36 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-#ifndef XASH_DEDICATED
 
 #include "common.h"
 #include "input.h"
 #include "client.h"
-#include "joyinput.h"
-#include "touch.h"
 #include "vgui_draw.h"
+#include "platform/platform.h"
 
-#ifdef XASH_SDL
-#include <SDL_keyboard.h>
-#include <platform/sdl/events.h>
-#endif
-
-typedef struct key_s
+typedef struct
 {
 	qboolean		down;
+	qboolean		gamedown;
 	int		repeats;	// if > 1, it is autorepeating
 	const char	*binding;
-} engine_key_t;
+} enginekey_t;
 
-engine_key_t	keys[256];
+typedef struct keyname_s
+{
+	char		*name;	// key name
+	int		keynum;	// key number
+	const char	*binding;	// default bind
+} keyname_t;
+
+enginekey_t	keys[256];
 
 keyname_t keynames[] =
 {
 {"TAB",		K_TAB,		""		},
 {"ENTER",		K_ENTER,		""		},
-{"ESCAPE",	K_ESCAPE, 	"cancelselect"	}, // hardcoded
-{"SPACE",		K_SPACE,		"+moveup"		},
+{"ESCAPE",	K_ESCAPE, 	"escape"		}, // hardcoded
+{"SPACE",		K_SPACE,		"+jump"		},
 {"BACKSPACE",	K_BACKSPACE,	""		},
 {"UPARROW",	K_UPARROW,	"+forward"	},
 {"DOWNARROW",	K_DOWNARROW,	"+back"		},
@@ -48,20 +49,21 @@ keyname_t keynames[] =
 {"RIGHTARROW",	K_RIGHTARROW,	"+right"		},
 {"ALT",		K_ALT,		"+strafe"		},
 {"CTRL",		K_CTRL,		"+attack"		},
-{"SHIFT",		K_SHIFT,		"+speed"		}, // replace with +attack2 ?
+{"SHIFT",		K_SHIFT,		"+speed"		},
 {"CAPSLOCK",	K_CAPSLOCK,	""		},
+{"SCROLLOCK",	K_SCROLLOCK,	""		},
 {"F1",		K_F1,		"cmd help"	},
 {"F2",		K_F2,		"menu_savegame"	},
 {"F3",		K_F3,		"menu_loadgame"	},
-{"F4",		K_F4,		"menu_keys"	},
-{"F5",		K_F5,		"menu_startserver"	},
+{"F4",		K_F4,		"menu_controls"	},
+{"F5",		K_F5,		"menu_creategame"	},
 {"F6",		K_F6,		"savequick"	},
 {"F7",		K_F7,		"loadquick"	},
 {"F8",		K_F8,		"stop"		},
 {"F9",		K_F9,		""		},
-{"F10",		K_F10,		"menu_quit"	},
+{"F10",		K_F10,		"menu_main"	},
 {"F11",		K_F11,		""		},
-{"F12",		K_F12,		"screenshot"	},
+{"F12",		K_F12,		"snapshot"	},
 {"INS",		K_INS,		""		},
 {"DEL",		K_DEL,		"+lookdown"	},
 {"PGDN",		K_PGDN,		"+lookup"		},
@@ -95,6 +97,7 @@ keyname_t keynames[] =
 {"KP_MINUS",	K_KP_MINUS,	""		},
 {"KP_PLUS",	K_KP_PLUS,	""		},
 {"PAUSE",		K_PAUSE,		"pause"		},
+
 {"A_BUTTON", K_A_BUTTON, ""}, // they match xbox controller
 {"B_BUTTON", K_B_BUTTON, ""},
 {"X_BUTTON", K_X_BUTTON, ""},
@@ -131,9 +134,10 @@ keyname_t keynames[] =
 {"RTRIGGER" , K_JOY2 , ""},
 {"JOY3" , K_JOY3 , ""},
 {"JOY4" , K_JOY4 , ""},
+
 // raw semicolon seperates commands
-{"SEMICOLON", ';', ""},
-{NULL, 0, NULL},
+{"SEMICOLON",	';',		""		},
+{NULL,		0,		NULL		},
 };
 
 /*
@@ -141,9 +145,9 @@ keyname_t keynames[] =
 Key_IsDown
 ===================
 */
-qboolean Key_IsDown( int keynum )
+int Key_IsDown( int keynum )
 {
-	if ( keynum == -1 )
+	if( keynum == -1 )
 		return false;
 	return keys[keynum].down;
 }
@@ -216,6 +220,7 @@ int Key_StringToKeynum( const char *str )
 		if( !Q_stricmp( str, kn->name ))
 			return kn->keynum;
 	}
+
 	return -1;
 }
 
@@ -237,7 +242,7 @@ const char *Key_KeynumToString( int keynum )
 	if ( keynum < 0 || keynum > 255 ) return "<OUT OF RANGE>";
 
 	// check for printable ascii (don't use quote)
-	if( keynum > 32 && keynum < 127 && keynum != '"' && keynum != ';' )
+	if( keynum > 32 && keynum < 127 && keynum != '"' && keynum != ';' && keynum != K_SCROLLOCK )
 	{
 		tinystr[0] = keynum;
 		tinystr[1] = 0;
@@ -273,22 +278,13 @@ void Key_SetBinding( int keynum, const char *binding )
 {
 	if( keynum == -1 ) return;
 
-	// free old binding
+	// free old bindings
 	if( keys[keynum].binding )
 	{
-		// GoldSrc doesn't touch ESC
-		if( keynum == K_ESCAPE ) return;
-
-		if( host.state != HOST_INIT && Q_stricmp( keys[keynum].binding, binding ) )
-			cls.keybind_changed = true;
-
 		Mem_Free((char *)keys[keynum].binding );
 		keys[keynum].binding = NULL;
 	}
-
-	// don't bind to empty string
-	if( !binding[0] ) return;
-
+		
 	// allocate memory for new binding
 	keys[keynum].binding = copystring( binding );
 }
@@ -310,17 +306,29 @@ const char *Key_GetBinding( int keynum )
 Key_GetKey
 ===================
 */
-int Key_GetKey( const char *binding )
+int Key_GetKey( const char *pBinding )
 {
 	int	i;
 
-	if( !binding ) return -1;
+	if( !pBinding ) return -1;
 
 	for( i = 0; i < 256; i++ )
 	{
-		if( keys[i].binding && !Q_stricmp( binding, keys[i].binding ))
-			return i;
+		if( !keys[i].binding )
+			continue;
+
+		if( *keys[i].binding == '+' )
+		{
+			if( !Q_strnicmp( keys[i].binding + 1, pBinding, Q_strlen( pBinding )))
+				return i;
+		}
+		else
+		{
+			if( !Q_strnicmp( keys[i].binding, pBinding, Q_strlen( pBinding )))
+				return i;
+		}
 	}
+
 	return -1;
 }
 
@@ -335,21 +343,18 @@ void Key_Unbind_f( void )
 
 	if( Cmd_Argc() != 2 )
 	{
-		Msg( "Usage: unbind <key> : remove commands from a key\n" );
+		Con_Printf( S_USAGE "unbind <key> : remove commands from a key\n" );
 		return;
 	}
 	
 	b = Key_StringToKeynum( Cmd_Argv( 1 ));
+
 	if( b == -1 )
 	{
-		Msg( "\"%s\" isn't a valid key\n", Cmd_Argv( 1 ));
+		Con_Printf( "\"%s\" isn't a valid key\n", Cmd_Argv( 1 ));
 		return;
 	}
-	if( b == K_ESCAPE )
-	{
-		Msg( "Can't unbind ESCAPE key\n" );
-		return;
-	}
+
 	Key_SetBinding( b, "" );
 }
 
@@ -364,9 +369,12 @@ void Key_Unbindall_f( void )
 	
 	for( i = 0; i < 256; i++ )
 	{
-		if( i != K_ESCAPE && keys[i].binding )
+		if( keys[i].binding )
 			Key_SetBinding( i, "" );
 	}
+
+	// set some defaults
+	Key_SetBinding( K_ESCAPE, "escape" );
 }
 
 /*
@@ -376,8 +384,8 @@ Key_Reset_f
 */
 void Key_Reset_f( void )
 {
-	int	i;
 	keyname_t	*kn;
+	int	i;
 
 	// clear all keys first	
 	for( i = 0; i < 256; i++ )
@@ -398,14 +406,14 @@ Key_Bind_f
 */
 void Key_Bind_f( void )
 {
-	int	i, c, b;
 	char	cmd[1024];
+	int	i, c, b;
 	
 	c = Cmd_Argc();
 
 	if( c < 2 )
 	{
-		Msg( "Usage: bind <key> [command] : attach a command to a key\n" );
+		Con_Printf( S_USAGE "bind <key> [command] : attach a command to a key\n" );
 		return;
 	}
 
@@ -413,21 +421,15 @@ void Key_Bind_f( void )
 
 	if( b == -1 )
 	{
-		// Trigger +mlook when changed from menu
-		if( !Q_strcmp( Cmd_Argv( 1 ), "_force_write" ) )
-		{
-			cls.keybind_changed = true;
-			return;
-		}
-		Msg( "\"%s\" isn't a valid key\n", Cmd_Argv( 1 ));
+		Con_Printf( "\"%s\" isn't a valid key\n", Cmd_Argv( 1 ));
 		return;
 	}
 
 	if( c == 2 )
 	{
 		if( keys[b].binding )
-			Msg( "\"%s\" = \"%s\"\n", Cmd_Argv( 1 ), keys[b].binding );
-		else Msg( "\"%s\" is not bound\n", Cmd_Argv( 1 ));
+			Con_Printf( "\"%s\" = \"%s\"\n", Cmd_Argv( 1 ), keys[b].binding );
+		else Con_Printf( "\"%s\" is not bound\n", Cmd_Argv( 1 ));
 		return;
 	}
 	
@@ -455,17 +457,15 @@ void Key_WriteBindings( file_t *f )
 	int	i;
 
 	if( !f ) return;
+
 	FS_Printf( f, "unbindall\n" );
 
 	for( i = 0; i < 256; i++ )
 	{
-		string command;
+		if( !COM_CheckString( keys[i].binding ))
+			continue;
 
-		if( keys[i].binding && keys[i].binding[0] )
-		{
-			Com_EscapeCommand( command, keys[i].binding, MAX_STRING );
-			FS_Printf( f, "bind %s \"%s\"\n", Key_KeynumToString(i), command );
-		}
+		FS_Printf( f, "bind %s \"%s\"\n", Key_KeynumToString( i ), keys[i].binding );
 	}
 }
 
@@ -481,8 +481,10 @@ void Key_Bindlist_f( void )
 
 	for( i = 0; i < 256; i++ )
 	{
-		if( keys[i].binding && keys[i].binding[0] )
-			Msg( "%s \"%s\"\n", Key_KeynumToString( i ), keys[i].binding );
+		if( !COM_CheckString( keys[i].binding ))
+			continue;
+
+		Con_Printf( "%s \"%s\"\n", Key_KeynumToString( i ), keys[i].binding );
 	}
 }
 
@@ -502,35 +504,31 @@ void Key_Init( void )
 {
 	keyname_t	*kn;
 
-	cls.key_dest = key_console;
-
 	// register our functions
 	Cmd_AddCommand( "bind", Key_Bind_f, "binds a command to the specified key in bindmap" );
 	Cmd_AddCommand( "unbind", Key_Unbind_f, "removes a command on the specified key in bindmap" );
 	Cmd_AddCommand( "unbindall", Key_Unbindall_f, "removes all commands from all keys in bindmap" );
 	Cmd_AddCommand( "resetkeys", Key_Reset_f, "reset all keys to their default values" );
 	Cmd_AddCommand( "bindlist", Key_Bindlist_f, "display current key bindings" );
-	Cmd_AddCommand( "makehelp", Key_EnumCmds_f, "write help.txt that contains all console cvars and cmds" );
-	Q_memset( keys, 0, sizeof( keys ) );
+	Cmd_AddCommand( "makehelp", Key_EnumCmds_f, "write help.txt that contains all console cvars and cmds" ); 
 
-	// setup default binding. "unbindall" from config.cfg will reset it
+	// setup default binding. "unbindall" from config.cfg will be reset it
 	for( kn = keynames; kn->name; kn++ ) Key_SetBinding( kn->keynum, kn->binding ); 
 }
 
 /*
 ===================
-Key_AddKeyUpCommands
+Key_AddKeyCommands
 ===================
 */
-void Key_AddKeyUpCommands( int key, const char *kb )
+void Key_AddKeyCommands( int key, const char *kb, qboolean down )
 {
-	int	i;
-	char	button[1024], *buttonPtr;
+	char	button[1024];
+	char	*buttonPtr;
 	char	cmd[1024];
-	qboolean	keyevent;
+	int	i;
 
 	if( !kb ) return;
-	keyevent = false;
 	buttonPtr = button;
 
 	for( i = 0; ; i++ )
@@ -541,18 +539,15 @@ void Key_AddKeyUpCommands( int key, const char *kb )
 			if( button[0] == '+' )
 			{
 				// button commands add keynum as a parm
-				Q_sprintf( cmd, "-%s %i\n", button+1, key );
+				if( down ) Q_sprintf( cmd, "%s %i\n", button, key );
+				else Q_sprintf( cmd, "-%s %i\n", button + 1, key );
 				Cbuf_AddText( cmd );
-				keyevent = true;
 			}
-			else
+			else if( down )
 			{
-				if( keyevent )
-				{
-					// down-only command
-					Cbuf_AddText( button );
-					Cbuf_AddText( "\n" );
-				}
+				// down-only command
+				Cbuf_AddText( button );
+				Cbuf_AddText( "\n" );
 			}
 
 			buttonPtr = button;
@@ -567,39 +562,92 @@ void Key_AddKeyUpCommands( int key, const char *kb )
 
 /*
 ===================
+Key_IsAllowedAutoRepeat
+
+List of keys that allows auto-repeat
+===================
+*/
+static qboolean Key_IsAllowedAutoRepeat( int key )
+{
+	if( cls.key_dest != key_game )
+		return true;
+
+	switch( key )
+	{
+	case K_BACKSPACE:
+	case K_PAUSE:
+	case K_PGUP:
+	case K_KP_PGUP:
+	case K_PGDN:
+	case K_KP_PGDN:
+		return true;
+	default:
+		return false;
+	} 
+}
+
+/*
+===================
 Key_Event
 
 Called by the system for both key up and key down events
 ===================
 */
-void GAME_EXPORT Key_Event( int key, qboolean down )
+void Key_Event( int key, int down )
 {
 	const char	*kb;
-	char		cmd[1024];
-	//Con_Printf( "Keycode %d\n", key );
-	if ( key > 255 || key < 0) 
-	{
-		MsgDev (D_NOTE, "Keynum %d out of range\n", key);
+
+	// key was pressed before engine was run
+	if( !keys[key].down && !down )
 		return;
-	}
-	// update auto-repeat status and BUTTON_ANY status
+
+	kb = keys[key].binding;
 	keys[key].down = down;
 
+#ifdef HACKS_RELATED_HLMODS
+	if(( cls.key_dest == key_game ) && ( cls.state == ca_cinematic ) && ( key != K_ESCAPE || !down ))
+	{
+		// only escape passed when cinematic is playing
+		// HLFX 0.6 bug: crash in vgui3.dll while press +attack during movie playback
+		return;
+	}
+#endif
+	// distribute the key down event to the apropriate handler
+	if( cls.key_dest == key_game && ( down || keys[key].gamedown ))
+	{
+		if( !clgame.dllFuncs.pfnKey_Event( down, key, keys[key].binding ))
+		{
+			if( keys[key].repeats == 0 && down )
+			{
+				keys[key].gamedown = true;
+			}
+
+			if( !down )
+			{
+				keys[key].gamedown = false;
+				keys[key].repeats = 0;
+			}
+			return; // handled in client.dll
+		}
+	}
+
+	// update auto-repeat status
 	if( down )
 	{
 		keys[key].repeats++;
 
-		if( key != K_BACKSPACE && key != K_PAUSE && keys[key].repeats > 1 )
+		if( !Key_IsAllowedAutoRepeat( key ) && keys[key].repeats > 1 )
 		{
-			if( cls.key_dest == key_game )
-			{
-				// ignore most autorepeats
-				return;
-			}
+			// ignore most autorepeats
+			return;
 		}
+
+		if( key >= 200 && !kb )
+			Con_Printf( "%s is unbound.\n", Key_KeynumToString( key ));
 	}
 	else
 	{
+		keys[key].gamedown = false;
 		keys[key].repeats = 0;
 	}
 
@@ -617,20 +665,21 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 		return;
 	}
 
-	// escape is always handled specially
+	// escape is always handled special
 	if( key == K_ESCAPE && down )
 	{
 		switch( cls.key_dest )
 		{
 		case key_game:
-			if( host.mouse_visible && cls.state != ca_cinematic )
+			if( CVAR_TO_BOOL( gl_showtextures ))
+			{
+				// close texture atlas
+				Cvar_SetValue( "r_showtextures", 0.0f );
+				return;
+			}
+			else if( host.mouse_visible && cls.state != ca_cinematic )
 			{
 				clgame.dllFuncs.pfnKey_Event( down, key, keys[key].binding );
-
-				// enable anti-The_Swank system
-				if( cls.state == ca_connected && Con_Visible() )
-					Key_SetKeyDest( key_console );
-
 				return; // handled in client.dll
 			}
 			break;
@@ -645,33 +694,21 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 		case key_menu:
 			UI_KeyEvent( key, true );
 			return;
-		default:
-			MsgDev( D_ERROR, "Key_Event: bad cls.key_dest\n" );
-			return;
+		default:	return;
 		}
 	}
 
 	if( cls.key_dest == key_menu )
 	{
 		// only non printable keys passed
-		// shift + click enables text mode (old menu compatibility)
-		/*if( down && !host.textmode && Key_IsDown( K_SHIFT ) && ( key == 241 ) )
-		{
-			SDLash_EnableTextInput( true );
-			return;
-		}
-		// and click disables
-		else if( down && ( key == 241 ) )
-			SDLash_EnableTextInput( false );
-		*/
-		if( !menu.use_text_api )
+		if( !gameui.use_text_api )
 			Key_EnableTextInput( true, false );
 		//pass printable chars for old menus
-		if( !menu.use_text_api && !host.textmode && down && ( key >= 32 ) && ( key <= 'z' ) )
+		if( !gameui.use_text_api && !host.textmode && down && ( key >= 32 ) && ( key <= 'z' ) )
 		{
 			if( Key_IsDown( K_SHIFT ) )
 			{
-				key += 'A'-'a';
+				key += 'A' - 'a';
 			}
 			UI_CharEvent( key );
 		}
@@ -685,75 +722,14 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 	// an action started before a mode switch.
 	if( !down )
 	{
-		kb = keys[key].binding;
-
-		if( cls.key_dest == key_game && ( key != K_ESCAPE ))
-			clgame.dllFuncs.pfnKey_Event( down, key, kb );
-
-		Key_AddKeyUpCommands( key, kb );
+		Key_AddKeyCommands( key, kb, down );
 		return;
 	}
 
 	// distribute the key down event to the apropriate handler
 	if( cls.key_dest == key_game )
 	{
-		if( cls.state == ca_cinematic )
-		{
-			// only escape passed when cinematic is playing
-			// HLFX 0.6 bug: crash in vgui3.dll while press +attack during movie playback
-			if( key != K_ESCAPE || !down )
-				return;
-		}
-		else if( host.mouse_visible )
-			return;
-
-		// send the bound action
-		kb = keys[key].binding;
-
-		if( !clgame.dllFuncs.pfnKey_Event( down, key, keys[key].binding ))
-		{
-			// handled in client.dll
-		}
-		else if( kb != NULL )
-		{
-			if( kb[0] == '+' )
-			{	
-				int	i;
-				char	button[1024], *buttonPtr;
-
-				for( i = 0, buttonPtr = button; ; i++ )
-				{
-					if( kb[i] == ';' || !kb[i] )
-					{
-						*buttonPtr = '\0';
-						if( button[0] == '+' )
-						{
-							Q_sprintf( cmd, "%s %i\n", button, key );
-							Cbuf_AddText( cmd );
-						}
-						else
-						{
-							// down-only command
-							Cbuf_AddText( button );
-							Cbuf_AddText( "\n" );
-						}
-
-						buttonPtr = button;
-						while (( kb[i] <= ' ' || kb[i] == ';' ) && kb[i] != 0 )
-							i++;
-					}
-
-					*buttonPtr++ = kb[i];
-					if( !kb[i] ) break;
-				}
-			}
-			else
-			{
-				// down-only command
-				Cbuf_AddText( kb );
-				Cbuf_AddText( "\n" );
-			}
-		}
+		Key_AddKeyCommands( key, kb, down );
 	}
 	else if( cls.key_dest == key_console )
 	{
@@ -765,16 +741,21 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 	}
 }
 
+/*
+================
+Key_EnableTextInput
+
+================
+*/
 void Key_EnableTextInput( qboolean enable, qboolean force )
 {
-#if XASH_INPUT == INPUT_SDL
-	SDLash_EnableTextInput( enable, force );
-#elif XASH_INPUT == INPUT_ANDROID
-	Android_EnableTextInput( enable, force );
-#endif
-#if 0
-	Joy_EnableTextInput( enable, force );
-#endif
+	if( enable && ( !host.textmode || force ) )
+		Platform_EnableTextInput( true );
+	else if( !enable )
+		Platform_EnableTextInput( false );
+
+	if( !force )
+		host.textmode = enable;
 }
 
 /*
@@ -790,16 +771,6 @@ void Key_SetKeyDest( int key_dest )
 	{
 	case key_game:
 		Key_EnableTextInput( false, false );
-		if( host_xashds_hacks->integer )
-		{
-			Cbuf_Execute();
-			if( cl.refdef.paused )
-			{
-				Cbuf_InsertText("pause\n");
-				Cbuf_Execute();
-			}
-			cl.refdef.paused = 0;
-		}
 		cls.key_dest = key_game;
 		break;
 	case key_menu:
@@ -829,6 +800,9 @@ void Key_ClearStates( void )
 {
 	int	i;
 
+	// don't clear keys during changelevel
+	if( cls.changelevel ) return;
+
 	for( i = 0; i < 256; i++ )
 	{
 		if( keys[i].down )
@@ -836,12 +810,11 @@ void Key_ClearStates( void )
 
 		keys[i].down = 0;
 		keys[i].repeats = 0;
+		keys[i].gamedown = 0;
 	}
 
 	if( clgame.hInstance )
-	{
 		clgame.dllFuncs.IN_ClearStates();
-	}
 }
 
 /*
@@ -851,32 +824,24 @@ CL_CharEvent
 Normal keyboard characters, already shifted / capslocked / etc
 ===================
 */
-void CL_CharEvent( int ch )
+void CL_CharEvent( int key )
 {
 	// the console key should never be used as a char
-#ifdef _WIN32
-	if( ch == '`' || ch == '~' ) return;
+	if( key == '`' || key == '~' ) return;
 
-#if 0
 	if( cls.key_dest == key_console && !Con_Visible( ))
 	{
-		if((char)key == '�' || (char)key == '�' )
-			return; // don't pass '�' when we open the console 
+		if((char)key == '`' || (char)key == '?' )
+			return; // don't pass '`' when we open the console 
 	}
-#endif
-#endif
+
 	// distribute the key down event to the apropriate handler
-
-	Con_CharEvent( ch ); // a1ba: no need for checks, as Con_CharEvent already it does
-
-	if( cls.key_dest == key_menu )
+	if( cls.key_dest == key_console || cls.key_dest == key_message )
 	{
-		UI_CharEvent( ch );
+		Con_CharEvent( key );
 	}
-	else if( cls.key_dest == key_game ) // typing support for VGUI
+	else if( cls.key_dest == key_menu )
 	{
-		VGui_KeyEvent( ch, 2 );
+		UI_CharEvent( key );
 	}
-
 }
-#endif

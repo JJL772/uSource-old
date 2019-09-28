@@ -20,7 +20,7 @@
 ========================================================================
 .WAD archive format	(WhereAllData - WAD)
 
-List of compressed files, that can be identify only by TYPE_*
+List of compressed files, that can be identify only by TYP_*
 
 <format>
 header:	dwadinfo_t[dwadinfo_t]
@@ -33,7 +33,8 @@ infotable	dlumpinfo_t[dwadinfo_t->numlumps]
 ========================================================================
 */
 
-#define IDWAD3HEADER	(('3'<<24)+('D'<<16)+('A'<<8)+'W')
+#define IDWAD2HEADER	(('2'<<24)+('D'<<16)+('A'<<8)+'W')	// little-endian "WAD2" quake wads
+#define IDWAD3HEADER	(('3'<<24)+('D'<<16)+('A'<<8)+'W')	// little-endian "WAD3" half-life wads
 
 // dlumpinfo_t->attribs
 #define ATTR_NONE		0	// allow to read-write
@@ -50,20 +51,9 @@ infotable	dlumpinfo_t[dwadinfo_t->numlumps]
 #define TYP_DDSTEX		65	// contain DDS texture
 #define TYP_GFXPIC		66	// menu or hud image (not contain mip-levels)
 #define TYP_MIPTEX		67	// quake1 and half-life in-game textures with four miplevels
-#define TYP_RAWDATA		68	// never was used but may contain any data
+#define TYP_SCRIPT		68	// contain script files
 #define TYP_COLORMAP2	69	// old stuff. build palette from LBM file (not used)
 #define TYP_QFONT		70	// half-life font (qfont_t)
-
-// dlumpinfo_t->img_type
-#define IMG_DIFFUSE		0	// same as default pad1 always equal 0
-#define IMG_ALPHAMASK	1	// alpha-channel that stored separate as luminance texture
-#define IMG_NORMALMAP	2	// indexed normalmap
-#define IMG_GLOSSMAP	3	// luminance or color specularity map
-#define IMG_GLOSSPOWER	4	// gloss power map (each value is a specular pow)
-#define IMG_HEIGHTMAP	5	// heightmap (for parallax occlusion mapping or source of normalmap)
-#define IMG_LUMA		6	// luma or glow texture with self-illuminated parts
-#define IMG_DECAL_ALPHA	7	// it's a decal texture (last color in palette is base color, and other colors his graduations)
-#define IMG_DECAL_COLOR	8	// decal without alpha-channel uses base, like 127 127 127 as transparent color
 
 /*
 ========================================================================

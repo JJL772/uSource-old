@@ -14,23 +14,20 @@ GNU General Public License for more details.
 */
 
 #include "imagelib.h"
+#include "mathlib.h"
 
 qboolean Image_CheckDXT3Alpha( dds_t *hdr, byte *fin )
 {
-	uint	bitmask;
 	word	sAlpha;
 	byte	*alpha; 
 	int	x, y, i, j; 
 
-	// analyze quad 4x4
 	for( y = 0; y < hdr->dwHeight; y += 4 )
 	{
 		for( x = 0; x < hdr->dwWidth; x += 4 )
 		{
-			alpha = fin;
-			fin += 8;
-			bitmask = ((uint *)fin)[1];
-			fin += 8;
+			alpha = fin + 8;
+			fin += 16;
 
 			for( j = 0; j < 4; j++ )
 			{
@@ -58,7 +55,6 @@ qboolean Image_CheckDXT5Alpha( dds_t *hdr, byte *fin )
 	byte	*alphamask; 
 	int	x, y, i, j; 
 
-	// analyze quad 4x4
 	for( y = 0; y < hdr->dwHeight; y += 4 )
 	{
 		for( x = 0; x < hdr->dwWidth; x += 4 )
@@ -98,13 +94,10 @@ void Image_DXTGetPixelFormat( dds_t *hdr )
 {
 	uint bits = hdr->dsPixelFormat.dwRGBBitCount;
 
-	// all volume textures I've seem so far didn't have the DDS_COMPLEX flag set,
-	// even though this is normally required. But because noone does set it,
-	// also read images without it (TODO: check file size for 3d texture?)
-	if( !( hdr->dsCaps.dwCaps2 & DDS_VOLUME ))
+	if( !FBitSet( hdr->dsCaps.dwCaps2, DDS_VOLUME ))
 		hdr->dwDepth = 1;
 
-	if( hdr->dsPixelFormat.dwFlags & DDS_FOURCC )
+	if( FBitSet( hdr->dsPixelFormat.dwFlags, DDS_FOURCC ))
 	{
 		switch( hdr->dsPixelFormat.dwFourCC )
 		{
@@ -120,6 +113,9 @@ void Image_DXTGetPixelFormat( dds_t *hdr )
 			image.flags &= ~IMAGE_HAS_ALPHA; // alpha is already premultiplied by color
 		case TYPE_DXT5:
 			image.type = PF_DXT5;
+			break;
+		case TYPE_ATI2:
+			image.type = PF_ATI2;
 			break;
 		default:
 			image.type = PF_UNKNOWN; // assume error
@@ -139,11 +135,21 @@ void Image_DXTGetPixelFormat( dds_t *hdr )
 		}
 		else 
 		{
-			if( bits == 32 )
+			switch( bits )
+			{
+			case 32:
 				image.type = PF_BGRA_32;
-			else if( bits == 24 )
+				break;
+			case 24:
 				image.type = PF_BGR_24;
-			else image.type = PF_UNKNOWN; // assume error;
+				break;
+			case 8:
+				image.type = PF_LUMINANCE;
+				break;
+			default:
+				image.type = PF_UNKNOWN;
+				break;
+			}
 		}
 	}
 
@@ -161,7 +167,9 @@ size_t Image_DXTGetLinearSize( int type, int width, int height, int depth )
 	{
 	case PF_DXT1: return ((( width + 3 ) / 4 ) * (( height + 3 ) / 4 ) * depth * 8 );
 	case PF_DXT3:
-	case PF_DXT5: return ((( width + 3 ) / 4 ) * (( height + 3 ) / 4 ) * depth * 16 );
+	case PF_DXT5:
+	case PF_ATI2: return ((( width + 3 ) / 4 ) * (( height + 3 ) / 4 ) * depth * 16 );
+	case PF_LUMINANCE: return (width * height * depth);
 	case PF_BGR_24:
 	case PF_RGB_24: return (width * height * depth * 3);
 	case PF_BGRA_32:
@@ -177,10 +185,10 @@ size_t Image_DXTCalcMipmapSize( dds_t *hdr )
 	int	i, width, height;
 		
 	// now correct buffer size
-	for( i = 0; i < hdr->dwMipMapCount; i++ )
+	for( i = 0; i < Q_max( 1, ( hdr->dwMipMapCount )); i++ )
 	{
-		width = max( 1, ( hdr->dwWidth >> i ));
-		height = max( 1, ( hdr->dwHeight >> i ));
+		width = Q_max( 1, ( hdr->dwWidth >> i ));
+		height = Q_max( 1, ( hdr->dwHeight >> i ));
 		buffsize += Image_DXTGetLinearSize( image.type, width, height, image.depth );
 	}
 
@@ -217,8 +225,9 @@ uint Image_DXTCalcSize( const char *name, dds_t *hdr, size_t filesize )
 
 	if( filesize != buffsize ) // main check
 	{
-		MsgDev( D_WARN, "Image_LoadDDS: (%s) probably corrupted(%i should be %i)\n", name, buffsize, filesize );
-		return false;
+		Con_DPrintf( S_WARN "Image_LoadDDS: (%s) probably corrupted (%i should be %i)\n", name, buffsize, filesize );
+		if( buffsize > filesize )
+			return false;
 	}
 
 	return buffsize;
@@ -238,31 +247,28 @@ void Image_DXTAdjustVolume( dds_t *hdr )
 Image_LoadDDS
 =============
 */
-qboolean Image_LoadDDS( const char *name, const byte *buffer, size_t filesize )
+qboolean Image_LoadDDS( const char *name, const byte *buffer, fs_offset_t filesize )
 {
 	dds_t	header;
 	byte	*fin;
 
 	if( filesize < sizeof( dds_t ))
-	{
-		MsgDev( D_ERROR, "Image_LoadDDS: file (%s) have invalid size\n", name );
 		return false;
-	}
 
-	Q_memcpy( &header, buffer, sizeof( dds_t ));
+	memcpy( &header, buffer, sizeof( dds_t ));
 
 	if( header.dwIdent != DDSHEADER )
 		return false; // it's not a dds file, just skip it
 
 	if( header.dwSize != sizeof( dds_t ) - sizeof( uint )) // size of the structure (minus MagicNum)
 	{
-		MsgDev( D_ERROR, "Image_LoadDDS: (%s) have corrupted header\n", name );
+		Con_DPrintf( S_ERROR "Image_LoadDDS: (%s) have corrupted header\n", name );
 		return false;
 	}
 
 	if( header.dsPixelFormat.dwSize != sizeof( dds_pixf_t )) // size of the structure
 	{
-		MsgDev( D_ERROR, "Image_LoadDDS: (%s) have corrupt pixelformat header\n", name );
+		Con_DPrintf( S_ERROR "Image_LoadDDS: (%s) have corrupt pixelformat header\n", name );
 		return false;
 	}
 
@@ -278,12 +284,12 @@ qboolean Image_LoadDDS( const char *name, const byte *buffer, size_t filesize )
 	Image_DXTGetPixelFormat( &header ); // and image type too :)
 	Image_DXTAdjustVolume( &header );
 
-	if( !Image_CheckFlag( IL_DDS_HARDWARE ) && ( image.type == PF_DXT1 || image.type == PF_DXT3 || image.type == PF_DXT5 ))
+	if( !Image_CheckFlag( IL_DDS_HARDWARE ) && ImageDXT( image.type ))
 		return false; // silently rejected
 
 	if( image.type == PF_UNKNOWN ) 
 	{
-		MsgDev( D_WARN, "Image_LoadDDS: (%s) has unrecognized type\n", name );
+		Con_DPrintf( S_ERROR "Image_LoadDDS: (%s) has unrecognized type\n", name );
 		return false;
 	}
 
@@ -297,28 +303,41 @@ qboolean Image_LoadDDS( const char *name, const byte *buffer, size_t filesize )
 	switch( image.encode )
 	{
 	case DXT_ENCODE_COLOR_YCoCg:
-		image.flags |= IMAGE_HAS_COLOR;
+		SetBits( image.flags, IMAGE_HAS_COLOR );
 		break;
 	case DXT_ENCODE_NORMAL_AG_ORTHO:
 	case DXT_ENCODE_NORMAL_AG_STEREO:
 	case DXT_ENCODE_NORMAL_AG_PARABOLOID:
 	case DXT_ENCODE_NORMAL_AG_QUARTIC:
 	case DXT_ENCODE_NORMAL_AG_AZIMUTHAL:
-		image.flags |= IMAGE_HAS_COLOR;
+		SetBits( image.flags, IMAGE_HAS_COLOR );
 		break;
 	default:	// check for real alpha-pixels
 		if( image.type == PF_DXT3 && Image_CheckDXT3Alpha( &header, fin ))
-			image.flags |= IMAGE_HAS_ALPHA;
+			SetBits( image.flags, IMAGE_HAS_ALPHA );
 		else if( image.type == PF_DXT5 && Image_CheckDXT5Alpha( &header, fin ))
-			image.flags |= IMAGE_HAS_ALPHA;
-		image.flags |= IMAGE_HAS_COLOR;
+			SetBits( image.flags, IMAGE_HAS_ALPHA );
+		if( !FBitSet( header.dsPixelFormat.dwFlags, DDS_LUMINANCE ))
+			SetBits( image.flags, IMAGE_HAS_COLOR );
 		break;
 	}
 
+	if( image.type == PF_LUMINANCE )
+		ClearBits( image.flags, IMAGE_HAS_COLOR|IMAGE_HAS_ALPHA );
+
+	if( header.dwReserved1[1] != 0 )
+	{
+		// store texture reflectivity
+		image.fogParams[0] = ((header.dwReserved1[1] & 0x000000FF) >> 0 );
+		image.fogParams[1] = ((header.dwReserved1[1] & 0x0000FF00) >> 8 );
+		image.fogParams[2] = ((header.dwReserved1[1] & 0x00FF0000) >> 16);
+		image.fogParams[3] = ((header.dwReserved1[1] & 0xFF000000) >> 24);
+	}
+
 	// dds files will be uncompressed on a render. requires minimal of info for set this
-	image.rgba = Mem_Alloc( host.imagepool, image.size ); 
-	Q_memcpy( image.rgba, fin, image.size );
-	image.flags |= IMAGE_DDS_FORMAT;
+	image.rgba = Mem_Malloc( host.imagepool, image.size ); 
+	memcpy( image.rgba, fin, image.size );
+	SetBits( image.flags, IMAGE_DDS_FORMAT );
 
 	return true;
 }

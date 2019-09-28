@@ -38,7 +38,6 @@ extern int gmsgFade;
 #define FFADE_STAYOUT	0x0004		// ignores the duration, stays faded out until new ScreenFade message received
 #define FFADE_LONGFADE	0x0008		// used to indicate the fade can be longer than 16 seconds (added for czero)
 
-
 // This structure is sent over the net to describe a screen fade event
 typedef struct
 {

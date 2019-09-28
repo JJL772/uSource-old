@@ -13,11 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef XASH_DEDICATED
-
 #include "common.h"
 #include "client.h"
-#include "gl_local.h"
 
 /*
 =================================================================
@@ -27,27 +24,12 @@ AVI PLAYING
 =================================================================
 */
 
-static long		xres, yres;
+static int		xres, yres;
 static float		video_duration;
 static float		cin_time;
 static int		cin_frame;
 static wavdata_t		cin_audio;
 static movie_state_t	*cin_state;
-
-void SCR_RebuildGammaTable( void )
-{
-	float	g;
-	int	i;
-
-	g = bound( 0.5f, vid_gamma->value, 2.3f );
-
-	// movie gamma	
-	for( i = 0; i < 256; i++ )
-	{
-		if( g == 1 ) clgame.ds.gammaTable[i] = i;
-		else clgame.ds.gammaTable[i] = bound( 0, pow( i * ( 1.0f / 255.0f ), g ) * 255.0f, 255 );
-	}
-}
 
 /*
 ==================
@@ -61,15 +43,20 @@ qboolean SCR_NextMovie( void )
 {
 	string	str;
 
-	S_StopAllSounds();
-	SCR_StopCinematic();
-
 	if( cls.movienum == -1 )
+	{
+		S_StopAllSounds( true );
+		SCR_StopCinematic();
+		CL_CheckStartupDemos();
 		return false; // don't play movies
+	}
 
 	if( !cls.movies[cls.movienum][0] || cls.movienum == MAX_MOVIES )
 	{
+		S_StopAllSounds( true );
+		SCR_StopCinematic();
 		cls.movienum = -1;
+		CL_CheckStartupDemos();
 		return false;
 	}
 
@@ -85,7 +72,7 @@ void SCR_CreateStartupVids( void )
 {
 	file_t	*f;
 
-	f = FS_Open( "media/StartupVids.txt", "w", false );
+	f = FS_Open( DEFAULT_VIDEOLIST_PATH, "w", false );
 	if( !f ) return;
 
 	// make standard video playlist: sierra, valve
@@ -97,23 +84,25 @@ void SCR_CreateStartupVids( void )
 void SCR_CheckStartupVids( void )
 {
 	int	c = 0;
-	char	*afile, *pfile;
+	byte *afile;
+	char *pfile;
 	string	token;
 		
-	if( Sys_CheckParm( "-nointro" ) || host.developer >= 2 || cls.demonum != -1 )
+	if( Sys_CheckParm( "-nointro" ) || host_developer.value || cls.demonum != -1 || GameState->nextstate != STATE_RUNFRAME )
 	{
 		// don't run movies where we in developer-mode
 		cls.movienum = -1;
+		CL_CheckStartupDemos();
 		return;
 	}
 
-	if( !FS_FileExists( "media/StartupVids.txt", false ))
+	if( !FS_FileExists( DEFAULT_VIDEOLIST_PATH, false ))
 		SCR_CreateStartupVids();
 
-	afile = (char *)FS_LoadFile( "media/StartupVids.txt", NULL, false );
+	afile = FS_LoadFile( DEFAULT_VIDEOLIST_PATH, NULL, false );
 	if( !afile ) return; // something bad happens
 
-	pfile = afile;
+	pfile = (char *)afile;
 
 	while(( pfile = COM_ParseFile( pfile, token )) != NULL )
 	{
@@ -121,7 +110,7 @@ void SCR_CheckStartupVids( void )
 
 		if( ++c > MAX_MOVIES - 1 )
 		{
-			MsgDev( D_WARN, "Host_StartMovies: max %i movies in StartupVids\n", MAX_MOVIES );
+			Con_Printf( S_WARN "too many movies (%d) specified in %s\n", MAX_MOVIES, DEFAULT_VIDEOLIST_PATH );
 			break;
 		}
 	}
@@ -129,12 +118,9 @@ void SCR_CheckStartupVids( void )
 	Mem_Free( afile );
 
 	// run cinematic
-	if( !SV_Active() && cls.movienum != -1 && cls.state != ca_cinematic )
-	{
-		cls.movienum = 0;
-		SCR_NextMovie ();
-	}
-	else cls.movienum = -1;
+	cls.movienum = 0;
+	SCR_NextMovie ();
+	Cbuf_Execute();
 }
 		
 /*
@@ -148,18 +134,21 @@ void SCR_RunCinematic( void )
 		return;
 
 	if( !AVI_IsActive( cin_state ))
+	{
+		SCR_NextMovie( );
 		return;
+	}
 
 	if( UI_IsVisible( ))
 	{
 		// these can happens when user set +menu_ option to cmdline
 		AVI_CloseVideo( cin_state );
 		cls.state = ca_disconnected;
-		Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
 		Key_SetKeyDest( key_menu );
 		S_StopStreaming();
 		cls.movienum = -1;
 		cin_time = 0.0f;
+		cls.signon = 0;
 		return;
 	}
 
@@ -191,7 +180,7 @@ qboolean SCR_DrawCinematic( void )
 	qboolean		redraw = false;
 	byte		*frame = NULL;
 
-	if( !glw_state.initialized || cin_time <= 0.0f )
+	if( !ref.initialized || cin_time <= 0.0f )
 		return false;
 
 	if( cin_frame != last_frame )
@@ -201,7 +190,7 @@ qboolean SCR_DrawCinematic( void )
 		redraw = true;
 	}
 
-	R_DrawStretchRaw( 0, 0, scr_width->value, scr_height->value, xres, yres, frame, redraw );
+	ref.dllFuncs.R_DrawStretchRaw( 0, 0, refState.width, refState.height, xres, yres, frame, redraw );
 
 	return true;
 }
@@ -220,11 +209,11 @@ qboolean SCR_PlayCinematic( const char *arg )
 
 	if( FS_FileExists( arg, false ) && !fullpath )
 	{
-		MsgDev( D_ERROR, "Couldn't load %s from packfile. Please extract it\n", path );
+		Con_Printf( S_ERROR "Couldn't load %s from packfile. Please extract it\n", path );
 		return false;
 	}
 
-	AVI_OpenVideo( cin_state, fullpath, true, true, false );
+	AVI_OpenVideo( cin_state, fullpath, true, false );
 	if( !AVI_IsActive( cin_state ))
 	{
 		AVI_CloseVideo( cin_state );
@@ -240,15 +229,15 @@ qboolean SCR_PlayCinematic( const char *arg )
 	if( AVI_GetAudioInfo( cin_state, &cin_audio ))
 	{
 		// begin streaming
-		S_StopAllSounds();
+		S_StopAllSounds( true );
 		S_StartStreaming();
 	}
 
 	UI_SetActiveMenu( false );
-	SCR_RebuildGammaTable();
-
 	cls.state = ca_cinematic;
+	Con_FastClose();
 	cin_time = 0.0f;
+	cls.signon = 0;
 	
 	return true;
 }
@@ -285,7 +274,8 @@ void SCR_StopCinematic( void )
 	cin_time = 0.0f;
 
 	cls.state = ca_disconnected;
-	Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
+	cls.signon = 0;
+
 	UI_SetActiveMenu( true );
 }
 
@@ -298,8 +288,6 @@ void SCR_InitCinematic( void )
 {
 	AVI_Initailize ();
 	cin_state = AVI_GetState( CIN_MAIN );
-
-	SCR_RebuildGammaTable();
 }
 
 /*
@@ -320,4 +308,3 @@ void SCR_FreeCinematic( void )
 
 	AVI_Shutdown();
 }
-#endif // XASH_DEDICATED

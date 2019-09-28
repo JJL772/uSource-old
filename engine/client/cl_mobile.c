@@ -19,12 +19,8 @@ GNU General Public License for more details.
 #include "client.h"
 #include "mobility_int.h"
 #include "library.h"
-#include "gl_local.h"
-#include "touch.h"
-
-#if defined(__ANDROID__)
-#include "platform/android/android-main.h"
-#endif
+#include "input.h"
+#include "platform/platform.h"
 
 mobile_engfuncs_t *gMobileEngfuncs;
 
@@ -33,28 +29,26 @@ convar_t *vibration_enable;
 
 static void pfnVibrate( float life, char flags )
 {
-	if( !vibration_enable->integer )
+	if( !vibration_enable->value )
 		return;
 
 	if( life < 0.0f )
 	{
-		MsgDev( D_WARN, "Negative vibrate time: %f\n", life );
+		Con_Reportf( S_WARN "Negative vibrate time: %f\n", life );
 		return;
 	}
 
-	//MsgDev( D_NOTE, "Vibrate: %f %d\n", life, flags );
+	//Con_Reportf( "Vibrate: %f %d\n", life, flags );
 
 	// here goes platform-specific backends
-#ifdef __ANDROID__
-	Android_Vibrate( life * vibration_length->value, flags );
-#endif
+	Platform_Vibrate( life * vibration_length->value, flags );
 }
 
 static void Vibrate_f()
 {
 	if( Cmd_Argc() != 2 )
 	{
-		Msg( "Usage: vibrate <time>\n" );
+		Msg( S_USAGE "vibrate <time>\n" );
 		return;
 	}
 
@@ -97,14 +91,10 @@ static void *pfnGetNativeObject( const char *obj )
 	if( !obj )
 		return NULL;
 
-	// Backend should handle NULL
 	// Backend should consider that obj is case-sensitive
-#ifdef __ANDROID__
-	return Android_GetNativeObject( obj );
-#else
-	return NULL;
-#endif
+	return Platform_GetNativeObject( obj );
 }
+
 
 static mobile_engfuncs_t gpMobileEngfuncs =
 {
@@ -113,7 +103,7 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	pfnEnableTextInput,
 	Touch_AddClientButton,
 	Touch_AddDefaultButton,
-	(void*)Touch_HideButtons,
+	Touch_HideButtons,
 	Touch_RemoveButton,
 	(void*)Touch_SetClientOnly,
 	Touch_ResetDefaultButtons,
@@ -123,25 +113,23 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	ID_SetCustomClientID
 };
 
-void Mobile_Init( void )
+qboolean Mobile_Init( void )
 {
-	// find a mobility interface
-	pfnMobilityInterface ExportToClient = Com_GetProcAddress(clgame.hInstance, MOBILITY_CLIENT_EXPORT);
+	qboolean success = false;
+	pfnMobilityInterface ExportToClient;
 
+	// find a mobility interface
+	ExportToClient = COM_GetProcAddress( clgame.hInstance, MOBILITY_CLIENT_EXPORT );
 	gMobileEngfuncs = &gpMobileEngfuncs;
 
-	if( ExportToClient )
-	{
-		ExportToClient( gMobileEngfuncs );
-	}
-	else
-	{
-		MsgDev( D_INFO, "Mobility interface not found\n");
-	}
+	if( ExportToClient && !ExportToClient( gMobileEngfuncs ) )
+		success = true;
 
 	Cmd_AddCommand( "vibrate", (xcommand_t)Vibrate_f, "Vibrate for specified time");
-	vibration_length = Cvar_Get( "vibration_length", "1.0", CVAR_ARCHIVE, "Vibration length");
-	vibration_enable = Cvar_Get( "vibration_enable", "1", CVAR_ARCHIVE, "Enable vibration");
+	vibration_length = Cvar_Get( "vibration_length", "1.0", FCVAR_ARCHIVE, "Vibration length");
+	vibration_enable = Cvar_Get( "vibration_enable", "1", FCVAR_ARCHIVE, "Enable vibration");
+
+	return success;
 }
 
 void Mobile_Shutdown( void )

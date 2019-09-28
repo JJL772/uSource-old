@@ -22,19 +22,17 @@ extern "C" {
 
 #include "port.h"
 
-#define VGUI_MAX_TEXTURES	2048	// a half of total textures count
-
 //
 // vgui_draw.c
 //
-void VGui_Startup( int width, int height );
+void VGui_Startup( const char *clientlib, int width, int height );
 void VGui_Shutdown( void );
 void VGui_Paint();
 void VGui_RunFrame();
 void VGui_KeyEvent( int key, int down );
 void VGui_MouseMove( int x, int y );
 qboolean VGui_IsActive( void );
-void *pfnVGui_GetPanel();
+void *VGui_GetPanel();
 #ifdef __cplusplus
 }
 #endif

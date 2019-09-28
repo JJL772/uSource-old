@@ -47,7 +47,7 @@ typedef struct loadformat_s
 {
 	const char *formatstring;
 	const char *ext;
-	qboolean (*loadfunc)( const char *name, const byte *buffer, size_t filesize );
+	qboolean (*loadfunc)( const char *name, const byte *buffer, fs_offset_t filesize );
 	image_hint_t hint;
 } loadpixformat_t;
 
@@ -67,7 +67,7 @@ typedef struct imglib_s
 	word			width;
 	word			height;
 	word			depth;
-	byte			num_mips; // mipmap count
+	byte			num_mips;		// mipmap count
 	word			encode;		// custom encode type
 	uint			type;		// main type switcher
 	uint			flags;		// additional image flags
@@ -95,6 +95,7 @@ typedef struct imglib_s
 	byte			*tempbuffer;	// for convert operations
 	int			cmd_flags;	// global imglib flags
 	int			force_flags;	// override cmd_flags
+	qboolean			custom_palette;	// custom palette was installed
 } imglib_t;
 
 /*
@@ -104,24 +105,26 @@ typedef struct imglib_s
 
 ========================================================================
 */
+#pragma pack( 1 )
 typedef struct
 {
-	//char	id[2];		// bmfh.bfType
-	uint	fileSize;		// bmfh.bfSize
-	uint	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
-	uint	bitmapDataOffset;	// bmfh.bfOffBits
-	uint	bitmapHeaderSize;	// bmih.biSize
-	uint	width;		// bmih.biWidth
-	int	height;		// bmih.biHeight
+	char	id[2];		// bmfh.bfType
+	dword	fileSize;		// bmfh.bfSize
+	dword	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
+	dword	bitmapDataOffset;	// bmfh.bfOffBits
+	dword	bitmapHeaderSize;	// bmih.biSize
+	int		width;		// bmih.biWidth
+	int		height;		// bmih.biHeight
 	word	planes;		// bmih.biPlanes
 	word	bitsPerPixel;	// bmih.biBitCount
-	uint	compression;	// bmih.biCompression
-	uint	bitmapDataSize;	// bmih.biSizeImage
-	uint	hRes;		// bmih.biXPelsPerMeter
-	uint	vRes;		// bmih.biYPelsPerMeter
-	uint	colors;		// bmih.biClrUsed
-	uint	importantColors;	// bmih.biClrImportant
+	dword	compression;	// bmih.biCompression
+	dword	bitmapDataSize;	// bmih.biSizeImage
+	dword	hRes;		// bmih.biXPelsPerMeter
+	dword	vRes;		// bmih.biYPelsPerMeter
+	dword	colors;		// bmih.biClrUsed
+	dword	importantColors;	// bmih.biClrImportant
 } bmp_t;
+#pragma pack( )
 
 /*
 ========================================================================
@@ -130,14 +133,15 @@ typedef struct
 
 ========================================================================
 */
+#pragma pack( 1 )
 typedef struct tga_s
 {
 	byte	id_length;
 	byte	colormap_type;
 	byte	image_type;
-	byte	colormap_size;
 	word	colormap_index;
 	word	colormap_length;
+	byte	colormap_size;
 	word	x_origin;
 	word	y_origin;
 	word	width;
@@ -145,6 +149,63 @@ typedef struct tga_s
 	byte	pixel_size;
 	byte	attributes;
 } tga_t;
+#pragma pack( )
+
+/*
+========================================================================
+
+.PNG image format	(Portable Network Graphics)
+
+========================================================================
+*/
+
+enum
+{
+	PNG_CT_GREY,
+	PNG_CT_PALLETE = BIT(0),
+	PNG_CT_RGB = BIT(1),
+	PNG_CT_ALPHA = BIT(2),
+	PNG_CT_RGBA = (PNG_CT_RGB|PNG_CT_ALPHA)
+} png_colortype;
+
+enum
+{
+	PNG_F_NONE,
+	PNG_F_SUB,
+	PNG_F_UP,
+	PNG_F_AVERAGE,
+	PNG_F_PAETH
+} png_filter;
+
+#pragma pack( push, 1 )
+typedef struct png_ihdr_s
+{
+	uint	width;
+	uint	height;
+	byte	bitdepth;
+	byte	colortype;
+	byte	compression;
+	byte	filter;
+	byte	interlace;	
+} png_ihdr_t;
+
+typedef struct png_s
+{
+	byte		sign[8];
+	uint		ihdr_len;
+	byte		ihdr_sign[4];
+	png_ihdr_t 	ihdr_chunk;
+	uint		ihdr_crc32;
+} png_t;
+#pragma pack( pop )
+
+typedef struct png_footer_s
+{
+	uint	idat_crc32;
+	uint	iend_len;
+	byte	iend_sign[4];
+	uint	iend_crc32;
+} png_footer_t;
 
 /*
 ========================================================================
@@ -230,7 +291,7 @@ typedef struct dds_caps_s
 
 typedef struct dds_s
 {
-	uint		dwIdent;		// must match DDSHEADER
+	uint		dwIdent;		// must matched with DDSHEADER
 	uint		dwSize;
 	uint		dwFlags;		// determines what fields are valid
 	uint		dwHeight;
@@ -246,18 +307,19 @@ typedef struct dds_s
 } dds_t;
 
 // imagelib definitions
-#define IMAGE_MAXWIDTH	8196
-#define IMAGE_MAXHEIGHT	8196
+#define IMAGE_MAXWIDTH	8192
+#define IMAGE_MAXHEIGHT	8192
 #define LUMP_MAXWIDTH	1024	// WorldCraft limits
 #define LUMP_MAXHEIGHT	1024
 
 enum
 {
-	LUMP_NORMAL = 0,
-	LUMP_TRANSPARENT,
-	LUMP_DECAL,
-	LUMP_QFONT,
-	LUMP_EXTENDED		// bmp images have extened palette with alpha-channel
+	LUMP_NORMAL = 0,		// no alpha
+	LUMP_MASKED,		// 1-bit alpha channel masked texture
+	LUMP_GRADIENT,		// gradient image (decals)
+	LUMP_EXTENDED,		// bmp images have extened palette with alpha-channel
+	LUMP_HALFLIFE,		// get predefined half-life palette
+	LUMP_QUAKE1		// get predefined quake palette
 };
 
 enum
@@ -270,16 +332,13 @@ enum
 
 extern imglib_t image;
 
-void Image_RoundDimensions( int *scaled_width, int *scaled_height );
 byte *Image_ResampleInternal( const void *indata, int in_w, int in_h, int out_w, int out_h, int intype, qboolean *done );
 byte *Image_FlipInternal( const byte *in, word *srcwidth, word *srcheight, int type, int flags );
-void Image_PaletteHueReplace( byte *palSrc, int newHue, int start, int end );
 rgbdata_t *Image_Load(const char *filename, const byte *buffer, size_t buffsize );
 qboolean Image_Copy8bitRGBA( const byte *in, byte *out, int pixels );
 qboolean Image_AddIndexedImageToPack( const byte *in, int width, int height );
 qboolean Image_AddRGBAImageToPack( uint imageSize, const void* data );
 void Image_Save( const char *filename, rgbdata_t *pix );
-void Image_ConvertPalTo24bit( rgbdata_t *pic );
 void Image_GetPaletteLMP( const byte *pal, int rendermode );
 void Image_GetPaletteBMP( const byte *pal );
 int Image_ComparePalette( const byte *pal );
@@ -293,21 +352,23 @@ void Image_GetPaletteHL( void );
 //
 // formats load
 //
-qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadMDL( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadSPR( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadTGA( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadFNT( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadDDS( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadLMP( const char *name, const byte *buffer, size_t filesize );
-qboolean Image_LoadPAL( const char *name, const byte *buffer, size_t filesize );
+qboolean Image_LoadMIP( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadMDL( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadSPR( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadTGA( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadBMP( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadPNG( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadDDS( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadFNT( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadLMP( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Image_LoadPAL( const char *name, const byte *buffer, fs_offset_t filesize );
 
 //
 // formats save
 //
 qboolean Image_SaveTGA( const char *name, rgbdata_t *pix );
 qboolean Image_SaveBMP( const char *name, rgbdata_t *pix );
+qboolean Image_SavePNG( const char *name, rgbdata_t *pix );
 
 //
 // img_quant.c

@@ -14,8 +14,11 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
+#include "base_cmd.h"
+#include "cdll_int.h"
 
-#define HASH_SIZE 256 // 256 * 4 * 4 == 4096 bytes
+// TODO: use another hash function, as COM_HashKey depends on string length
+#define HASH_SIZE 128 // 128 * 4 * 4 == 2048 bytes
 static base_command_hashmap_t *hashed_cmds[HASH_SIZE];
 
 /*
@@ -43,7 +46,7 @@ Get bucket which contain basecmd by given name
 */
 base_command_hashmap_t *BaseCmd_GetBucket( const char *name )
 {
-	return hashed_cmds[ Com_HashKey( name, HASH_SIZE ) ];
+	return hashed_cmds[ COM_HashKey( name, HASH_SIZE ) ];
 }
 
 /*
@@ -110,7 +113,7 @@ Add new typed base command to hashmap
 */
 void BaseCmd_Insert( base_command_type_e type, base_command_t *basecmd, const char *name )
 {
-	uint hash = Com_HashKey( name, HASH_SIZE );
+	uint hash = COM_HashKey( name, HASH_SIZE );
 	base_command_hashmap_t *elem;
 
 	elem = Z_Malloc( sizeof( base_command_hashmap_t ) );
@@ -137,7 +140,7 @@ qboolean BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, con
 
 	if( !i )
 	{
-		MsgDev( D_ERROR, "BaseCmd_Replace: couldn't find %s\n", name);
+		Con_Reportf( S_ERROR  "BaseCmd_Replace: couldn't find %s\n", name);
 		return false;
 	}
 
@@ -154,9 +157,9 @@ BaseCmd_Remove
 Remove base command from hashmap
 ============
 */
-void BaseCmd_Remove(base_command_type_e type, const char *name )
+void BaseCmd_Remove( base_command_type_e type, const char *name )
 {
-	uint hash = Com_HashKey( name, HASH_SIZE );
+	uint hash = COM_HashKey( name, HASH_SIZE );
 	base_command_hashmap_t *i, *prev;
 
 	for( prev = NULL, i = hashed_cmds[hash]; i &&
@@ -165,7 +168,7 @@ void BaseCmd_Remove(base_command_type_e type, const char *name )
 
 	if( !i )
 	{
-		MsgDev( D_ERROR, "Couldn't find %s in buckets\n", name );
+		Con_Reportf( S_ERROR  "Couldn't find %s in buckets\n", name );
 		return;
 	}
 
@@ -186,5 +189,99 @@ initialize base command hashmap system
 */
 void BaseCmd_Init( void )
 {
-	Q_memset( hashed_cmds, 0, sizeof( hashed_cmds ) );
+	memset( hashed_cmds, 0, sizeof( hashed_cmds ) );
+}
+
+/*
+============
+BaseCmd_Stats_f
+
+============
+*/
+void BaseCmd_Stats_f( void )
+{
+	int i, minsize = 99999, maxsize = -1, empty = 0;
+
+	for( i = 0; i < HASH_SIZE; i++ )
+	{
+		base_command_hashmap_t *hm;
+		int len = 0;
+
+		// count bucket length
+		for( hm = hashed_cmds[i]; hm; hm = hm->next, len++ );
+
+		if( len == 0 )
+		{
+			empty++;
+			continue;
+		}
+
+		if( len < minsize )
+			minsize = len;
+
+		if( len > maxsize )
+			maxsize = len;
+	}
+
+	Con_Printf( "Base command stats:\n");
+	Con_Printf( "Bucket minimal length: %d\n", minsize );
+	Con_Printf( "Bucket maximum length: %d\n", maxsize );
+	Con_Printf( "Empty buckets: %d\n", empty );
+}
+
+static void BaseCmd_CheckCvars( const char *key, const char *value, void *buffer, void *ptr )
+{
+	base_command_t *v = BaseCmd_Find( HM_CVAR, key );
+	qboolean *invalid = ptr;
+
+	if( !v )
+	{
+		Con_Printf( "Cvar %s is missing in basecmd\n", key );
+		*invalid = true;
+	}
+}
+
+/*
+============
+BaseCmd_Stats_f
+
+testing order matches cbuf execute
+============
+*/
+void BaseCmd_Test_f( void )
+{
+	void *cmd;
+	cmdalias_t *a;
+	qboolean invalid = false;
+
+	// Cmd_LookupCmds don't allows to check alias, so just iterate
+	for( a = Cmd_AliasGetList(); a; a = a->next )
+	{
+		base_command_t *v = BaseCmd_Find( HM_CMDALIAS, a->name );
+
+		if( !v )
+		{
+			Con_Printf( "Alias %s is missing in basecmd\n", a->name );
+			invalid = true;
+		}
+	}
+
+	for( cmd = Cmd_GetFirstFunctionHandle(); cmd;
+		 cmd = Cmd_GetNextFunctionHandle( cmd ) )
+	{
+		base_command_t *v = BaseCmd_Find( HM_CMD, Cmd_GetName( cmd ) );
+
+		if( !v )
+		{
+			Con_Printf( "Command %s is missing in basecmd\n", Cmd_GetName( cmd ) );
+			invalid = true;
+		}
+	}
+
+	Cvar_LookupVars( 0, NULL, &invalid, (setpair_t)BaseCmd_CheckCvars );
+
+	if( !invalid )
+	{
+		Con_Printf( "BaseCmd is valid\n" );
+	}
 }

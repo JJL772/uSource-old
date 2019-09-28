@@ -25,22 +25,25 @@ GNU General Public License for more details.
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
+typedef void (*pfnChangeGame)( const char *progname );
+
 char szGameDir[128]; // safe place to keep gamedir
 int g_iArgc;
 
 void Host_Shutdown( void );
-void *Com_LoadLibrary(char *, int );
-int Host_Main( int szArgc, char **szArgv, const char *szGameDir, int chg, void *callback );
+void Launcher_ChangeGame( const char *progname );
+void *Com_LoadLibrary( char *, int );
+int Host_Main( int szArgc, char **szArgv, const char *szGameDir, int chg, pfnChangeGame callback );
 
 char **g_pszArgv;
 
-void Launcher_ChangeGame( const char *progname );
 void Launcher_ChangeGame( const char *progname )
 {
 	strncpy( szGameDir, progname, sizeof( szGameDir ) - 1 );
 	Host_Shutdown( );
 	exit( Host_Main( g_iArgc, g_pszArgv, szGameDir, 1, &Launcher_ChangeGame ) );
 }
+
 #ifdef XASH_NOCONHOST
 #include <windows.h>
 int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
@@ -49,7 +52,7 @@ int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int n
 	char **szArgv;
 	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
 	int size, i = 0;
-	szArgv = (char**)calloc(szArgc + 1,sizeof(char*));
+	szArgv = (char**)malloc(szArgc*sizeof(char*));
 	for (; i < szArgc; ++i)
 	{
 		size = wcslen(lpArgv[i]) + 1;
@@ -63,10 +66,12 @@ int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int n
 int main( int argc, char** argv )
 {
 	char gamedir_buf[32] = "";
-	const char *gamedir = getenv("XASH3D_GAMEDIR");
+	const char *gamedir = getenv( "XASH3D_GAMEDIR" );
 
-	if(!gamedir)
+	if( !gamedir )
+	{
 		gamedir = "valve";
+	}
 	else
 	{
 		strncpy( gamedir_buf, gamedir, 32 );

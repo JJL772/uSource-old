@@ -30,9 +30,9 @@ static const loadwavfmt_t load_null[] =
 
 static const loadwavfmt_t load_game[] =
 {
-{ "sound/%s%s.%s", "wav", Sound_LoadWAV },
+{ DEFAULT_SOUNDPATH "%s%s.%s", "wav", Sound_LoadWAV },
 { "%s%s.%s", "wav", Sound_LoadWAV },
-{ "sound/%s%s.%s", "mp3", Sound_LoadMPG },
+{ DEFAULT_SOUNDPATH "%s%s.%s", "mp3", Sound_LoadMPG },
 { "%s%s.%s", "mp3", Sound_LoadMPG },
 { NULL, NULL, NULL }
 };
@@ -87,8 +87,8 @@ byte *Sound_Copy( size_t size )
 {
 	byte	*out;
 
-	out = Mem_Alloc( host.soundpool, size );
-	Q_memcpy( out, sound.tempbuffer, size );
+	out = Mem_Malloc( host.soundpool, size );
+	memcpy( out, sound.tempbuffer, size );
 
 	return out; 
 }
@@ -235,15 +235,15 @@ qboolean Sound_ResampleInternal( wavdata_t *sc, int inrate, int inwidth, int out
 				srcsample = samplefrac >> 8;
 				samplefrac += fracstep;
 
-				if( inwidth == 2 ) sample = ( (short *)data )[srcsample];
-				else sample = (int)( (uint)( (char)(data[srcsample]) ) << 8 );
+				if( inwidth == 2 ) sample = ((short *)data)[srcsample];
+				else sample = (int)( (char)(data[srcsample])) << 8;
 
-				if( outwidth == 2 ) ( (short *)sound.tempbuffer )[i] = sample;
-				else ( (signed char *)sound.tempbuffer )[i] = sample >> 8;
+				if( outwidth == 2 ) ((short *)sound.tempbuffer)[i] = sample;
+				else ((signed char *)sound.tempbuffer)[i] = sample >> 8;
 			}
 		}
 
-		MsgDev( D_NOTE, "Sound_Resample: from[%d bit %d kHz] to [%d bit %d kHz]\n", inwidth * 8, inrate, outwidth * 8, outrate );
+		Con_Reportf( "Sound_Resample: from[%d bit %d kHz] to [%d bit %d kHz]\n", inwidth * 8, inrate, outwidth * 8, outrate );
 	}
 
 	sc->rate = outrate;
@@ -259,10 +259,7 @@ qboolean Sound_Process( wavdata_t **wav, int rate, int width, uint flags )
 				
 	// check for buffers
 	if( !snd || !snd->buffer )
-	{
-		MsgDev( D_WARN, "Sound_Process: NULL sound\n" );
 		return false;
-	}
 
 	if(( flags & SOUND_RESAMPLE ) && ( width > 0 || rate > 0 ))
 	{

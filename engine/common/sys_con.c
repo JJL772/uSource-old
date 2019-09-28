@@ -18,7 +18,14 @@ GNU General Public License for more details.
 #include <android/log.h>
 #endif
 
-#ifdef USE_SELECT
+#if !defined( _WIN32 ) && !defined( XASH_MOBILE_PLATFORM )
+#define XASH_COLORIZE_CONSOLE
+// use with caution, running engine in Qt Creator may cause a freeze in read() call
+// I was never encountered this bug anywhere else, so still enable by default
+#define XASH_USE_SELECT
+#endif
+
+#ifdef XASH_USE_SELECT
 // non-blocking console input
 #include <sys/select.h>
 #endif
@@ -35,7 +42,7 @@ static LogData s_ld;
 
 char *Sys_Input( void )
 {
-#ifdef USE_SELECT
+#ifdef XASH_USE_SELECT
 	{
 		fd_set rfds;
 		static char line[1024];
@@ -43,9 +50,9 @@ char *Sys_Input( void )
 		struct timeval tv;
 		tv.tv_sec = 0;
 		tv.tv_usec = 0;
-		FD_ZERO(&rfds);
-		FD_SET(0, &rfds); // stdin
-		while( select(1, &rfds, NULL, NULL, &tv ) > 0 )
+		FD_ZERO( &rfds );
+		FD_SET( 0, &rfds); // stdin
+		while( select( 1, &rfds, NULL, NULL, &tv ) > 0 )
 		{
 			if( read( 0, &line[len], 1 ) != 1 )
 				break;
@@ -61,7 +68,7 @@ char *Sys_Input( void )
 		}
 	}
 #endif
-#ifdef XASH_W32CON
+#ifdef _WIN32
 	return Wcon_Input();
 #endif
 	return NULL;
@@ -70,10 +77,48 @@ char *Sys_Input( void )
 void Sys_DestroyConsole( void )
 {
 	// last text message into console or log
-	MsgDev( D_NOTE, "Sys_DestroyConsole: Exiting!\n" );
-#ifdef XASH_W32CON
+	Con_Reportf( "Sys_DestroyConsole: Exiting!\n" );
+#ifdef _WIN32
 	Wcon_DestroyConsole();
 #endif
+}
+
+/*
+===============================================================================
+
+SYSTEM LOG
+
+===============================================================================
+*/
+int Sys_LogFileNo( void )
+{
+	return s_ld.logfileno;
+}
+
+void Sys_InitLog( void )
+{
+	const char	*mode;
+
+	if( Sys_CheckParm( "-log" ) && host.allow_console != 0 )
+	{
+		s_ld.log_active = true;
+		Q_strncpy( s_ld.log_path, "engine.log", sizeof( s_ld.log_path ));
+	}
+
+	if( host.change_game && host.type != HOST_DEDICATED )
+		mode = "a";
+	else mode = "w";
+
+	// create log if needed
+	if( s_ld.log_active )
+	{
+		s_ld.logfile = fopen( s_ld.log_path, mode );
+		if( !s_ld.logfile ) Con_Reportf( S_ERROR  "Sys_InitLog: can't create log file %s\n", s_ld.log_path );
+
+		fprintf( s_ld.logfile, "=================================================================================\n" );
+		fprintf( s_ld.logfile, "\t%s (build %i) started at %s\n", s_ld.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "=================================================================================\n" );
+	}
 }
 
 void Sys_CloseLog( void )
@@ -81,7 +126,7 @@ void Sys_CloseLog( void )
 	char	event_name[64];
 
 	// continue logged
-	switch( host.state )
+	switch( host.status )
 	{
 	case HOST_CRASHED:
 		Q_strncpy( event_name, "crashed", sizeof( event_name ));
@@ -95,66 +140,16 @@ void Sys_CloseLog( void )
 		break;
 	}
 
-	printf( "\n================================================================================\n");
-	printf( "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
-	printf( "================================================================================\n");
-
 	if( s_ld.logfile )
 	{
-		fprintf( s_ld.logfile, "\n================================================================================\n");
-		fprintf( s_ld.logfile, "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
-		fprintf( s_ld.logfile, "================================================================================\n");
+		fprintf( s_ld.logfile, "\n");
+		fprintf( s_ld.logfile, "=================================================================================");
+		if( host.change_game ) fprintf( s_ld.logfile, "\n\t%s (build %i) %s\n", s_ld.title, Q_buildnum(), event_name );
+		else fprintf( s_ld.logfile, "\n\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "=================================================================================\n");
 
 		fclose( s_ld.logfile );
 		s_ld.logfile = NULL;
-	}
-}
-
-/*
-===============================================================================
-
-SYSTEM LOG
-
-===============================================================================
-*/
-
-void Sys_InitLog( void )
-{
-	const char	*mode;
-
-	if( Sys_CheckParm( "-log" ) && host.developer != 0 )
-	{
-		s_ld.log_active = true;
-		Q_strncpy( s_ld.log_path, "engine.log", sizeof( s_ld.log_path ));
-	}
-
-	if( host.change_game )
-		mode = "a";
-	else mode = "w";
-	Q_strncpy( s_ld.title, "Xash3D FWGS", sizeof ( s_ld.title ) );
-
-	// print log to stdout
-	printf( "================================================================================\n" );
-	printf( "\t%s (build %i, %s-%s) started at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), Q_timestamp( TIME_FULL ));
-	printf( "================================================================================\n" );
-
-	s_ld.logfileno = -1;
-	// create log if needed
-	if( s_ld.log_active )
-	{
-		s_ld.logfile = fopen( s_ld.log_path, mode );
-		if( !s_ld.logfile )
-		{
-				s_ld.log_active = false;
-				MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_ld.log_path );
-				Sys_Warn( "Failed to open log file %s!\nAre you sure you have write access?", s_ld.log_path );
-				return;
-		}
-		else s_ld.logfileno = fileno( s_ld.logfile );
-
-		fprintf( s_ld.logfile, "================================================================================\n" );
-		fprintf( s_ld.logfile, "\t%s (build %i, %s-%s) started at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), Q_timestamp( TIME_FULL ));
-		fprintf( s_ld.logfile, "================================================================================\n" );
 	}
 }
 
@@ -167,7 +162,7 @@ void Sys_PrintLog( const char *pMsg )
 
 	time( &crt_time );
 	crt_tm = localtime( &crt_time );
-#ifdef __ANDROID__
+#if XASH_ANDROID && !XASH_DEDICATED
 	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
 #endif
 
@@ -180,7 +175,7 @@ void Sys_PrintLog( const char *pMsg )
 	if( !lastchar || lastchar == '\n')
 		strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
 
-#ifdef COLORIZE_CONSOLE
+#ifdef XASH_COLORIZE_CONSOLE
 	{
 		char colored[4096];
 		const char *msg = pMsg;
@@ -221,6 +216,7 @@ void Sys_PrintLog( const char *pMsg )
 		}
 		colored[len] = 0;
 		printf( "\033[34m%s\033[0m%s\033[0m", logtime, colored );
+
 	}
 #else
 #if !defined __ANDROID__ || defined XASH_DEDICATED
@@ -228,19 +224,89 @@ void Sys_PrintLog( const char *pMsg )
 	fflush( stdout );
 #endif
 #endif
-	lastchar = pMsg[strlen(pMsg)-1];
+
 	if( !s_ld.logfile )
 		return;
 
 	if( !lastchar || lastchar == '\n')
 		strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
 
+	// save last char to detect when line was not ended
+	lastchar = pMsg[strlen(pMsg)-1];
+
 	fprintf( s_ld.logfile, "%s %s", logtime, pMsg );
 	fflush( s_ld.logfile );
 }
 
-int Sys_LogFileNo( void )
+/*
+=============================================================================
+
+CONSOLE PRINT
+
+=============================================================================
+*/
+/*
+=============
+Con_Printf
+
+=============
+*/
+void Con_Printf( const char *szFmt, ... )
 {
-	if( s_ld.logfileno ) fflush( s_ld.logfile );
-	return s_ld.logfileno;
+	static char	buffer[MAX_PRINT_MSG];
+	va_list		args;
+
+	if( !host.allow_console )
+		return;
+
+	va_start( args, szFmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), szFmt, args );
+	va_end( args );
+
+	Sys_Print( buffer );
+}
+
+/*
+=============
+Con_DPrintf
+
+=============
+*/
+void Con_DPrintf( const char *szFmt, ... )
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list		args;
+
+	if( host_developer.value < DEV_NORMAL )
+		return;
+
+	va_start( args, szFmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), szFmt, args );
+	va_end( args );
+
+	if( buffer[0] == '0' && buffer[1] == '\n' && buffer[2] == '\0' )
+		return; // hlrally spam
+
+	Sys_Print( buffer );
+}
+
+/*
+=============
+Con_Reportf
+
+=============
+*/
+void Con_Reportf( const char *szFmt, ... )
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list		args;
+
+	if( host_developer.value < DEV_EXTENDED )
+		return;
+
+	va_start( args, szFmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), szFmt, args );
+	va_end( args );
+
+	Sys_Print( buffer );
 }

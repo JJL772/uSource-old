@@ -13,37 +13,29 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef XASH_DEDICATED
-
 #include "common.h"
 #include "sound.h"
 #include "client.h"
 
-portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
 static bg_track_t		s_bgTrack;
 static musicfade_t		musicfade;	// controlled by game dlls
-int			s_rawend;
 
+/*
+=================
+S_PrintBackgroundTrackState
+=================
+*/
 void S_PrintBackgroundTrackState( void )
 {
+	Con_Printf( "BackgroundTrack: " );
+
 	if( s_bgTrack.current[0] && s_bgTrack.loopName[0] )
-		Msg( "BackgroundTrack: intro %s, loop %s\n", s_bgTrack.current, s_bgTrack.loopName );
+		Con_Printf( "intro %s, loop %s\n", s_bgTrack.current, s_bgTrack.loopName );
 	else if( s_bgTrack.current[0] )
-		Msg( "BackgroundTrack: %s\n", s_bgTrack.current );
+		Con_Printf( "%s\n", s_bgTrack.current );
 	else if( s_bgTrack.loopName[0] )
-		Msg( "BackgroundTrack: %s [loop]\n", s_bgTrack.loopName );
-}
-
-void S_CheckLerpingState( void )
-{
-	wavdata_t	*info;
-
-	s_listener.lerping = false;
-	if( !s_bgTrack.stream ) return;
-	info = FS_StreamInfo( s_bgTrack.stream );
-
-	if( info && ((float)info->rate / SOUND_DMA_SPEED ) >= 1.0f )
-		s_listener.lerping = s_lerping->integer;
+		Con_Printf( "%s [loop]\n", s_bgTrack.loopName );
+	else Con_Printf( "not playing\n" );
 }
 
 /*
@@ -53,7 +45,7 @@ S_FadeMusicVolume
 */
 void S_FadeMusicVolume( float fadePercent )
 {
-	musicfade.percent = bound( 0.0f, fadePercent, 100.0f );       
+	musicfade.percent = bound( 0.0f, fadePercent, 100.0f );
 }
 
 /*
@@ -70,6 +62,7 @@ float S_GetMusicVolume( void )
 		scale = bound( 0.0f, musicfade.percent / 100.0f, 1.0f );
 		scale = 1.0f - scale;
 	}
+
 	return s_musicvolume->value * scale;
 }
 
@@ -78,7 +71,7 @@ float S_GetMusicVolume( void )
 S_StartBackgroundTrack
 =================
 */
-void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int position )
+void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int position, qboolean fullpath )
 {
 	S_StopBackgroundTrack();
 
@@ -91,25 +84,20 @@ void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int 
 	if( mainTrack && *mainTrack == '*' )
 		mainTrack = NULL;
 
-	if(( !introTrack || !*introTrack ) && ( !mainTrack || !*mainTrack ))
+	if( !COM_CheckString( introTrack ) && !COM_CheckString( mainTrack ))
 		return;
 
 	if( !introTrack ) introTrack = mainTrack;
 	if( !*introTrack ) return;
 
-	if( !mainTrack || !*mainTrack ) s_bgTrack.loopName[0] = '\0';
+	if( !COM_CheckString( mainTrack ))
+		s_bgTrack.loopName[0] = '\0';
 	else Q_strncpy( s_bgTrack.loopName, mainTrack, sizeof( s_bgTrack.loopName ));
 
 	// open stream
 	s_bgTrack.stream = FS_OpenStream( va( "media/%s", introTrack ));
-
-	// HACKHACK: try to open in case if mp3 file is outside from media folder
-	// e.g. mp3 play sounds/category/somefile.mp3
-	if( !s_bgTrack.stream )
-		s_bgTrack.stream = FS_OpenStream( introTrack );
-
 	Q_strncpy( s_bgTrack.current, introTrack, sizeof( s_bgTrack.current ));
-	Q_memset( &musicfade, 0, sizeof( musicfade )); // clear any soundfade
+	memset( &musicfade, 0, sizeof( musicfade )); // clear any soundfade
 	s_bgTrack.source = cls.key_dest;
 
 	if( position != 0 )
@@ -117,10 +105,13 @@ void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int 
 		// restore message, update song position
 		FS_SetStreamPos( s_bgTrack.stream, position );
 	}
-
-	S_CheckLerpingState();
 }
 
+/*
+=================
+S_StopBackgroundTrack
+=================
+*/
 void S_StopBackgroundTrack( void )
 {
 	s_listener.stream_paused = false;
@@ -129,12 +120,15 @@ void S_StopBackgroundTrack( void )
 	if( !s_bgTrack.stream ) return;
 
 	FS_FreeStream( s_bgTrack.stream );
-	Q_memset( &s_bgTrack, 0, sizeof( bg_track_t ));
-	Q_memset( &musicfade, 0, sizeof( musicfade ));
-	s_listener.lerping = false;
-	s_rawend = 0;
+	memset( &s_bgTrack, 0, sizeof( bg_track_t ));
+	memset( &musicfade, 0, sizeof( musicfade ));
 }
 
+/*
+=================
+S_StreamSetPause
+=================
+*/
 void S_StreamSetPause( int pause )
 {
 	s_listener.stream_paused = pause;
@@ -147,7 +141,7 @@ S_StreamGetCurrentState
 save\restore code
 =================
 */
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position )
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position )
 {
 	if( !s_bgTrack.stream )
 		return false; // not active
@@ -183,10 +177,10 @@ void S_StreamBackgroundTrack( void )
 	int	fileSamples;
 	byte	raw[MAX_RAW_SAMPLES];
 	int	r, fileBytes;
+	rawchan_t	*ch = NULL;
 
-	if( !dma.initialized ) return;
-	if( !s_bgTrack.stream ) return;
-	if( s_listener.streaming ) return;	// we are playing movie or somewhat
+	if( !dma.initialized || !s_bgTrack.stream || s_listener.streaming )
+		return;
 
 	// don't bother playing anything if musicvolume is 0
 	if( !s_musicvolume->value || s_listener.paused || s_listener.stream_paused )
@@ -201,15 +195,19 @@ void S_StreamBackgroundTrack( void )
 	else if( cls.key_dest == key_console )
 		return;
 
-	// see how many samples should be copied into the raw buffer
-	if( s_rawend < soundtime )
-		s_rawend = soundtime;
+	ch = S_FindRawChannel( S_RAW_SOUND_BACKGROUNDTRACK, true );
 
-	while( s_rawend < soundtime + MAX_RAW_SAMPLES )
+	Assert( ch != NULL );
+
+	// see how many samples should be copied into the raw buffer
+	if( ch->s_rawend < soundtime )
+		ch->s_rawend = soundtime;
+
+	while( ch->s_rawend < soundtime + ch->max_samples )
 	{
 		wavdata_t	*info = FS_StreamInfo( s_bgTrack.stream );
 
-		bufferSamples = MAX_RAW_SAMPLES - (s_rawend - soundtime);
+		bufferSamples = ch->max_samples - (ch->s_rawend - soundtime);
 
 		// decide how much data needs to be read from the file
 		fileSamples = bufferSamples * ((float)info->rate / SOUND_DMA_SPEED );
@@ -236,7 +234,7 @@ void S_StreamBackgroundTrack( void )
 		if( r > 0 )
 		{
 			// add to raw buffer
-			S_StreamRawSamples( fileSamples, info->rate, info->width, info->channels, raw );
+			S_RawSamples( fileSamples, info->rate, info->width, info->channels, raw, S_RAW_SOUND_BACKGROUNDTRACK );
 		}
 		else
 		{
@@ -245,15 +243,9 @@ void S_StreamBackgroundTrack( void )
 			{
 				FS_FreeStream( s_bgTrack.stream );
 				s_bgTrack.stream = FS_OpenStream( va( "media/%s", s_bgTrack.loopName ));
-
-				// HACKHACK: see S_StartBackgroundTrack
-				if( !s_bgTrack.stream )
-					s_bgTrack.stream = FS_OpenStream( s_bgTrack.loopName );
-
 				Q_strncpy( s_bgTrack.current, s_bgTrack.loopName, sizeof( s_bgTrack.current ));
 
 				if( !s_bgTrack.stream ) return;
-				S_CheckLerpingState();
 			}
 			else
 			{
@@ -275,7 +267,6 @@ void S_StartStreaming( void )
 	if( !dma.initialized ) return;
 	// begin streaming movie soundtrack
 	s_listener.streaming = true;
-	s_listener.lerping = false;
 }
 
 /*
@@ -287,8 +278,6 @@ void S_StopStreaming( void )
 {
 	if( !dma.initialized ) return;
 	s_listener.streaming = false;
-	s_listener.lerping = false;
-	s_rawend = 0;
 }
 
 /*
@@ -302,19 +291,26 @@ void S_StreamSoundTrack( void )
 	int	fileSamples;
 	byte	raw[MAX_RAW_SAMPLES];
 	int	r, fileBytes;
+	rawchan_t	*ch = NULL;
 
-	if( !dma.initialized ) return;
-	if( !s_listener.streaming || s_listener.paused ) return;
+	if( !dma.initialized || !s_listener.streaming || s_listener.paused )
+		return;
+
+	ch = S_FindRawChannel( S_RAW_SOUND_SOUNDTRACK, true );
+
+	Assert( ch != NULL );
 
 	// see how many samples should be copied into the raw buffer
-	if( s_rawend < soundtime )
-		s_rawend = soundtime;
+	if( ch->s_rawend < soundtime )
+		ch->s_rawend = soundtime;
 
-	while( s_rawend < soundtime + MAX_RAW_SAMPLES )
+	while( ch->s_rawend < soundtime + ch->max_samples )
 	{
 		wavdata_t	*info = SCR_GetMovieInfo();
 
-		bufferSamples = MAX_RAW_SAMPLES - (s_rawend - soundtime);
+		if( !info ) break;	// bad soundtrack?
+
+		bufferSamples = ch->max_samples - (ch->s_rawend - soundtime);
 
 		// decide how much data needs to be read from the file
 		fileSamples = bufferSamples * ((float)info->rate / SOUND_DMA_SPEED );
@@ -330,7 +326,7 @@ void S_StreamSoundTrack( void )
 		}
 
 		// read audio stream
-		r = SCR_GetAudioChunk( (char *)raw, fileBytes );
+		r = SCR_GetAudioChunk( raw, fileBytes );
 
 		if( r < fileBytes )
 		{
@@ -341,69 +337,8 @@ void S_StreamSoundTrack( void )
 		if( r > 0 )
 		{
 			// add to raw buffer
-			S_StreamRawSamples( fileSamples, info->rate, info->width, info->channels, raw );
+			S_RawSamples( fileSamples, info->rate, info->width, info->channels, raw, S_RAW_SOUND_SOUNDTRACK );
 		}
 		else break; // no more samples for this frame
 	}
 }
-
-/*
-============
-S_StreamRawSamples
-
-Cinematic streaming and voice over network
-============
-*/
-void S_StreamRawSamples( int samples, int rate, int width, int channels, const byte *data )
-{
-	int	i, a, b, src, dst;
-	int	fracstep, samplefrac;
-	int	incount, outcount;
-
-	src = 0;
-	samplefrac = 0;
-	fracstep = (((double)rate) / (double)SOUND_DMA_SPEED) * 256.0;
-	outcount = (double)samples * (double)SOUND_DMA_SPEED / (double)rate;
-	incount = samples * channels;
-
-#define TAKE_SAMPLE( s )	(sizeof(*in) == 1 ? (a = (in[src+(s)]-128)<<8,\
-			b = (src < incount - channels) ? (in[src+channels+(s)]-128)<<8 : 128) : \
-			(a = in[src+(s)],\
-			b = (src < incount - channels) ? (in[src+channels+(s)]) : 0))
-
-			// NOTE: disable lerping for cinematic sountracks
-#define LERP_SAMPLE		s_listener.lerping ? (((((b - a) * (samplefrac & 255)) >> 8) + a)) : a
-
-#define RESAMPLE_RAW \
-	if( channels == 2 ) { \
-		for( i = 0; i < outcount; i++, samplefrac += fracstep, src = (samplefrac >> 8) << 1 ) { \
-			dst = s_rawend++ & (MAX_RAW_SAMPLES - 1); \
-			TAKE_SAMPLE(0); \
-			s_rawsamples[dst].left = LERP_SAMPLE; \
-			TAKE_SAMPLE(1); \
-			s_rawsamples[dst].right = LERP_SAMPLE; \
-		} \
-	} else { \
-		for( i = 0; i < outcount; i++, samplefrac += fracstep, src = (samplefrac >> 8) << 0 ) { \
-			dst = s_rawend++ & (MAX_RAW_SAMPLES - 1); \
-			TAKE_SAMPLE(0); \
-			s_rawsamples[dst].left = LERP_SAMPLE; \
-			s_rawsamples[dst].right = s_rawsamples[dst].left; \
-		} \
-	}
-		
-	if( s_rawend < paintedtime )
-		s_rawend = paintedtime;
-
-	if( width == 2 )
-	{
-		short *in = (short *)data;
-		RESAMPLE_RAW
-	}
-	else
-	{
-		byte *in = (unsigned char *)data;
-		RESAMPLE_RAW
-	}
-}
-#endif // XASH_DEDICATED

@@ -18,13 +18,14 @@ GNU General Public License for more details.
 
 #include "common.h"
 
-#define OUTBUF_SIZE             8192    // don't change!
+#define FRAME_SIZE		32768	// must match with mp3 frame size
+#define OUTBUF_SIZE		8192	// don't change!
 
 typedef struct loadwavfmt_s
 {
 	const char *formatstring;
 	const char *ext;
-	qboolean (*loadfunc)( const char *name, const byte *buffer, size_t filesize );
+	qboolean (*loadfunc)( const char *name, const byte *buffer, fs_offset_t filesize );
 } loadwavfmt_t;
 
 typedef struct streamfmt_s
@@ -59,23 +60,24 @@ typedef struct sndlib_s
 	int		cmd_flags;
 } sndlib_t;
 
-struct stream_s
+typedef struct stream_s
 {
 	const streamfmt_t	*format;	// streamformat to operate
 
-	// current stream state
+	// stream info
 	file_t		*file;	// stream file
 	int		width;	// resolution - num bits divided by 8 (8 bit is 1, 16 bit is 2)
 	int		rate;	// stream rate
 	int		channels;	// stream channels
 	int		type;	// wavtype
 	size_t		size;	// total stream size
-	int		pos;	// actual track position
+
+	// current stream state
 	void		*ptr;	// internal decoder state
-	char temp[OUTBUF_SIZE]; // mpeg decoder stuff
+	char		temp[OUTBUF_SIZE]; // mpeg decoder stuff
+	size_t		pos;	// actual track position (or actual buffer remains)
 	int		buffsize;	// cached buffer size
-	qboolean		timejump;	// true if position is changed
-};
+} stream_t;
 
 /*
 ========================================================================
@@ -101,7 +103,7 @@ typedef struct
 	short	nChannels;	// 1,2 for stereo data is (l,r) pairs 
 	int	nSamplesPerSec;
 	int	nAvgBytesPerSec;
-	short	nBlockAlign;      
+	short	nBlockAlign;
 	short	nBitsPerSample;
 } wavehdr_t;
 
@@ -115,8 +117,8 @@ extern sndlib_t sound;
 //
 // formats load
 //
-qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize );
-qboolean Sound_LoadMPG( const char *name, const byte *buffer, size_t filesize );
+qboolean Sound_LoadWAV( const char *name, const byte *buffer, fs_offset_t filesize );
+qboolean Sound_LoadMPG( const char *name, const byte *buffer, fs_offset_t filesize );
 
 //
 // stream operate

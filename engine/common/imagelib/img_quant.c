@@ -30,9 +30,9 @@ GNU General Public License for more details.
 
 // defs for freq and bias
 #define intbiasshift	16			// bias for fractions
-#define intbias		(1U << intbiasshift)
+#define intbias		(1<<intbiasshift)
 #define gammashift  	10			// gamma = 1024
-#define gamma		(1U << gammashift)
+#define gamma		(1<<gammashift)
 #define betashift		10
 #define beta		(intbias>>betashift)	// beta = 1 / 1024
 #define betagamma		(intbias<<(gammashift - betashift))
@@ -40,20 +40,20 @@ GNU General Public License for more details.
 // defs for decreasing radius factor
 #define initrad		(netsize>>3)		// for 256 cols, radius starts
 #define radiusbiasshift	6			// at 32.0 biased by 6 bits
-#define radiusbias		(1U << radiusbiasshift)
+#define radiusbias		(1<<radiusbiasshift)
 #define initradius		(initrad * radiusbias)	// and decreases by a
 #define radiusdec		30			// factor of 1/30 each cycle 
 
 // defs for decreasing alpha factor
 #define alphabiasshift	10			// alpha starts at 1.0
-#define initalpha		(1U << alphabiasshift)
+#define initalpha		(1<<alphabiasshift)
 int			alphadec;			// biased by 10 bits
 
 // radbias and alpharadbias used for radpower calculation
 #define radbiasshift	8
-#define radbias		(1U << radbiasshift)
+#define radbias		(1<<radbiasshift)
 #define alpharadbshift	(alphabiasshift+radbiasshift)
-#define alpharadbias	(1U << alpharadbshift)
+#define alpharadbias	(1<<alpharadbshift)
 
 // types and global variables
 static byte		*thepicture;		// the input image itself
@@ -93,7 +93,7 @@ void unbiasnet( void )
 		{
 			// OLD CODE: network[i][j] >>= netbiasshift;
 			// Fix based on bug report by Juergen Weigert jw@suse.de
-			temp = (network[i][j] + (1U << (netbiasshift - 1))) >> netbiasshift;
+			temp = (network[i][j] + (1 << (netbiasshift - 1))) >> netbiasshift;
 			if( temp > 255 ) temp = 255;
 			network[i][j] = temp;
 		}
@@ -245,16 +245,15 @@ int inxsearch( int r, int g, int b )
 // Search for biased BGR values
 int contest( int r, int g, int b )
 {
-	// finds closest neuron (min dist) and updates freq
-	// finds best neuron (min dist-bias) and returns position
-	// for frequently chosen neurons, freq[i] is high and bias[i] is negative
-	// bias[i] = gamma * ((1 / netsize) - freq[i])
-
 	register int	*p, *f, *n;
 	register int	i, dist, a, biasdist, betafreq;
 	int		bestpos, bestbiaspos, bestd, bestbiasd;
 
-	bestd = ~(1U << 31);
+	// finds closest neuron (min dist) and updates freq
+	// finds best neuron (min dist-bias) and returns position
+	// for frequently chosen neurons, freq[i] is high and bias[i] is negative
+	// bias[i] = gamma * ((1 / netsize) - freq[i])
+	bestd = ~(1<<31);
 	bestbiasd = bestd;
 	bestpos = -1;
 	bestbiaspos = bestpos;
@@ -375,31 +374,25 @@ void learn( void )
 	if( rad <= 1 ) rad = 0;
 
 	for( i = 0; i < rad; i++ ) 
-	{
-		radpower[i] = alpha * (((rad * rad - i * i) * radbias) / (rad * rad));
-	}	
+		radpower[i] = alpha * ((( rad * rad - i * i ) * radbias ) / ( rad * rad ));	
+
+	if( delta <= 0 ) return;
 
 	if(( lengthcount % prime1 ) != 0 )
 	{
-		step = image.bpp * prime1;
+		step = prime1 * image.bpp;
+	}
+	else if(( lengthcount % prime2 ) != 0 )
+	{
+		step = prime2 * image.bpp;
+	}
+	else if(( lengthcount % prime3 ) != 0 )
+	{
+		step = prime3 * image.bpp;
 	}
 	else
 	{
-		if(( lengthcount % prime2 ) != 0 )
-		{
-			step = image.bpp * prime2;
-		}
-		else
-		{
-			if(( lengthcount % prime3 ) != 0 )
-			{
-				step = image.bpp * prime3;
-			}
-			else
-			{
-				step = image.bpp * prime4;
-			}
-		}
+		step = prime4 * image.bpp;
 	}
 	
 	i = 0;
@@ -427,7 +420,7 @@ void learn( void )
 			if( rad <= 1 ) rad = 0;
 
 			for( j = 0; j < rad; j++ ) 
-				radpower[j] = alpha * (((rad * rad - j * j) * radbias) / (rad * rad));
+				radpower[j] = alpha * ((( rad * rad - j * j ) * radbias ) / ( rad * rad ));
 		}
 	}
 }
@@ -453,7 +446,7 @@ rgbdata_t *Image_Quantize( rgbdata_t *pic )
 	learn();
 	unbiasnet();
 
-	pic->palette = Mem_Alloc( host.imagepool, netsize * 3 );
+	pic->palette = Mem_Malloc( host.imagepool, netsize * 3 );
 
 	for( i = 0; i < netsize; i++ )
 	{
@@ -470,7 +463,7 @@ rgbdata_t *Image_Quantize( rgbdata_t *pic )
 	}
 
 	pic->buffer = Mem_Realloc( host.imagepool, pic->buffer, image.size );
-	Q_memcpy( pic->buffer, image.tempbuffer, image.size );
+	memcpy( pic->buffer, image.tempbuffer, image.size );
 	pic->type = PF_INDEXED_24;
 	pic->size = image.size;
 

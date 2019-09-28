@@ -114,7 +114,7 @@ Default build-depended cvar and constant values
 =========================================================================
 */
 
-#if defined __ANDROID__ || TARGET_OS_IPHONE || defined __SAILFISH__
+#if defined __ANDROID__ || TARGET_OS_IPHONE
 	#define DEFAULT_TOUCH_ENABLE "1"
 	#define DEFAULT_M_IGNORE "1"
 #else
@@ -122,23 +122,12 @@ Default build-depended cvar and constant values
 	#define DEFAULT_M_IGNORE "0"
 #endif
 
-#if defined __ANDROID__ || TARGET_OS_IPHONE || defined __SAILFISH__ || defined __EMSCRIPTEN__
+#if defined __ANDROID__ || TARGET_OS_IPHONE || defined __EMSCRIPTEN__
+#define XASH_INTERNAL_GAMELIBS
 // this means that libraries are provided with engine, but not in game data
 // You need add library loading code to library.c when adding new platform
-#define XASH_INTERNAL_GAMELIBS
 #endif
 
-#if defined XASH_NANOGL || defined XASH_WES || defined XASH_REGAL
-#ifndef XASH_GLES
-#define XASH_GLES
-#endif // XASH_GLES
-#ifndef XASH_GL_STATIC
-#define XASH_GL_STATIC
-#endif // XASH_GL_STATIC
-#endif // XASH_NANOGL || XASH_WES || XASH_REGAL
-
-#define DEFAULT_PRIMARY_MASTER "ms.xash.su:27010"
-#define DEFAULT_SECONDARY_MASTER "ms2.xash.su:27010"
 // Set ForceSimulating to 1 by default for dedicated, because AMXModX timers require this
 // TODO: enable simulating for any server?
 #ifdef XASH_DEDICATED
@@ -153,8 +142,20 @@ Default build-depended cvar and constant values
 #endif
 
 #ifndef DEFAULT_FULLSCREEN
-#define DEFAULT_FULLSCREEN 1
+	#define DEFAULT_FULLSCREEN 1
 #endif
+
+#ifndef DEFAULT_ACCELERATED_RENDERER
+	#ifdef __ANDROID__
+		#define DEFAULT_ACCELERATED_RENDERER "gles1"
+	#else
+		#define DEFAULT_ACCELERATED_RENDERER "gl"
+	#endif
+#endif // DEFAULT_ACCELERATED_RENDERER
+
+#ifndef DEFAULT_SOFTWARE_RENDERER
+	#define DEFAULT_SOFTWARE_RENDERER "soft" // mittorn's ref_soft
+#endif // DEFAULT_SOFTWARE_RENDERER
 
 #if TARGET_OS_IPHONE
 	#define DEFAULT_CON_MAXFRAC "0.5"

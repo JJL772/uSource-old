@@ -28,11 +28,10 @@ typedef enum
 	pt_blob2,
 	pt_vox_slowgrav,
 	pt_vox_grav,
-	pt_clientcustom,	// Must have callback function specified
-	pt_tracer		// Always have callback
+	pt_clientcustom	// Must have callback function specified
 } ptype_t;
 
-struct particle_s
+typedef struct particle_s
 {
 	vec3_t		org;
 	short		color;
@@ -49,6 +48,6 @@ struct particle_s
 	
 	// For deathfunc, etc.
 	unsigned char	context;
-};
+} particle_t;
 
 #endif//PARTICLEDEF_H

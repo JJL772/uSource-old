@@ -30,8 +30,8 @@ static short GetLittleShort( void )
 {
 	short	val = 0;
 
-	val += ((uint) *(iff_dataPtr+0) << 0);
-	val += ((uint) *(iff_dataPtr+1) << 8);
+	val += (*(iff_dataPtr+0) << 0);
+	val += (*(iff_dataPtr+1) << 8);
 	iff_dataPtr += 2;
 
 	return val;
@@ -46,10 +46,10 @@ static int GetLittleLong( void )
 {
 	int	val = 0;
 
-	val += ((uint) *(iff_dataPtr+0) << 0);
-	val += ((uint) *(iff_dataPtr+1) << 8);
-	val += ((uint) *(iff_dataPtr+2) <<16);
-	val += ((uint) *(iff_dataPtr+3) <<24);
+	val += (*(iff_dataPtr+0) << 0);
+	val += (*(iff_dataPtr+1) << 8);
+	val += (*(iff_dataPtr+2) <<16);
+	val += (*(iff_dataPtr+3) <<24);
 	iff_dataPtr += 4;
 
 	return val;
@@ -76,8 +76,7 @@ static void FindNextChunk( const char *name )
 		iff_dataPtr += 4;
 		iff_chunkLen = GetLittleLong();
 
-		// limit chunk size to 100 mb
-		if( iff_chunkLen < 0 || !Q_strcmp(name, "LIST") && iff_end < iff_dataPtr + 4 || iff_chunkLen > 1024 * 1024 * 100 )
+		if( iff_chunkLen < 0 )
 		{
 			iff_dataPtr = NULL;
 			return;
@@ -86,7 +85,7 @@ static void FindNextChunk( const char *name )
 		iff_dataPtr -= 8;
 		iff_lastChunk = iff_dataPtr + 8 + ((iff_chunkLen + 1) & ~1);
 
-		if( !Q_strncmp( (char *)iff_dataPtr, name, 4 ))
+		if( !Q_strncmp( (const char *)iff_dataPtr, name, 4 ))
 			return;
 	}
 }
@@ -140,7 +139,7 @@ qboolean StreamFindNextChunk( file_t *file, const char *name, int *last_chunk )
 Sound_LoadWAV
 =============
 */
-qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
+qboolean Sound_LoadWAV( const char *name, const byte *buffer, fs_offset_t filesize )
 {
 	int	samples, fmt;
 	qboolean	mpeg_stream = false;
@@ -148,17 +147,15 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( !buffer || filesize <= 0 )
 		return false;
 
-	//MsgDev( D_NOTE, "Sound_LoadWAV: ( %s, %p, %u )\n", name, buffer, filesize );
-
 	iff_data = buffer;
 	iff_end = buffer + filesize;
 
 	// find "RIFF" chunk
 	FindChunk( "RIFF" );
 
-	if( !( iff_dataPtr && !Q_strncmp( (char *)iff_dataPtr + 8, "WAVE", 4 )))
+	if( !( iff_dataPtr && !Q_strncmp( (const char *)iff_dataPtr + 8, "WAVE", 4 )))
 	{
-		MsgDev( D_ERROR, "Sound_LoadWAV: %s missing 'RIFF/WAVE' chunks\n", name );
+		Con_DPrintf( S_ERROR "Sound_LoadWAV: %s missing 'RIFF/WAVE' chunks\n", name );
 		return false;
 	}
 
@@ -168,7 +165,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 	if( !iff_dataPtr )
 	{
-		MsgDev( D_ERROR, "Sound_LoadWAV: %s missing 'fmt ' chunk\n", name );
+		Con_DPrintf( S_ERROR "Sound_LoadWAV: %s missing 'fmt ' chunk\n", name );
 		return false;
 	}
 
@@ -179,7 +176,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	{
 		if( fmt != 85 )
 		{
-			MsgDev( D_ERROR, "Sound_LoadWAV: %s not a microsoft PCM format\n", name );
+			Con_DPrintf( S_ERROR "Sound_LoadWAV: %s not a microsoft PCM format\n", name );
 			return false;
 		}
 		else
@@ -192,7 +189,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	sound.channels = GetLittleShort();
 	if( sound.channels != 1 && sound.channels != 2 )
 	{
-		MsgDev( D_ERROR, "Sound_LoadWAV: only mono and stereo WAV files supported (%s)\n", name );
+		Con_DPrintf( S_ERROR "Sound_LoadWAV: only mono and stereo WAV files supported (%s)\n", name );
 		return false;
 	}
 
@@ -204,7 +201,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 	if( sound.width != 1 && sound.width != 2 )
 	{
-		MsgDev( D_WARN, "Sound_LoadWAV: only 8 and 16 bit WAV files supported (%s)\n", name );
+		Con_DPrintf( S_ERROR "Sound_LoadWAV: only 8 and 16 bit WAV files supported (%s)\n", name );
 		return false;
 	}
 
@@ -219,7 +216,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 		if( iff_dataPtr )
 		{
-			if( !Q_strncmp( (char *)iff_dataPtr + 28, "mark", 4 ))
+			if( !Q_strncmp( (const char *)iff_dataPtr + 28, "mark", 4 ))
 			{	
 				// this is not a proper parse, but it works with CoolEdit...
 				iff_dataPtr += 24;
@@ -238,7 +235,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 	if( !iff_dataPtr )
 	{
-		MsgDev( D_WARN, "Sound_LoadWAV: %s missing 'data' chunk\n", name );
+		Con_DPrintf( S_ERROR "Sound_LoadWAV: %s missing 'data' chunk\n", name );
 		return false;
 	}
 
@@ -249,7 +246,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	{
 		if( samples < sound.samples )
 		{
-			MsgDev( D_ERROR, "Sound_LoadWAV: %s has a bad loop length\n", name );
+			Con_DPrintf( S_ERROR "Sound_LoadWAV: %s has a bad loop length\n", name );
 			return false;
 		}
 	}
@@ -257,7 +254,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 	if( sound.samples <= 0 )
 	{
-		MsgDev( D_ERROR, "Sound_LoadWAV: file with %i samples (%s)\n", sound.samples, name );
+		Con_Reportf( S_ERROR "Sound_LoadWAV: file with %i samples (%s)\n", sound.samples, name );
 		return false;
 	}
 
@@ -270,11 +267,11 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	{
 		int	hdr_size = (iff_dataPtr - buffer);
 
-		if(( filesize - hdr_size ) < 16384 )
+		if(( filesize - hdr_size ) < FRAME_SIZE )
 		{
-			sound.tempbuffer = (byte *)Mem_Realloc( host.soundpool, sound.tempbuffer, 16384 );
-			Q_memcpy( sound.tempbuffer, buffer + (iff_dataPtr - buffer), filesize - hdr_size );
-			return Sound_LoadMPG( name, sound.tempbuffer, 16384 );
+			sound.tempbuffer = (byte *)Mem_Realloc( host.soundpool, sound.tempbuffer, FRAME_SIZE );
+			memcpy( sound.tempbuffer, buffer + (iff_dataPtr - buffer), filesize - hdr_size );
+			return Sound_LoadMPG( name, sound.tempbuffer, FRAME_SIZE );
 		}
 
 		return Sound_LoadMPG( name, buffer + hdr_size, filesize - hdr_size );
@@ -282,9 +279,9 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 	// Load the data
 	sound.size = sound.samples * sound.width * sound.channels;
-	sound.wav = Mem_Alloc( host.soundpool, sound.size );
+	sound.wav = Mem_Malloc( host.soundpool, sound.size );
 
-	Q_memcpy( sound.wav, buffer + (iff_dataPtr - buffer), sound.size );
+	memcpy( sound.wav, buffer + (iff_dataPtr - buffer), sound.size );
 
 	// now convert 8-bit sounds to signed
 	if( sound.width == 1 )
@@ -315,7 +312,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	stream_t	*stream;
 	int 	last_chunk = 0;
 	char	chunkName[4];
-	int	iff_data_i;
+	int	iff_data;
 	file_t	*file;
 	short	t;
 
@@ -329,7 +326,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	// find "RIFF" chunk
 	if( !StreamFindNextChunk( file, "RIFF", &last_chunk ))
 	{
-		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing RIFF chunk\n", filename );
+		Con_DPrintf( S_ERROR "Stream_OpenWAV: %s missing RIFF chunk\n", filename );
 		FS_Close( file );
 		return NULL;
 	}
@@ -337,17 +334,17 @@ stream_t *Stream_OpenWAV( const char *filename )
 	FS_Read( file, chunkName, 4 );
 	if( !Q_strncmp( chunkName, "WAVE", 4 ))
 	{
-		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing WAVE chunk\n", filename );
+		Con_DPrintf( S_ERROR "Stream_OpenWAV: %s missing WAVE chunk\n", filename );
 		FS_Close( file );
 		return NULL;
 	}
 
 	// get "fmt " chunk
-	iff_data_i = FS_Tell( file ) + 4;
-	last_chunk = iff_data_i;
+	iff_data = FS_Tell( file ) + 4;
+	last_chunk = iff_data;
 	if( !StreamFindNextChunk( file, "fmt ", &last_chunk ))
 	{
-		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing 'fmt ' chunk\n", filename );
+		Con_DPrintf( S_ERROR "Stream_OpenWAV: %s missing 'fmt ' chunk\n", filename );
 		FS_Close( file );
 		return NULL;
 	}
@@ -357,7 +354,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	FS_Read( file, &t, sizeof( t ));
 	if( t != 1 )
 	{
-		MsgDev( D_ERROR, "Stream_OpenWAV: %s not a microsoft PCM format\n", filename );
+		Con_DPrintf( S_ERROR "Stream_OpenWAV: %s not a microsoft PCM format\n", filename );
 		FS_Close( file );
 		return NULL;
 	}
@@ -375,10 +372,10 @@ stream_t *Stream_OpenWAV( const char *filename )
 	sound.loopstart = 0;
 
 	// find data chunk
-	last_chunk = iff_data_i;
+	last_chunk = iff_data;
 	if( !StreamFindNextChunk( file, "data", &last_chunk ))
 	{
-		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing 'data' chunk\n", filename );
+		Con_DPrintf( S_ERROR "Stream_OpenWAV: %s missing 'data' chunk\n", filename );
 		FS_Close( file );
 		return NULL;
 	}
@@ -387,7 +384,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	sound.samples = ( sound.samples / sound.width ) / sound.channels;
 
 	// at this point we have valid stream
-	stream = Mem_Alloc( host.soundpool, sizeof( stream_t ));
+	stream = Mem_Calloc( host.soundpool, sizeof( stream_t ));
 	stream->file = file;
 	stream->size = sound.samples * sound.width * sound.channels;
 	stream->buffsize = FS_Tell( file ); // header length
@@ -408,7 +405,7 @@ assume stream is valid
 */
 int Stream_ReadWAV( stream_t *stream, int bytes, void *buffer )
 {
-	int	samples, remaining;
+	int	remaining;
 
 	if( !stream->file ) return 0;	// invalid file
 
@@ -417,7 +414,6 @@ int Stream_ReadWAV( stream_t *stream, int bytes, void *buffer )
 	if( bytes > remaining ) bytes = remaining;
 
 	stream->pos += bytes;
-	samples = ( bytes / stream->width ) / stream->channels;
 	FS_Read( stream->file, buffer, bytes );
 
 	return bytes;

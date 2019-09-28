@@ -13,26 +13,21 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef XASH_DEDICATED
-
 #include "common.h"
 #include "client.h"
-#include "gl_local.h"
 #include "vgui_draw.h"
 #include "qfont.h"
-#include "library.h"
+#include "input.h"
 
 convar_t *scr_centertime;
 convar_t *scr_loading;
 convar_t *scr_download;
-convar_t *scr_width;
-convar_t *scr_height;
 convar_t *scr_viewsize;
 convar_t *cl_testlights;
 convar_t *cl_allow_levelshots;
 convar_t *cl_levelshot_name;
 convar_t *cl_envshot_size;
-convar_t *scr_dark;
+convar_t *v_dark;
 
 typedef struct
 {
@@ -47,124 +42,63 @@ static qboolean	scr_init = false;
 SCR_DrawFPS
 ==============
 */
-void SCR_DrawFPS( void )
+void SCR_DrawFPS( int height )
 {
-	float calc;
-	rgba_t color;
-	static double nexttime = 0, lasttime = 0;
-	static double framerate = 0, avgrate = 0;
-	static int framecount = 0;
-	static int minfps     = 9999;
-	static int maxfps     = 0;
-	double newtime;
-	char fpsstring[64];
-	int offset;
+	float		calc;
+	rgba_t		color;
+	double		newtime;
+	static double	nexttime = 0, lasttime = 0;
+	static double	framerate = 0;
+	static int	framecount = 0;
+	static int	minfps = 9999;
+	static int	maxfps = 0;
+	char		fpsstring[64];
+	int		offset;
 
-	if ( cls.state != ca_active )
-		return;
-	if ( !cl_showfps->integer || cl.background )
-		return;
+	if( cls.state != ca_active || !cl_showfps->value || cl.background )
+		return; 
 
-	switch ( cls.scrshot_action )
+	switch( cls.scrshot_action )
 	{
 	case scrshot_normal:
 	case scrshot_snapshot:
 	case scrshot_inactive:
 		break;
-	default:
-		return;
+	default: return;
 	}
 
-	newtime = Sys_DoubleTime( );
-	if ( newtime >= nexttime )
+	newtime = Sys_DoubleTime();
+	if( newtime >= nexttime )
 	{
-		framerate  = framecount / ( newtime - lasttime );
-		lasttime   = newtime;
-		nexttime   = max( nexttime + 1, lasttime - 1 );
+		framerate = framecount / (newtime - lasttime);
+		lasttime = newtime;
+		nexttime = Q_max( nexttime + 1.0, lasttime - 1.0 );
 		framecount = 0;
 	}
 
-	framecount++;
 	calc = framerate;
+	framecount++;
 
-	if ( calc == 0 )
-		return;
-
-	if ( calc < 1.0f )
+	if( calc < 1.0f )
 	{
-		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)( 1.0f / calc + 0.5f ) );
+		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)(1.0f / calc + 0.5f));
 		MakeRGBA( color, 255, 0, 0, 255 );
 	}
 	else
 	{
-		int curfps = (int)( calc + 0.5f );
+		int	curfps = (int)(calc + 0.5f);
 
-		if ( curfps < minfps )
-			minfps = curfps;
-		if ( curfps > maxfps )
-			maxfps = curfps;
+		if( curfps < minfps ) minfps = curfps;
+		if( curfps > maxfps ) maxfps = curfps;
 
-		/*if( !avgrate ) avgrate = ( maxfps - minfps ) / 2.0f;
-		else */
-		avgrate += ( calc - avgrate ) / host.framecount;
-
-		switch ( cl_showfps->integer )
-		{
-		case 3:
-			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max | ^3%.2f avg", minfps, curfps, maxfps, avgrate );
-			break;
-		case 2:
+		if( cl_showfps->value == 2 )
 			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max", minfps, curfps, maxfps );
-			break;
-		case 1:
-		default:
-			Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
-		}
-
+		else Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
 		MakeRGBA( color, 255, 255, 255, 255 );
 	}
 
 	Con_DrawStringLen( fpsstring, &offset, NULL );
-	Con_DrawString( scr_width->integer - offset - 2, 4, fpsstring, color );
-}
-
-/*
-==============
-SCR_DrawPos
-
-Draw local player position, angles and velocity
-==============
-*/
-void SCR_DrawPos( void )
-{
-	static char	msg[MAX_SYSPATH];
-	char vel[64];
-	float speed;
-	cl_entity_t *pPlayer;
-	rgba_t color;
-
-	if( cls.state != ca_active ) return;
-	if( !cl_showpos->integer || cl.background ) return;
-
-	pPlayer = CL_GetLocalPlayer();
-	speed = VectorLength( cl.frame.client.velocity );
-
-	if( cl_showpos->integer >= 2 )
-		Q_snprintf( vel, sizeof( vel ), "%.2f %.2f %2.2f", cl.frame.client.velocity[0],cl.frame.client.velocity[1], cl.frame.client.velocity[2] );
-	else
-		Q_snprintf( vel, sizeof( vel ), "%.2f", speed );
-
-	Q_snprintf( msg, MAX_SYSPATH,
-	"pos: %.2f %.2f %.2f\n"
-	"ang: %.2f %.2f %.2f\n"
-	"vel: %s", pPlayer->origin[0], pPlayer->origin[1], pPlayer->origin[2],
-					pPlayer->angles[0], pPlayer->angles[1], pPlayer->angles[2],
-					vel );
-
-	MakeRGBA( color, 255, 255, 255, 255 );
-
-	Con_DrawString( scr_width->integer / 2, 4, msg, color );
-
+	Con_DrawString( refState.width - offset - 4, height, fpsstring, color );
 }
 
 /*
@@ -180,45 +114,41 @@ void SCR_NetSpeeds( void )
 	int		x, y, height;
 	char		*p, *start, *end;
 	float		time = cl.mtime[0];
+	static int	min_svfps = 100;
+	static int	max_svfps = 0;
+	int		cur_svfps = 0;
+	static int	min_clfps = 100;
+	static int	max_clfps = 0;
+	int		cur_clfps = 0;
 	rgba_t		color;
 
-	if( !net_speeds->integer ) return;
-	if( cls.state != ca_active ) return; 
+	if( !host.allow_console )
+		return;
 
-	switch( net_speeds->integer )
+	if( !net_speeds->value || cls.state != ca_active )
+		return;
+
+	// prevent to get too big values at max
+	if( cl_serverframetime() > 0.0001f )
 	{
-	case 1:
-		if( cls.netchan.compress )
-		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\n Huffman %s\nUncompressed %s\nSplit %s\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received ), Q_memprint( cls.netchan.total_received_uncompressed ),
-						Q_memprint( cls.netchan.netsplit.total_received ) );
-		}
-		else
-		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\nUncompressed %s\nSplit %s/%s(%f)\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received_uncompressed ),
-						Q_memprint( cls.netchan.netsplit.total_received ), Q_memprint( cls.netchan.netsplit.total_received_uncompressed ),
-						((float)cls.netchan.netsplit.total_received) / cls.netchan.netsplit.total_received_uncompressed );
-		}
-		break;
-	case 2:
-		if( cls.netchan.compress )
-		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal sended to server:\nHuffman %s\nUncompressed %s\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_sended ), Q_memprint( cls.netchan.total_sended_uncompressed ));
-		}
-		else
-		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal sended to server:\nUncompressed %s\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_sended_uncompressed ));
-		}
-		break;
-	default: return;
+		cur_svfps = Q_rint( 1.0f / cl_serverframetime( ));
+		if( cur_svfps < min_svfps ) min_svfps = cur_svfps;
+		if( cur_svfps > max_svfps ) max_svfps = cur_svfps;
 	}
 
-	x = scr_width->integer - 320;
-	y = 256;
+	// prevent to get too big values at max
+	if( cl_clientframetime() > 0.0001f )
+	{
+		cur_clfps = Q_rint( 1.0f / cl_clientframetime( ));
+		if( cur_clfps < min_clfps ) min_clfps = cur_clfps;
+		if( cur_clfps > max_clfps ) max_clfps = cur_clfps;
+	}
+
+	Q_snprintf( msg, sizeof( msg ), "sv fps: ^1%4i min, ^3%4i cur, ^2%4i max\ncl fps: ^1%4i min, ^3%4i cur, ^2%4i max\nGame Time: %02d:%02d\nTotal received from server: %s\nTotal sent to server: %s\n",
+	min_svfps, cur_svfps, max_svfps, min_clfps, cur_clfps, max_clfps, (int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received ), Q_memprint( cls.netchan.total_sended ));
+
+	x = refState.width - 320;
+	y = 384;
 
 	Con_DrawStringLen( NULL, NULL, &height );
 	MakeRGBA( color, 255, 255, 255, 255 );
@@ -245,15 +175,18 @@ SCR_RSpeeds
 */
 void SCR_RSpeeds( void )
 {
-	char	msg[MAX_SYSPATH];
+	char	msg[2048];
 
-	if( R_SpeedsMessage( msg, sizeof( msg )))
+	if( !host.allow_console )
+		return;
+
+	if( ref.dllFuncs.R_SpeedsMessage( msg, sizeof( msg )))
 	{
 		int	x, y, height;
 		char	*p, *start, *end;
 		rgba_t	color;
 
-		x = scr_width->integer - 340;
+		x = refState.width - 340;
 		y = 64;
 
 		Con_DrawStringLen( NULL, NULL, &height );
@@ -268,15 +201,22 @@ void SCR_RSpeeds( void )
 			Con_DrawString( x, y, p, color );
 			y += height;
 
+			// handle '\n\n'
+			if( *p == '\n' ) 
+				y += height;
 			if( end ) p = end + 1;
 			else break;
 		} while( 1 );
 	}
 }
 
+/*
+================
+SCR_MakeLevelShot
 
-
-
+creates levelshot at next frame
+================
+*/
 void SCR_MakeLevelShot( void )
 {
 	if( cls.scrshot_request != scrshot_plaque )
@@ -286,6 +226,44 @@ void SCR_MakeLevelShot( void )
 	Cbuf_AddText( "levelshot\n" );
 }
 
+/*
+===============
+VID_WriteOverviewScript
+
+Create overview script file
+===============
+*/
+void VID_WriteOverviewScript( void )
+{
+	ref_overview_t	*ov = &clgame.overView;
+	string		filename;
+	file_t		*f;
+
+	Q_snprintf( filename, sizeof( filename ), "overviews/%s.txt", clgame.mapname );
+
+	f = FS_Open( filename, "w", false );
+	if( !f ) return;
+
+	FS_Printf( f, "// overview description file for %s.bsp\n\n", clgame.mapname );
+	FS_Print( f, "global\n{\n" );
+	FS_Printf( f, "\tZOOM\t%.2f\n", ov->flZoom );
+	FS_Printf( f, "\tORIGIN\t%.2f\t%.2f\t%.2f\n", ov->origin[0], ov->origin[1], ov->origin[2] );
+	FS_Printf( f, "\tROTATED\t%i\n", ov->rotated ? 1 : 0 );
+	FS_Print( f, "}\n\nlayer\n{\n" );
+	FS_Printf( f, "\tIMAGE\t\"overviews/%s.bmp\"\n", clgame.mapname );
+	FS_Printf( f, "\tHEIGHT\t%.2f\n", ov->zFar );	// ???
+	FS_Print( f, "}\n" );
+
+	FS_Close( f );
+}
+
+/*
+================
+SCR_MakeScreenShot
+
+create a requested screenshot type
+================
+*/
 void SCR_MakeScreenShot( void )
 {
 	qboolean	iRet = false;
@@ -293,31 +271,32 @@ void SCR_MakeScreenShot( void )
 
 	if( cls.envshot_viewsize > 0 )
 		viewsize = cls.envshot_viewsize;
-	else viewsize = cl_envshot_size->integer;
+	else viewsize = cl_envshot_size->value;
 
 	switch( cls.scrshot_action )
 	{
 	case scrshot_normal:
-		iRet = VID_ScreenShot( cls.shotname, VID_SCREENSHOT );
+		iRet = ref.dllFuncs.VID_ScreenShot( cls.shotname, VID_SCREENSHOT );
 		break;
 	case scrshot_snapshot:
-		iRet = VID_ScreenShot( cls.shotname, VID_SNAPSHOT );
+		iRet = ref.dllFuncs.VID_ScreenShot( cls.shotname, VID_SNAPSHOT );
 		break;
 	case scrshot_plaque:
-		iRet = VID_ScreenShot( cls.shotname, VID_LEVELSHOT );
+		iRet = ref.dllFuncs.VID_ScreenShot( cls.shotname, VID_LEVELSHOT );
 		break;
 	case scrshot_savegame:
-	case scrshot_demoshot:
-		iRet = VID_ScreenShot( cls.shotname, VID_MINISHOT );
+		iRet = ref.dllFuncs.VID_ScreenShot( cls.shotname, VID_MINISHOT );
 		break;
 	case scrshot_envshot:
-		iRet = VID_CubemapShot( cls.shotname, viewsize, cls.envshot_vieworg, false );
+		iRet = ref.dllFuncs.VID_CubemapShot( cls.shotname, viewsize, cls.envshot_vieworg, false );
 		break;
 	case scrshot_skyshot:
-		iRet = VID_CubemapShot( cls.shotname, viewsize, cls.envshot_vieworg, true );
+		iRet = ref.dllFuncs.VID_CubemapShot( cls.shotname, viewsize, cls.envshot_vieworg, true );
 		break;
 	case scrshot_mapshot:
-		iRet = VID_ScreenShot( cls.shotname, VID_MAPSHOT );
+		iRet = ref.dllFuncs.VID_ScreenShot( cls.shotname, VID_MAPSHOT );
+		if( iRet )
+			VID_WriteOverviewScript(); // store overview script too
 		break;
 	case scrshot_inactive:
 		return;
@@ -328,9 +307,9 @@ void SCR_MakeScreenShot( void )
 	{
 		// snapshots don't writes message about image		
 		if( cls.scrshot_action != scrshot_snapshot )
-			MsgDev( D_AICONSOLE, "Write %s\n", cls.shotname );
+			Con_Reportf( "Write %s\n", cls.shotname );
 	}
-	else MsgDev( D_ERROR, "Unable to write %s\n", cls.shotname );
+	else Con_Printf( S_ERROR "Unable to write %s\n", cls.shotname );
 
 	cls.envshot_vieworg = NULL;
 	cls.scrshot_action = scrshot_inactive;
@@ -339,15 +318,18 @@ void SCR_MakeScreenShot( void )
 	cls.shotname[0] = '\0';
 }
 
+/*
+================
+SCR_DrawPlaque
+================
+*/
 void SCR_DrawPlaque( void )
 {
-	int	levelshot;
-
-	if(( cl_allow_levelshots->integer && !cls.changelevel ) || cl.background )
+	if(( cl_allow_levelshots->value && !cls.changelevel ) || cl.background )
 	{
-		levelshot = GL_LoadTexture( cl_levelshot_name->string, NULL, 0, TF_IMAGE, NULL );
-		GL_SetRenderMode( kRenderNormal );
-		R_DrawStretchPic( 0, 0, scr_width->value, scr_height->value, 0, 0, 1, 1, levelshot );
+		int levelshot = ref.dllFuncs.GL_LoadTexture( cl_levelshot_name->string, NULL, 0, TF_IMAGE );
+		ref.dllFuncs.GL_SetRenderMode( kRenderNormal );
+		ref.dllFuncs.R_DrawStretchPic( 0, 0, refState.width, refState.height, 0, 0, 1, 1, levelshot );
 		if( !cl.background ) CL_DrawHUD( CL_LOADING );
 	}
 }
@@ -359,18 +341,34 @@ SCR_BeginLoadingPlaque
 */
 void SCR_BeginLoadingPlaque( qboolean is_background )
 {
-	S_StopAllSounds();
+	float	oldclear;
+
+	S_StopAllSounds( true );
 	cl.audio_prepped = false;			// don't play ambients
+	cl.video_prepped = false;
+	oldclear = gl_clear->value;
 
-	if( cls.disable_screen ) return;		// already set
-	if( cls.state == ca_disconnected ) return;	// if at console, don't bring up the plaque
-	if( cls.key_dest == key_console ) return;
+	if( CL_IsInMenu( ) && !cls.changedemo && !is_background )
+	{
+		if( cls.state == ca_disconnected )
+			SCR_UpdateScreen();
+	}
 
-	cls.draw_changelevel = is_background ? false : true;
+	if( cls.state == ca_disconnected || cls.disable_screen )
+		return; // already set
+
+	if( cls.key_dest == key_console )
+		return;
+
+	gl_clear->value = 0.0f;
+	if( is_background ) IN_MouseSavePos( );
+	cls.draw_changelevel = !is_background;
 	SCR_UpdateScreen();
 	cls.disable_screen = host.realtime;
 	cls.disable_servercount = cl.servercount;
 	cl.background = is_background;		// set right state before svc_serverdata is came
+	gl_clear->value = oldclear;
+//	SNDDMA_LockSound();
 }
 
 /*
@@ -382,6 +380,7 @@ void SCR_EndLoadingPlaque( void )
 {
 	cls.disable_screen = 0.0f;
 	Con_ClearNotify();
+//	SNDDMA_UnlockSound();
 }
 
 /*
@@ -405,7 +404,7 @@ SCR_DirtyScreen
 void SCR_DirtyScreen( void )
 {
 	SCR_AddDirtyPoint( 0, 0 );
-	SCR_AddDirtyPoint( scr_width->integer - 1, scr_height->integer - 1 );
+	SCR_AddDirtyPoint( refState.width - 1, refState.height - 1 );
 }
 
 /*
@@ -418,7 +417,7 @@ void SCR_TileClear( void )
 	int	i, top, bottom, left, right;
 	dirty_t	clear;
 
-	if( scr_viewsize->integer >= 120 )
+	if( scr_viewsize->value >= 120 )
 		return; // full screen rendering
 
 	// erase rect will be the union of the past three frames
@@ -448,16 +447,16 @@ void SCR_TileClear( void )
 	if( clear.y2 <= clear.y1 )
 		return; // nothing disturbed
 
-	top = cl.refdef.viewport[1];
-	bottom = top + cl.refdef.viewport[3] - 1;
-	left = cl.refdef.viewport[0];
-	right = left + cl.refdef.viewport[2] - 1;
+	top = clgame.viewport[1];
+	bottom = top + clgame.viewport[3] - 1;
+	left = clgame.viewport[0];
+	right = left + clgame.viewport[2] - 1;
 
 	if( clear.y1 < top )
 	{	
 		// clear above view screen
 		i = clear.y2 < top-1 ? clear.y2 : top - 1;
-		R_DrawTileClear( clear.x1, clear.y1, clear.x2 - clear.x1 + 1, i - clear.y1 + 1 );
+		ref.dllFuncs.R_DrawTileClear( cls.tileImage, clear.x1, clear.y1, clear.x2 - clear.x1 + 1, i - clear.y1 + 1 );
 		clear.y1 = top;
 	}
 
@@ -465,7 +464,7 @@ void SCR_TileClear( void )
 	{	
 		// clear below view screen
 		i = clear.y1 > bottom + 1 ? clear.y1 : bottom + 1;
-		R_DrawTileClear( clear.x1, i, clear.x2 - clear.x1 + 1, clear.y2 - i + 1 );
+		ref.dllFuncs.R_DrawTileClear( cls.tileImage, clear.x1, i, clear.x2 - clear.x1 + 1, clear.y2 - i + 1 );
 		clear.y2 = bottom;
 	}
 
@@ -473,7 +472,7 @@ void SCR_TileClear( void )
 	{
 		// clear left of view screen
 		i = clear.x2 < left - 1 ? clear.x2 : left - 1;
-		R_DrawTileClear( clear.x1, clear.y1, i - clear.x1 + 1, clear.y2 - clear.y1 + 1 );
+		ref.dllFuncs.R_DrawTileClear( cls.tileImage, clear.x1, clear.y1, i - clear.x1 + 1, clear.y2 - clear.y1 + 1 );
 		clear.x1 = left;
 	}
 
@@ -481,7 +480,7 @@ void SCR_TileClear( void )
 	{	
 		// clear left of view screen
 		i = clear.x1 > right + 1 ? clear.x1 : right + 1;
-		R_DrawTileClear( i, clear.y1, clear.x2 - i + 1, clear.y2 - clear.y1 + 1 );
+		ref.dllFuncs.R_DrawTileClear( cls.tileImage, i, clear.y1, clear.x2 - i + 1, clear.y2 - clear.y1 + 1 );
 		clear.x2 = right;
 	}
 }
@@ -501,12 +500,15 @@ void SCR_UpdateScreen( void )
 	switch( cls.state )
 	{
 	case ca_disconnected:
+		Con_RunConsole ();
 		break;
 	case ca_connecting:
 	case ca_connected:
+	case ca_validate:
 		SCR_DrawPlaque();
 		break;
 	case ca_active:
+		Con_RunConsole ();
 		V_RenderView();
 		break;
 	case ca_cinematic:
@@ -520,43 +522,63 @@ void SCR_UpdateScreen( void )
 	V_PostRender();
 }
 
-void SCR_LoadCreditsFont( void )
+qboolean SCR_LoadFixedWidthFont( const char *fontname )
 {
-	int	fontWidth;
-	dword crc = 0;
-	const char *path = "gfx/creditsfont.fnt";
+	int	i, fontWidth;
+
+	if( cls.creditsFont.valid )
+		return true; // already loaded
+
+	if( !FS_FileExists( fontname, false ))
+		return false;
+
+	cls.creditsFont.hFontTexture = ref.dllFuncs.GL_LoadTexture( fontname, NULL, 0, TF_IMAGE|TF_KEEP_SOURCE );
+	R_GetTextureParms( &fontWidth, NULL, cls.creditsFont.hFontTexture );
+	cls.creditsFont.charHeight = clgame.scrInfo.iCharHeight = fontWidth / 16;
+	cls.creditsFont.type = FONT_FIXED;
+	cls.creditsFont.valid = true;
+
+	// build fixed rectangles
+	for( i = 0; i < 256; i++ )
+	{
+		cls.creditsFont.fontRc[i].left = (i * (fontWidth / 16)) % fontWidth;
+		cls.creditsFont.fontRc[i].right = cls.creditsFont.fontRc[i].left + fontWidth / 16;
+		cls.creditsFont.fontRc[i].top = (i / 16) * (fontWidth / 16);
+		cls.creditsFont.fontRc[i].bottom = cls.creditsFont.fontRc[i].top + fontWidth / 16;
+		cls.creditsFont.charWidths[i] = clgame.scrInfo.charWidths[i] = fontWidth / 16;
+	}
+
+	return true;
+}
+
+qboolean SCR_LoadVariableWidthFont( const char *fontname )
+{
+	int	i, fontWidth;
 	byte	*buffer;
 	fs_offset_t	length;
 	qfont_t	*src;
 
-	if( cls.creditsFont.valid ) return; // already loaded
+	if( cls.creditsFont.valid )
+		return true; // already loaded
 
-	// replace default gfx.wad textures by current charset's font
-	if( !CRC32_File( &crc, "gfx.wad" ) || crc == 0x49eb9f16 )
-	{
-		const char *path2 = va("creditsfont_%s.fnt", Cvar_VariableString( "con_charset" ) );
-		if( FS_FileExists( path2, false ) )
-			path = path2;
-	}
+	if( !FS_FileExists( fontname, false ))
+		return false;
 
-	cls.creditsFont.hFontTexture = GL_LoadTexture( path, NULL, 0, TF_IMAGE, NULL );
+	cls.creditsFont.hFontTexture = ref.dllFuncs.GL_LoadTexture( fontname, NULL, 0, TF_IMAGE );
 	R_GetTextureParms( &fontWidth, NULL, cls.creditsFont.hFontTexture );
 
-	if( fontWidth == 0 ) return;
-	
-	// setup creditsfont
-	// half-life font with variable chars width
-	buffer = FS_LoadFile( path, &length, false );
+	// half-life font with variable chars witdh
+	buffer = FS_LoadFile( fontname, &length, false );
 
-	if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
+	// setup creditsfont	
+	if( buffer && length >= sizeof( qfont_t ))
 	{
-		int	i;
-
 		src = (qfont_t *)buffer;
 		cls.creditsFont.charHeight = clgame.scrInfo.iCharHeight = src->rowheight;
+		cls.creditsFont.type = FONT_VARIABLE;
 
 		// build rectangles
-		for( i = 0; i < NUM_GLYPHS; i++ )
+		for( i = 0; i < 256; i++ )
 		{
 			cls.creditsFont.fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
 			cls.creditsFont.fontRc[i].right = cls.creditsFont.fontRc[i].left + src->fontinfo[i].charwidth;
@@ -567,55 +589,108 @@ void SCR_LoadCreditsFont( void )
 		cls.creditsFont.valid = true;
 	}
 	if( buffer ) Mem_Free( buffer );
+
+	return true;
 }
 
+/*
+================
+SCR_LoadCreditsFont
+
+INTERNAL RESOURCE
+================
+*/
+void SCR_LoadCreditsFont( void )
+{
+	const char *path = "gfx/creditsfont.fnt";
+	dword crc;
+
+	// replace default gfx.wad textures by current charset's font
+	if( !CRC32_File( &crc, "gfx.wad" ) || crc == 0x49eb9f16 )
+	{
+		const char *path2 = va("creditsfont_%s.fnt", Cvar_VariableString( "con_charset" ) );
+		if( FS_FileExists( path2, false ) )
+			path = path2;
+	}
+
+	if( !SCR_LoadVariableWidthFont( path ))
+	{
+		if( !SCR_LoadFixedWidthFont( "gfx/conchars" ))
+			Con_DPrintf( S_ERROR "failed to load HUD font\n" );
+	}
+}
+
+/*
+================
+SCR_InstallParticlePalette
+
+INTERNAL RESOURCE
+================
+*/
 void SCR_InstallParticlePalette( void )
 {
 	rgbdata_t	*pic;
 	int	i;
 
 	// first check 'palette.lmp' then 'palette.pal'
-	pic = FS_LoadImage( "gfx/palette.lmp", NULL, 0 );
-	if( !pic ) pic = FS_LoadImage( "gfx/palette.pal", NULL, 0 );
+	pic = FS_LoadImage( DEFAULT_INTERNAL_PALETTE, NULL, 0 );
+	if( !pic ) pic = FS_LoadImage( DEFAULT_EXTERNAL_PALETTE, NULL, 0 );
 
 	// NOTE: imagelib required this fakebuffer for loading internal palette
-	if( !pic ) pic = FS_LoadImage( "#valve.pal", ((byte *)&i), 768 );
+	if( !pic ) pic = FS_LoadImage( "#valve.pal", (byte *)&i, 768 );
 
 	if( pic )
 	{
 		for( i = 0; i < 256; i++ )
 		{
-			clgame.palette[i][0] = pic->palette[i*4+0];
-			clgame.palette[i][1] = pic->palette[i*4+1];
-			clgame.palette[i][2] = pic->palette[i*4+2];
+			clgame.palette[i].r = pic->palette[i*4+0];
+			clgame.palette[i].g = pic->palette[i*4+1];
+			clgame.palette[i].b = pic->palette[i*4+2];
 		}
 		FS_FreeImage( pic );
 	}
 	else
 	{
+		// someone deleted internal palette from code...
 		for( i = 0; i < 256; i++ )
 		{
-			clgame.palette[i][0] = i;
-			clgame.palette[i][1] = i;
-			clgame.palette[i][2] = i;
+			clgame.palette[i].r = i;
+			clgame.palette[i].g = i;
+			clgame.palette[i].b = i;
 		}
-		MsgDev( D_WARN, "CL_InstallParticlePalette: failed. Force to grayscale\n" );
 	}
 }
 
+/*
+================
+SCR_RegisterTextures
+
+INTERNAL RESOURCE
+================
+*/
 void SCR_RegisterTextures( void )
 {
-	cls.fillImage = GL_LoadTexture( "*white", NULL, 0, TF_IMAGE, NULL ); // used for FillRGBA
-	cls.particleImage = GL_LoadTexture( "*particle", NULL, 0, TF_IMAGE, NULL );
-
 	// register gfx.wad images
-	cls.oldParticleImage = GL_LoadTexture("*oldparticle", NULL, 0, TF_IMAGE, NULL);
-	cls.pauseIcon = GL_LoadTexture( "gfx.wad/paused.lmp", NULL, 0, TF_IMAGE, NULL );
-	if( cl_allow_levelshots->integer )
-		cls.loadingBar = GL_LoadTexture( "gfx.wad/lambda.lmp", NULL, 0, TF_IMAGE|TF_LUMINANCE, NULL );
-	else cls.loadingBar = GL_LoadTexture( "gfx.wad/lambda.lmp", NULL, 0, TF_IMAGE, NULL ); 
-	cls.tileImage = GL_LoadTexture( "gfx.wad/backtile.lmp", NULL, 0, TF_UNCOMPRESSED|TF_NOPICMIP|TF_NOMIPMAP, NULL );
-	cls.hChromeSprite = pfnSPR_Load( "sprites/shellchrome.spr" );
+
+	if( FS_FileExists( "gfx/paused.lmp", false ))
+		cls.pauseIcon = ref.dllFuncs.GL_LoadTexture( "gfx/paused.lmp", NULL, 0, TF_IMAGE );
+	else if( FS_FileExists( "gfx/pause.lmp", false ))
+		cls.pauseIcon = ref.dllFuncs.GL_LoadTexture( "gfx/pause.lmp", NULL, 0, TF_IMAGE );
+
+	if( FS_FileExists( "gfx/lambda.lmp", false ))
+	{
+		if( cl_allow_levelshots->value )
+			cls.loadingBar = ref.dllFuncs.GL_LoadTexture( "gfx/lambda.lmp", NULL, 0, TF_IMAGE|TF_LUMINANCE );
+		else cls.loadingBar = ref.dllFuncs.GL_LoadTexture( "gfx/lambda.lmp", NULL, 0, TF_IMAGE );
+	}
+	else if( FS_FileExists( "gfx/loading.lmp", false ))
+	{
+		if( cl_allow_levelshots->value )
+			cls.loadingBar = ref.dllFuncs.GL_LoadTexture( "gfx/loading.lmp", NULL, 0, TF_IMAGE|TF_LUMINANCE );
+		else cls.loadingBar = ref.dllFuncs.GL_LoadTexture( "gfx/loading.lmp", NULL, 0, TF_IMAGE );
+	}
+	
+	cls.tileImage = ref.dllFuncs.GL_LoadTexture( "gfx/backtile.lmp", NULL, 0, TF_NOMIPMAP );
 }
 
 /*
@@ -627,7 +702,7 @@ Keybinding command
 */
 void SCR_SizeUp_f( void )
 {
-	Cvar_SetFloat( "viewsize", min( scr_viewsize->value + 10, 120 ));
+	Cvar_SetValue( "viewsize", Q_min( scr_viewsize->value + 10, 120 ));
 }
 
 
@@ -640,7 +715,7 @@ Keybinding command
 */
 void SCR_SizeDown_f( void )
 {
-	Cvar_SetFloat( "viewsize", max( scr_viewsize->value - 10, 30 ));
+	Cvar_SetValue( "viewsize", Q_max( scr_viewsize->value - 10, 30 ));
 }
 
 /*
@@ -650,24 +725,23 @@ SCR_VidInit
 */
 void SCR_VidInit( void )
 {
-	Q_memset( &clgame.ds, 0, sizeof( clgame.ds )); // reset a draw state
-	Q_memset( &menu.ds, 0, sizeof( menu.ds )); // reset a draw state
-	Q_memset( &clgame.centerPrint, 0, sizeof( clgame.centerPrint ));
+	memset( &clgame.ds, 0, sizeof( clgame.ds )); // reset a draw state
+	memset( &gameui.ds, 0, sizeof( gameui.ds )); // reset a draw state
+	memset( &clgame.centerPrint, 0, sizeof( clgame.centerPrint ));
 
-	if( menu.globals )
+	// update screen sizes for menu
+	if( gameui.globals )
 	{
-		// update screen sizes for menu
-		menu.globals->scrWidth = scr_width->integer;
-		menu.globals->scrHeight = scr_height->integer;
+		gameui.globals->scrWidth = refState.width;
+		gameui.globals->scrHeight = refState.height;
 	}
 
-	SCR_RebuildGammaTable();
-	VGui_Startup (scr_width->integer, scr_height->integer);
+	VGui_Startup( NULL, refState.width, refState.height ); // initialized already, so pass NULL
 
-	clgame.load_sequence++; // now all hud sprites are invalid
+	CL_ClearSpriteTextures(); // now all hud sprites are invalid
 	
 	// vid_state has changed
-	if( menu.hInstance ) menu.dllFuncs.pfnVidInit();
+	if( gameui.hInstance ) gameui.dllFuncs.pfnVidInit();
 	if( clgame.hInstance ) clgame.dllFuncs.pfnVidInit();
 
 	// restart console size
@@ -683,45 +757,39 @@ void SCR_Init( void )
 {
 	if( scr_init ) return;
 
-	MsgDev( D_NOTE, "SCR_Init()\n" );
 	scr_centertime = Cvar_Get( "scr_centertime", "2.5", 0, "centerprint hold time" );
 	cl_levelshot_name = Cvar_Get( "cl_levelshot_name", "*black", 0, "contains path to current levelshot" );
-	cl_allow_levelshots = Cvar_Get( "allow_levelshots", "0", CVAR_ARCHIVE, "allow engine to use indivdual levelshots instead of 'loading' image" );
+	cl_allow_levelshots = Cvar_Get( "allow_levelshots", "0", FCVAR_ARCHIVE, "allow engine to use indivdual levelshots instead of 'loading' image" );
 	scr_loading = Cvar_Get( "scr_loading", "0", 0, "loading bar progress" );
-	scr_download = Cvar_Get( "scr_download", "0", 0, "downloading bar progress" );
+	scr_download = Cvar_Get( "scr_download", "-1", 0, "downloading bar progress" );
 	cl_testlights = Cvar_Get( "cl_testlights", "0", 0, "test dynamic lights" );
-	cl_envshot_size = Cvar_Get( "cl_envshot_size", "256", CVAR_ARCHIVE, "envshot size of cube side" );
-	scr_dark = Cvar_Get( "v_dark", "0", 0, "starts level from dark screen" );
-	scr_viewsize = Cvar_Get( "viewsize", "120", CVAR_ARCHIVE, "screen size" );
+	cl_envshot_size = Cvar_Get( "cl_envshot_size", "256", FCVAR_ARCHIVE, "envshot size of cube side" );
+	v_dark = Cvar_Get( "v_dark", "0", 0, "starts level from dark screen" );
+	scr_viewsize = Cvar_Get( "viewsize", "120", FCVAR_ARCHIVE, "screen size" );
+	
 	// register our commands
-	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f, "turn quickly and print rendering statistcs" );
 	Cmd_AddCommand( "skyname", CL_SetSky_f, "set new skybox by basename" );
+	Cmd_AddCommand( "loadsky", CL_SetSky_f, "set new skybox by basename" );
 	Cmd_AddCommand( "viewpos", SCR_Viewpos_f, "prints current player origin" );
 	Cmd_AddCommand( "sizeup", SCR_SizeUp_f, "screen size up to 10 points" );
 	Cmd_AddCommand( "sizedown", SCR_SizeDown_f, "screen size down to 10 points" );
 
-	Com_ResetLibraryError();
-
-	if( host.state != HOST_RESTART && !UI_LoadProgs( ))
+	if( !UI_LoadProgs( ))
 	{
-		Sys_Warn( "can't initialize menu library:\n%s", Com_GetLibraryError() ); // this is not fatal for us
-		// console still can't be toggled in-game without extra cmd-line switch
-		if( !host.developer ) host.developer = 1; // we need console, because menu is missing
+		Con_Printf( S_ERROR "can't initialize gameui.dll\n" ); // there is non fatal for us
+		host.allow_console = true; // we need console, because menu is missing
 	}
 
+	SCR_VidInit();
 	SCR_LoadCreditsFont ();
-	SCR_InstallParticlePalette ();
 	SCR_RegisterTextures ();
+	SCR_InstallParticlePalette ();
 	SCR_InitCinematic();
 	CL_InitNetgraph();
-	SCR_VidInit();
 
-	if( host.state != HOST_RESTART )
-	{
-		if( host.developer && Sys_CheckParm( "-toconsole" ))
-			Cbuf_AddText( "toggleconsole\n" );
-		else UI_SetActiveMenu( true );
-	}
+	if( host.allow_console && Sys_CheckParm( "-toconsole" ))
+		Cbuf_AddText( "toggleconsole\n" );
+	else UI_SetActiveMenu( true );
 
 	scr_init = true;
 }
@@ -730,17 +798,11 @@ void SCR_Shutdown( void )
 {
 	if( !scr_init ) return;
 
-	MsgDev( D_NOTE, "SCR_Shutdown()\n" );
 	Cmd_RemoveCommand( "timerefresh" );
 	Cmd_RemoveCommand( "skyname" );
 	Cmd_RemoveCommand( "viewpos" );
-	Cmd_RemoveCommand( "sizeup" );
-	Cmd_RemoveCommand( "sizedown" );
 	UI_SetActiveMenu( false );
+	UI_UnloadProgs();
 
-	if( host.state != HOST_RESTART )
-		UI_UnloadProgs();
-	cls.creditsFont.valid = false;
 	scr_init = false;
 }
-#endif // XASH_DEDICATED

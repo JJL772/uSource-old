@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "imagelib.h"
+#include "mathlib.h"
 
 #define BI_SIZE	40 //size of bitmap info header.
 #ifndef _WIN32
@@ -32,47 +33,35 @@ typedef struct tagRGBQUAD {
 Image_LoadBMP
 =============
 */
-qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
+qboolean Image_LoadBMP( const char *name, const byte *buffer, fs_offset_t filesize )
 {
-	byte	*buf_p, *pixbuf, magic[2];
+	byte	*buf_p, *pixbuf;
 	byte	palette[256][4];
 	int	i, columns, column, rows, row, bpp = 1;
-	int	padSize = 0, bps;
+	int	cbPalBytes = 0, padSize = 0, bps = 0;
+	int	reflectivity[3] = { 0, 0, 0 };
 	qboolean	load_qfont = false;
 	bmp_t	bhdr;
 
-	if( filesize < sizeof( bhdr )) return false; 
+	if( filesize < sizeof( bhdr )) return false;
 
 	buf_p = (byte *)buffer;
-	Q_memcpy( magic, buf_p, sizeof( magic ) );
-	buf_p += sizeof( magic );	// move pointer
-	Q_memcpy( &bhdr, buf_p, sizeof( bmp_t ));
+	memcpy( &bhdr, buf_p, sizeof( bmp_t ));
 	buf_p += sizeof( bmp_t );
-
-	LittleLongSW(bhdr.fileSize);
-	LittleLongSW(bhdr.bitmapDataOffset);
-	LittleLongSW(bhdr.bitmapHeaderSize);
-	LittleLongSW(bhdr.width);
-	LittleLongSW(bhdr.height);
-	LittleShortSW(bhdr.planes);
-	LittleShortSW(bhdr.bitsPerPixel);
-	LittleLongSW(bhdr.compression);
-	LittleLongSW(bhdr.bitmapDataSize);
-	LittleLongSW(bhdr.colors);
 
 	// bogus file header check
 	if( bhdr.reserved0 != 0 ) return false;
 	if( bhdr.planes != 1 ) return false;
 
-	if( Q_memcmp( magic, "BM", 2 ))
+	if( memcmp( bhdr.id, "BM", 2 ))
 	{
-		MsgDev( D_ERROR, "Image_LoadBMP: only Windows-style BMP files supported (%s)\n", name );
+		Con_DPrintf( S_ERROR "Image_LoadBMP: only Windows-style BMP files supported (%s)\n", name );
 		return false;
 	} 
 
 	if( bhdr.bitmapHeaderSize != 0x28 )
 	{
-		MsgDev( D_ERROR, "Image_LoadBMP: invalid header size %i\n", bhdr.bitmapHeaderSize );
+		Con_DPrintf( S_ERROR "Image_LoadBMP: invalid header size %i\n", bhdr.bitmapHeaderSize );
 		return false;
 	}
 
@@ -80,13 +69,13 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 	if( bhdr.fileSize != filesize )
 	{
 		// Sweet Half-Life issues. splash.bmp have bogus filesize
-		MsgDev( D_WARN, "Image_LoadBMP: %s have incorrect file size %i should be %i\n", name, filesize, bhdr.fileSize );
+		Con_Reportf( S_WARN "Image_LoadBMP: %s have incorrect file size %li should be %i\n", name, filesize, bhdr.fileSize );
 	}
 
 	// bogus compression?  Only non-compressed supported.
 	if( bhdr.compression != BI_RGB ) 
 	{
-		MsgDev( D_ERROR, "Image_LoadBMP: only uncompressed BMP files supported (%s)\n", name );
+		Con_DPrintf( S_ERROR "Image_LoadBMP: only uncompressed BMP files supported (%s)\n", name );
 		return false;
 	}
 
@@ -96,8 +85,8 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 	if( !Image_ValidSize( name ))
 		return false;
 
-	// special hack for loading qfont
-	if( !Q_strncmp( "#XASH_SYSTEMFONT_001", name, 20 ))
+	// special case for loading qfont (menu font)
+	if( !Q_strncmp( name, "#XASH_SYSTEMFONT_001", 20 ))
 	{
 		// NOTE: same as system font we can use 4-bit bmps only
 		// step1: move main layer into alpha-channel (give grayscale from RED channel)
@@ -110,21 +99,26 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 
 	if( bhdr.bitsPerPixel <= 8 )
 	{
-		int cbPalBytes;
-
 		// figure out how many entries are actually in the table
 		if( bhdr.colors == 0 )
 		{
 			bhdr.colors = 256;
-			cbPalBytes = (1 << bhdr.bitsPerPixel) * sizeof( RGBQUAD );
+			cbPalBytes = ( 1 << bhdr.bitsPerPixel ) * sizeof( RGBQUAD );
 		}
 		else cbPalBytes = bhdr.colors * sizeof( RGBQUAD );
-
-		Q_memcpy( palette, buf_p, cbPalBytes );
-		buf_p += cbPalBytes;
 	}
 
-	if( host.overview_loading && bhdr.bitsPerPixel == 8 )
+	memcpy( palette, buf_p, cbPalBytes );
+
+	// setup gradient alpha for player decal
+	if( !Q_strncmp( name, "#logo", 5 ))
+	{
+		for( i = 0; i < bhdr.colors; i++ )
+			palette[i][3] = i;
+		image.flags |= IMAGE_HAS_ALPHA;
+	}
+
+	if( Image_CheckFlag( IL_OVERVIEW ) && bhdr.bitsPerPixel == 8 )
 	{
 		// convert green background into alpha-layer, make opacity for all other entries
 		for( i = 0; i < bhdr.colors; i++ )
@@ -140,9 +134,8 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 
 	if( Image_CheckFlag( IL_KEEP_8BIT ) && bhdr.bitsPerPixel == 8 )
 	{
-		pixbuf = image.palette = Mem_Alloc( host.imagepool, 1024 );
-		image.flags |= IMAGE_HAS_COLOR;
- 
+		pixbuf = image.palette = Mem_Malloc( host.imagepool, 1024 );
+
 		// bmp have a reversed palette colors
 		for( i = 0; i < bhdr.colors; i++ )
 		{
@@ -160,8 +153,10 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 		bpp = 4;
 	}
 
+	buf_p += cbPalBytes;
 	image.size = image.width * image.height * bpp;
-	image.rgba = Mem_Alloc( host.imagepool, image.size );
+	image.rgba = Mem_Malloc( host.imagepool, image.size );
+	bps = image.width * (bhdr.bitsPerPixel >> 3);
 
 	switch( bhdr.bitsPerPixel )
 	{
@@ -176,7 +171,6 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 		break;
 	case 8:
 	case 24:
-		bps = image.width * (bhdr.bitsPerPixel >> 3);
 		padSize = ( 4 - ( bps % 4 )) % 4;
 		break;
 	}
@@ -187,7 +181,7 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 
 		for( column = 0; column < columns; column++ )
 		{
-			byte	red = '\0', green = '\0', blue = '\0', alpha;
+			byte	red, green, blue, alpha;
 			word	shortPixel;
 			int	c, k, palIndex;
 
@@ -288,18 +282,24 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 				if( alpha != 255 ) image.flags |= IMAGE_HAS_ALPHA;
 				break;
 			default:
-				MsgDev( D_ERROR, "Image_LoadBMP: illegal pixel_size (%s)\n", name );
 				Mem_Free( image.palette );
 				Mem_Free( image.rgba );
 				return false;
 			}
-			if( !Image_CheckFlag( IL_KEEP_8BIT ) && ( red != green || green != blue ))
+
+			if( red != green || green != blue )
 				image.flags |= IMAGE_HAS_COLOR;
+
+			reflectivity[0] += red;
+			reflectivity[1] += green;
+			reflectivity[2] += blue;
 		}
 		buf_p += padSize;	// actual only for 4-bit bmps
 	}
 
+	VectorDivide( reflectivity, ( image.width * image.height ), image.fogParams );
 	if( image.palette ) Image_GetPaletteBMP( image.palette );
+	image.depth = 1;
 
 	return true;
 }
@@ -307,18 +307,18 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 {
 	file_t		*pfile = NULL;
-	bmp_t		bhdr;
-	size_t		total_size = 0, cur_size;
+	size_t		total_size, cur_size;
 	RGBQUAD		rgrgbPalette[256];
-	uint		cbBmpBits;
-	byte		*clipbuf = NULL, magic[2];
+	dword		cbBmpBits;
+	byte		*clipbuf = NULL;
 	byte		*pb, *pbBmpBits;
-	uint		cbPalBytes;
-	uint		biTrueWidth;
+	dword		cbPalBytes;
+	dword		biTrueWidth;
 	int		pixel_size;
 	int		i, x, y;
+	bmp_t	hdr;
 
-	if( FS_FileExists( name, false ) && !Image_CheckFlag( IL_ALLOW_OVERWRITE ) && !host.write_to_clipboard )
+	if( FS_FileExists( name, false ) && !Image_CheckFlag( IL_ALLOW_OVERWRITE ) )
 		return false; // already existed
 
 	// bogus parameter check
@@ -339,77 +339,45 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 		pixel_size = 4;
 		break;	
 	default:
-		MsgDev( D_ERROR, "Image_SaveBMP: unsupported image type %s\n", PFDesc[pix->type].name );
 		return false;
 	}
 
-	if( !host.write_to_clipboard )
-	{
-		pfile = FS_Open( name, "wb", false );
-		if( !pfile ) return false;
-	}
+	pfile = FS_Open( name, "wb", false );
+	if( !pfile ) return false;
 
 	// NOTE: align transparency column will sucessfully removed
 	// after create sprite or lump image, it's just standard requiriments 
-	//biTrueWidth = pix->width;
-	biTrueWidth = ((pix->width + 3) & ~3); // What is this?
+	biTrueWidth = ((pix->width + 3) & ~3);
 	cbBmpBits = biTrueWidth * pix->height * pixel_size;
 	cbPalBytes = ( pixel_size == 1 ) ? 256 * sizeof( RGBQUAD ) : 0;
 
 	// Bogus file header check
-	magic[0] = 'B';
-	magic[1] = 'M';
-	bhdr.fileSize = sizeof( magic ) + sizeof( bmp_t ) + cbBmpBits + cbPalBytes;
-	bhdr.reserved0 = 0;
-	bhdr.bitmapDataOffset = sizeof( magic ) + sizeof( bmp_t ) + cbPalBytes;
-	bhdr.bitmapHeaderSize = BI_SIZE;
-	bhdr.width = biTrueWidth;
-	bhdr.height = pix->height;
-	bhdr.planes = 1;
-	bhdr.bitsPerPixel = pixel_size * 8;
-	bhdr.compression = BI_RGB;
-	bhdr.bitmapDataSize = cbBmpBits;
-	bhdr.hRes = 0;
-	bhdr.vRes = 0;
-	bhdr.colors = ( pixel_size == 1 ) ? 256 : 0;
-	bhdr.importantColors = 0;
+	hdr.id[0] = 'B';
+	hdr.id[1] = 'M';
+	hdr.fileSize =  sizeof( hdr ) + cbBmpBits + cbPalBytes;
+	hdr.bitmapDataOffset = sizeof( hdr ) + cbPalBytes;
+	hdr.bitmapHeaderSize = BI_SIZE;
+	hdr.width = biTrueWidth;
+	hdr.height = pix->height;
+	hdr.planes = 1;
+	hdr.bitsPerPixel = pixel_size * 8;
+	hdr.compression = BI_RGB;
+	hdr.bitmapDataSize = cbBmpBits;
+	hdr.hRes = 0;
+	hdr.vRes = 0;
+	hdr.colors = ( pixel_size == 1 ) ? 256 : 0;
+	hdr.importantColors = 0;
 
-	if( host.write_to_clipboard )
-	{
-		// NOTE: the cbPalBytes may be 0
-		total_size = BI_SIZE + cbPalBytes + cbBmpBits;
-		clipbuf = Z_Malloc( total_size );
-		Q_memcpy( clipbuf, (byte *)&bhdr + ( sizeof( bmp_t ) - BI_SIZE ), BI_SIZE );
-		cur_size = BI_SIZE;
-	}
-	else
-	{
-		bmp_t sw= bhdr;
-		// Write header
-		FS_Write( pfile, magic, sizeof( magic ));
-		LittleLongSW(sw.fileSize);
-		LittleLongSW(sw.bitmapDataOffset);
-		LittleLongSW(sw.bitmapHeaderSize);
-		LittleLongSW(sw.width);
-		LittleLongSW(sw.height);
-		LittleShortSW(sw.planes);
-		LittleShortSW(sw.bitsPerPixel);
-		LittleLongSW(sw.compression);
-		LittleLongSW(sw.bitmapDataSize);
-		LittleLongSW(sw.colors);
+	FS_Write( pfile, &hdr, sizeof( bmp_t ));
 
-
-		FS_Write( pfile, &sw, sizeof( bmp_t ));
-	}
-
-	pbBmpBits = Mem_Alloc( host.imagepool, cbBmpBits );
+	pbBmpBits = Mem_Malloc( host.imagepool, cbBmpBits );
 
 	if( pixel_size == 1 )
 	{
 		pb = pix->palette;
 
 		// copy over used entries
-		for( i = 0; i < (int)bhdr.colors; i++ )
+		for( i = 0; i < (int)hdr.colors; i++ )
 		{
 			rgrgbPalette[i].rgbRed = *pb++;
 			rgrgbPalette[i].rgbGreen = *pb++;
@@ -422,23 +390,15 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 			else rgrgbPalette[i].rgbReserved = 0;
 		}
 
-		if( host.write_to_clipboard )
-		{
-			Q_memcpy( clipbuf + cur_size, rgrgbPalette, cbPalBytes );
-			cur_size += cbPalBytes;
-		}
-		else
-		{
-			// write palette
-			FS_Write( pfile, rgrgbPalette, cbPalBytes );
-		}
+		// write palette
+		FS_Write( pfile, rgrgbPalette, cbPalBytes );
 	}
 
 	pb = pix->buffer;
 
-	for( y = 0; y < bhdr.height; y++ )
+	for( y = 0; y < hdr.height; y++ )
 	{
-		i = ( bhdr.height - 1 - y ) * ( bhdr.width );
+		i = (hdr.height - 1 - y ) * (hdr.width);
 
 		for( x = 0; x < pix->width; x++ )
 		{
@@ -463,19 +423,9 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 		pb += pix->width * pixel_size;
 	}
 
-	if( host.write_to_clipboard )
-	{
-		Q_memcpy( clipbuf + cur_size, pbBmpBits, cbBmpBits );
-		cur_size += cbBmpBits;
-		Sys_SetClipboardData( clipbuf, total_size );
-		Z_Free( clipbuf );
-	}
-	else
-	{
-		// write bitmap bits (remainder of file)
-		FS_Write( pfile, pbBmpBits, cbBmpBits );
-		FS_Close( pfile );
-	}
+	// write bitmap bits (remainder of file)
+	FS_Write( pfile, pbBmpBits, cbBmpBits );
+	FS_Close( pfile );
 
 	Mem_Free( pbBmpBits );
 

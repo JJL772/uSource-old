@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #include "common.h"
+#include "netchan.h"
 
 typedef struct master_s
 {
@@ -53,7 +54,7 @@ qboolean NET_SendToMasters( netsrc_t sock, size_t len, const void *data )
 
 		if( !res )
 		{
-			MsgDev( D_INFO, "Can't resolve adr: %s\n", list->address );
+			Con_Reportf( "Can't resolve adr: %s\n", list->address );
 			list->sent = true;
 			continue;
 		}
@@ -91,7 +92,7 @@ NET_AddMaster
 Add master to the list
 ========================
 */
-static void NET_AddMaster( char *addr, qboolean save )
+static void NET_AddMaster( const char *addr, qboolean save )
 {
 	master_t *master, *last;
 
@@ -101,7 +102,7 @@ static void NET_AddMaster( char *addr, qboolean save )
 			return;
 	}
 
-	master = Mem_Alloc( host.mempool, sizeof( master_t ) );
+	master = Mem_Malloc( host.mempool, sizeof( master_t ) );
 	Q_strncpy( master->address, addr, MAX_STRING );
 	master->sent = false;
 	master->save = save;
@@ -118,7 +119,7 @@ static void NET_AddMaster_f( void )
 {
 	if( Cmd_Argc() != 2 )
 	{
-		Msg( "Usage: addmaster <address>\n");
+		Msg( S_USAGE "addmaster <address>\n");
 		return;
 	}
 
@@ -171,18 +172,21 @@ NET_LoadMasters
 Load master server list from xashcomm.lst
 ========================
 */
-void NET_LoadMasters( )
+static void NET_LoadMasters( void )
 {
-	byte *afile, *pfile;
-	char token[4096];
+	byte *afile;
+	char *pfile;
+	char token[MAX_TOKEN];
 
-	pfile = afile = FS_LoadFile( "xashcomm.lst", NULL, true );
+	afile = FS_LoadFile( "xashcomm.lst", NULL, true );
 
 	if( !afile ) // file doesn't exist yet
 	{
-		MsgDev( D_INFO, "Cannot load xashcomm.lst\n" );
+		Con_Reportf( "Cannot load xashcomm.lst\n" );
 		return;
 	}
+
+	pfile = (char*)afile;
 
 	// format: master <addr>\n
 	while( ( pfile = COM_ParseFile( pfile, token ) ) )
@@ -207,14 +211,14 @@ NET_SaveMasters
 Save master server list to xashcomm.lst, except for default
 ========================
 */
-void NET_SaveMasters( )
+void NET_SaveMasters( void )
 {
 	file_t *f;
 	master_t *m;
 
 	if( !ml.modified )
 	{
-		MsgDev( D_NOTE, "Master server list not changed\n" );
+		Con_Reportf( "Master server list not changed\n" );
 		return;
 	}
 
@@ -222,7 +226,7 @@ void NET_SaveMasters( )
 
 	if( !f )
 	{
-		MsgDev( D_ERROR, "Couldn't write xashcomm.lst\n" );
+		Con_Reportf( S_ERROR  "Couldn't write xashcomm.lst\n" );
 		return;
 	}
 
@@ -242,14 +246,14 @@ NET_InitMasters
 Initialize master server list
 ========================
 */
-void NET_InitMasters()
+void NET_InitMasters( void )
 {
 	Cmd_AddRestrictedCommand( "addmaster", NET_AddMaster_f, "add address to masterserver list" );
 	Cmd_AddRestrictedCommand( "clearmasters", NET_ClearMasters_f, "clear masterserver list" );
 	Cmd_AddCommand( "listmasters", NET_ListMasters_f, "list masterservers" );
 
 	// keep main master always there
-	NET_AddMaster( DEFAULT_PRIMARY_MASTER, false );
-	NET_AddMaster( DEFAULT_SECONDARY_MASTER, false );
+	NET_AddMaster( MASTERSERVER_ADR, false );
+	NET_AddMaster( MASTERSERVER_ADR2, false );
 	NET_LoadMasters( );
 }

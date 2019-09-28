@@ -64,7 +64,6 @@ typedef enum
 	force_exactfile,			// File on client must exactly match server's file
 	force_model_samebounds,		// For model files only, the geometry must fit in the same bbox
 	force_model_specifybounds,		// For model files only, the geometry must fit in the specified bbox
-	force_model_specifybounds_if_avail,	// For Steam model files only, the geometry must fit in the specified bbox (if the file is available)
 } FORCE_TYPE;
 
 // Returned by TraceLine
@@ -95,19 +94,21 @@ typedef struct
 	int	fPlayTrack;
 } CDStatus;
 		
-typedef unsigned long	CRC32_t;
-struct delta_s;
+typedef unsigned int	CRC32_t;
+
+typedef struct delta_s delta_t;
+struct entity_state_s;
 
 // Engine hands this to DLLs for functionality callbacks
 typedef struct enginefuncs_s
 {
-	int	(*pfnPrecacheModel)( char* s );
-	int	(*pfnPrecacheSound)( char* s );
+	int	(*pfnPrecacheModel)( const char* s );
+	int	(*pfnPrecacheSound)( const char* s );
 	void	(*pfnSetModel)( edict_t *e, const char *m );
 	int	(*pfnModelIndex)( const char *m );
 	int	(*pfnModelFrames)( int modelIndex );
 	void	(*pfnSetSize)( edict_t *e, const float *rgflMin, const float *rgflMax );
-	void	(*pfnChangeLevel)( char* s1, char* s2 );
+	void	(*pfnChangeLevel)( const char* s1, const char* s2 );
 	void	(*pfnGetSpawnParms)( edict_t *ent );
 	void	(*pfnSaveSpawnParms)( edict_t *ent );
 	float	(*pfnVecToYaw)( const float *rgflVector );
@@ -140,11 +141,11 @@ typedef struct enginefuncs_s
 	const char *(*pfnTraceTexture)( edict_t *pTextureEntity, const float *v1, const float *v2 );
 	void	(*pfnTraceSphere)( const float *v1, const float *v2, int fNoMonsters, float radius, edict_t *pentToSkip, TraceResult *ptr );
 	void	(*pfnGetAimVector)( edict_t* ent, float speed, float *rgflReturn );
-	void	(*pfnServerCommand)( char* str );
+	void	(*pfnServerCommand)( const char* str );
 	void	(*pfnServerExecute)( void );
 	void	(*pfnClientCommand)( edict_t* pEdict, char* szFmt, ... );
 	void	(*pfnParticleEffect)( const float *org, const float *dir, float color, float count );
-	void	(*pfnLightStyle)( int style, char* val );
+	void	(*pfnLightStyle)( int style, const char* val );
 	int	(*pfnDecalIndex)( const char *name );
 	int	(*pfnPointContents)( const float *rgflVector );
 	void	(*pfnMessageBegin)( int msg_dest, int msg_type, const float *pOrigin, edict_t *ed );
@@ -188,18 +189,18 @@ typedef struct enginefuncs_s
 	int	(*pfnCmd_Argc)( void );		// access client 'cmd' strings
 	void	(*pfnGetAttachment)( const edict_t *pEdict, int iAttachment, float *rgflOrigin, float *rgflAngles );
 	void	(*pfnCRC32_Init)( CRC32_t *pulCRC );
-	void	(*pfnCRC32_ProcessBuffer)( CRC32_t *pulCRC, void *p, int len );
+	void	(*pfnCRC32_ProcessBuffer)( CRC32_t *pulCRC, const void *p, int len );
 	void	(*pfnCRC32_ProcessByte)( CRC32_t *pulCRC, unsigned char ch );
 	CRC32_t	(*pfnCRC32_Final)( CRC32_t pulCRC );
-	long	(*pfnRandomLong)( long lLow, long lHigh );
+	int		(*pfnRandomLong)( int lLow, int lHigh );
 	float	(*pfnRandomFloat)( float flLow, float flHigh );
 	void	(*pfnSetView)( const edict_t *pClient, const edict_t *pViewent );
 	float	(*pfnTime)( void );
 	void	(*pfnCrosshairAngle)( const edict_t *pClient, float pitch, float yaw );
-	byte*	(*pfnLoadFileForMe)( char *filename, int *pLength );
+	byte*	(*pfnLoadFileForMe)( const char *filename, int *pLength );
 	void	(*pfnFreeFile)( void *buffer );
 	void	(*pfnEndSection)( const char *pszSectionName ); // trigger_endsection
-	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
+	int	(*pfnCompareFileTime)( const char *filename1, const char *filename2, int *iCompare );
 	void	(*pfnGetGameDir)( char *szGetGameDir );
 	void	(*pfnCvar_RegisterVariable)( cvar_t *variable );
 	void	(*pfnFadeClientVolume)( const edict_t *pEdict, int fadePercent, int fadeOutSeconds, int holdTime, int fadeInSeconds );
@@ -208,12 +209,12 @@ typedef struct enginefuncs_s
 	void	(*pfnRunPlayerMove)( edict_t *fakeclient, const float *viewangles, float forwardmove, float sidemove, float upmove, unsigned short buttons, byte impulse, byte msec );
 	int	(*pfnNumberOfEntities)( void );
 	char*	(*pfnGetInfoKeyBuffer)( edict_t *e );			// passing in NULL gets the serverinfo
-	char*	(*pfnInfoKeyValue)( char *infobuffer, char *key );
+	const char*	(*pfnInfoKeyValue)( const char *infobuffer, const char *key );
 	void	(*pfnSetKeyValue)( char *infobuffer, char *key, char *value );
 	void	(*pfnSetClientKeyValue)( int clientIndex, char *infobuffer, char *key, char *value );
-	int	(*pfnIsMapValid)( const char *filename );
+	int	(*pfnIsMapValid)( char *filename );
 	void	(*pfnStaticDecal)( const float *origin, int decalIndex, int entityIndex, int modelIndex );
-	int	(*pfnPrecacheGeneric)( char *s );
+	int	(*pfnPrecacheGeneric)( const char *s );
 	int	(*pfnGetPlayerUserId)( edict_t *e ); // returns the server assigned userid for this player.  useful for logging frags, etc.  returns -1 if the edict couldn't be found in the list of clients
 	void	(*pfnBuildSoundMsg)( edict_t *entity, int channel, const char *sample, /*int*/float volume, float attenuation, int fFlags, int pitch, int msg_dest, int msg_type, const float *pOrigin, edict_t *ed );
 	int	(*pfnIsDedicatedServer)( void );			// is this a dedicated server?
@@ -228,8 +229,8 @@ typedef struct enginefuncs_s
 	unsigned short (*pfnPrecacheEvent)( int type, const char*psz );
 	void	(*pfnPlaybackEvent)( int flags, const edict_t *pInvoker, unsigned short eventindex, float delay, float *origin, float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 );
 	
-	unsigned char *(*pfnSetFatPVS)( float *org );
-	unsigned char *(*pfnSetFatPAS)( float *org );
+	unsigned char *(*pfnSetFatPVS)( const float *org );
+	unsigned char *(*pfnSetFatPAS)( const float *org );
 
 	int	(*pfnCheckVisibility )( const edict_t *entity, unsigned char *pset );
 
@@ -243,7 +244,7 @@ typedef struct enginefuncs_s
 	void	(*pfnDeltaUnsetFieldByIndex)( struct delta_s *pFields, int fieldNumber );
 	void	(*pfnSetGroupMask)( int mask, int op );
 	int	(*pfnCreateInstancedBaseline)( int classname, struct entity_state_s *baseline );
-	void	(*pfnCvar_DirectSet)( struct cvar_s *var, char *value );
+	void	(*pfnCvar_DirectSet)( struct cvar_s *var, const char *value );
 
 	// Forces the client and server to be running with the same version of the specified file
 	//  ( e.g., a player model ).
@@ -252,7 +253,7 @@ typedef struct enginefuncs_s
 
 	void	(*pfnGetPlayerStats)( const edict_t *pClient, int *ping, int *packet_loss );
 
-	void	(*pfnAddServerCommand)( char *cmd_name, void (*function) (void) );
+	void	(*pfnAddServerCommand)( const char *cmd_name, void (*function) (void) );
 
 	// For voice communications, set which clients hear eachother.
 	// NOTE: these functions take player entity indices (starting at 1).
@@ -261,20 +262,22 @@ typedef struct enginefuncs_s
 
 	const char *(*pfnGetPlayerAuthId)		( edict_t *e );
 
-	void	*(*pfnSequenceGet)( const char *fileName, const char *entryName );
-	void	*(*pfnSequencePickSentence)( const char *groupName, int pickMethod, int *picked );
-	int	(*pfnGetFileSize)( char *filename );
-	unsigned int (*pfnGetApproxWavePlayLen)( const char *filepath );
-	int	(*pfnIsCareerMatch)( void );
-	int	(*pfnGetLocalizedStringLength)( const char *label );
-	void	(*pfnRegisterTutorMessageShown)( int mid );
-	int	(*pfnGetTimesTutorMessageShown)( int mid );
-	void	(*pfnProcessTutorMessageDecayBuffer)( int *buffer, int bufferLength );
-	void	(*pfnConstructTutorMessageDecayBuffer)( int *buffer, int bufferLength );
-	void	(*pfnResetTutorMessageDecayData)( void );
+	void	(*pfnUnused1)( void );
+	void	(*pfnUnused2)( void );
+	void	(*pfnUnused3)( void );
+	void	(*pfnUnused4)( void );
+	void	(*pfnUnused5)( void );
+	void	(*pfnUnused6)( void );
+	void	(*pfnUnused7)( void );
+	void	(*pfnUnused8)( void );
+	void	(*pfnUnused9)( void );
+	void	(*pfnUnused10)( void );
+	void	(*pfnUnused11)( void );
+
+	// three useable funcs
 	void	(*pfnQueryClientCvarValue)( const edict_t *player, const char *cvarName );
 	void	(*pfnQueryClientCvarValue2)( const edict_t *player, const char *cvarName, int requestID );
-	int	(*CheckParm)( char *parm, char **ppnext );
+	int	(*pfnCheckParm)( char *parm, char **ppnext );
 } enginefuncs_t;
 // ONLY ADD NEW FUNCTIONS TO THE END OF THIS STRUCT.  INTERFACE VERSION IS FROZEN AT 138
 	
@@ -284,7 +287,7 @@ typedef struct KeyValueData_s
 	char	*szClassName;	// in: entity classname
 	char	*szKeyName;	// in: name of key
 	char	*szValue;		// in: value of key
-	long	fHandled;		// out: DLL sets to true if key-value pair was understood
+	int	fHandled;		// out: DLL sets to true if key-value pair was understood
 } KeyValueData;
 
 
@@ -387,12 +390,16 @@ typedef struct
 	short		flags;
 } TYPEDESCRIPTION;
 
-#ifdef ARRAYSIZE
 #undef ARRAYSIZE
-#endif
 #define ARRAYSIZE(p)	(sizeof(p)/sizeof(p[0]))
 
-#define ARRAYSIZE(p)	(sizeof(p)/sizeof(p[0]))
+struct weapon_data_s;
+struct playermove_s;
+struct clientdata_s;
+struct usercmd_s;
+struct edict_s;
+struct netadr_s;
+
 typedef struct 
 {
 	// Initialize/shutdown the game (one-time call after loading of game .dll )
@@ -430,7 +437,7 @@ typedef struct
 	void	(*pfnParmsChangeLevel)( void );
 
 	 // Returns string describing current .dll.  E.g., TeamFotrress 2, Half-Life
-	const char     *(*pfnGetGameDescription)( void );     
+	const char     *(*pfnGetGameDescription)( void );
 
 	// Notify dll about a player customization.
 	void	(*pfnPlayerCustomization)( edict_t *pEntity, customization_t *pCustom );

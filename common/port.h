@@ -17,89 +17,43 @@ GNU General Public License for more details.
 #ifndef PORT_H
 #define PORT_H
 
-#if defined(__LP64__) || defined(__LLP64__) || defined(_WIN64) || (defined(__x86_64__) && !defined(__ILP32__) ) || defined(_M_X64) || defined(__ia64) || defined (_M_IA64) || defined(__aarch64__) || defined(__powerpc64__)
-  #define XASH_64BIT
-#endif
-
-#ifdef XASH_64BIT
-#define ARCH_SUFFIX "64"
-#else
-#define ARCH_SUFFIX
-#endif
-
-#if defined(__ANDROID__) || TARGET_OS_IOS || defined(__SAILFISH__)
-#define XASH_MOBILE_PLATFORM
-#endif
-
-#ifdef _WIN32
-#define PATH_SPLITTER "\\"
-#else
-#define PATH_SPLITTER "/"
-#endif
+#include "build.h"
 
 #if !defined(_WIN32)
-	#include <limits.h>
 	#include <dlfcn.h>
-	#include <stdlib.h>
 	#include <unistd.h>
+
+	#define PATH_SPLITTER "/"
 
 	#if defined(__APPLE__)
 		#include <sys/syslimits.h>
+		#include "TargetConditionals.h"
 		#define OS_LIB_EXT "dylib"
 		#define OPEN_COMMAND "open"
-		#include "TargetConditionals.h"
-	#elif defined(__HAIKU__)
-		#define OS_LIB_EXT "so"
-		#define OPEN_COMMAND "/bin/open"
 	#else
 		#define OS_LIB_EXT "so"
 		#define OPEN_COMMAND "xdg-open"
 	#endif
 
-
-	#ifdef __EMSCRIPTEN__
-	#include <emscripten.h>
-	#endif
+	#define OS_LIB_PREFIX "lib"
 
 	#if defined(__ANDROID__)
-		#if defined(LOAD_HARDFP)
-			#define POSTFIX "_hardfp"
-		#else
+		//#if defined(LOAD_HARDFP)
+		//	#define POSTFIX "_hardfp"
+		//#else
 			#define POSTFIX
-		#endif
-
-		// don't change these names
-		#define MENUDLL   "libmenu"   POSTFIX "." OS_LIB_EXT
-		#define CLIENTDLL "libclient" POSTFIX "." OS_LIB_EXT
-		#define SERVERDLL "libserver" POSTFIX "." OS_LIB_EXT
-		#define GAMEPATH "/sdcard/xash"
-	#elif defined(__SAILFISH__)
-		#define POSTFIX
-		// don't change these names
-		#define MENUDLL   "libmenu"   POSTFIX "." OS_LIB_EXT
-		#define CLIENTDLL "libclient" POSTFIX "." OS_LIB_EXT
-		#define SERVERDLL "libserver" POSTFIX "." OS_LIB_EXT
-		#define GAMEPATH "/home/nemo/xash"
-		#define LIBPATH "/usr/lib/xash3d/"
-		#define SHAREPATH "/usr/share/xash3d/"
-	#elif defined(__HAIKU__)
-		#define POSTFIX   "-haiku"
-		#define MENUDLL   "libmenu"                       "." OS_LIB_EXT
-		#define CLIENTDLL "libclient" POSTFIX ARCH_SUFFIX "." OS_LIB_EXT
-		#define SERVERDLL "libserver" POSTFIX ARCH_SUFFIX "." OS_LIB_EXT
-		#define PACKAGE   "/Xash3D"
+		//#endif
 	#else
-		#define MENUDLL   "libxashmenu" ARCH_SUFFIX "." OS_LIB_EXT
-		#define CLIENTDLL "client"      ARCH_SUFFIX "." OS_LIB_EXT
 	#endif
 
 	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT
 
 	// Windows-specific
-#ifndef __HAIKU__
 	#define __cdecl
-#endif
+	#define __stdcall
+
 	#define _inline	static inline
+	#define FORCEINLINE inline __attribute__((always_inline))
 	#define O_BINARY 0 // O_BINARY is Windows extension
 	#define O_TEXT 0 // O_TEXT is Windows extension
 
@@ -133,14 +87,17 @@ GNU General Public License for more details.
 		int x, y;
 	} POINT;
 #else // WIN32
+	#define PATH_SPLITTER "\\"
 	#ifdef __MINGW32__
 		#define _inline static inline
+		#define FORCEINLINE inline __attribute__((always_inline))
+	#else
+		#define FORCEINLINE __forceinline
 	#endif
 
-	#define strcasecmp _stricmp
-	#define strncasecmp _strnicmp
 	#define open _open
 	#define read _read
+	#define alloca _alloca
 
 	// shut-up compiler warnings
 	#pragma warning(disable : 4244)	// MIPS
@@ -156,43 +113,26 @@ GNU General Public License for more details.
 	#pragma warning(disable : 4310)	// cast truncates constant value
 
 	#define HSPRITE WINAPI_HSPRITE
+		#define WIN32_LEAN_AND_MEAN
+		#include <winsock2.h>
 		#include <windows.h>
 	#undef HSPRITE
 
+	#define OS_LIB_PREFIX ""
 	#define OS_LIB_EXT "dll"
-	#define MENUDLL "menu"ARCH_SUFFIX"." OS_LIB_EXT
-	#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
-	#include <limits.h>
-	
-#if defined(_MSC_VER) && (_MSC_VER < 1700) 
-#include <math.h>
-static __inline int round(float f)
-{
-    return (int)(f + 0.5);
-
-}
-static __inline float cbrt(float f)
-{
-    return pow(f,1.0/3.0);
-
-}
-
-#endif
-
-
-#ifdef XASH_64BIT
-// windows NameForFunction not implemented yet
-#define XASH_ALLOW_SAVERESTORE_OFFSETS
-#endif
+	#ifdef XASH_64BIT
+		// windows NameForFunction not implemented yet
+		#define XASH_ALLOW_SAVERESTORE_OFFSETS
+	#endif
 #endif //WIN32
 
-#ifndef INT_MAX
-#define INT_MAX 2147483647
-#endif
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
 
-#ifndef USHRT_MAX
-#define USHRT_MAX 65535
+#if defined XASH_SDL && !defined REF_DLL
+#include <SDL.h>
 #endif
 
 #endif // PORT_H

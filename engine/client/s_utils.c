@@ -13,32 +13,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef XASH_DEDICATED
-
 #include "common.h"
 #include "sound.h"
 
 // hardcoded macros to test for zero crossing
 #define ZERO_X_8( b )	(( b ) < 2 && ( b ) > -2 )
 #define ZERO_X_16( b )	(( b ) < 512 && ( b ) > -512 )
-
-/*
-=================
-S_SimpleSpline
-
-NOTE: ripped from hl2 source
-hermite basis function for smooth interpolation
-Similar to Gain() above, but very cheap to call
-value should be between 0 & 1 inclusive
-=================
-*/
-float S_SimpleSpline( float value )
-{
-	float	valueSquared = value * value;
-
-	// nice little ease-in, ease-out spline-like curve
-	return (3 * valueSquared - 2 * valueSquared * value);
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Search backward for a zero crossing starting at sample
@@ -62,7 +42,7 @@ int S_ZeroCrossingBefore( wavdata_t *pWaveData, int sample )
 			
 		if( pWaveData->width == 1 )
 		{
-			signed char	*pData = (char *)pWaveData->buffer + sample * sampleSize;
+			signed char	*pData = (signed char *)(pWaveData->buffer + sample * sampleSize);
 			qboolean	zero = false;
 
 			if( pWaveData->channels == 1 )
@@ -159,7 +139,7 @@ int S_ZeroCrossingAfter( wavdata_t *pWaveData, int sample )
 
 		if( pWaveData->width == 1 )	// 8-bit
 		{
-			signed char	*pData = (char *)pWaveData->buffer + sample * sampleSize;
+			signed char	*pData = (signed char *)(pWaveData->buffer + sample * sampleSize);
 			qboolean	zero = false;
 
 			if( pWaveData->channels == 1 )
@@ -324,4 +304,3 @@ void S_SetSampleEnd( channel_t *pChan, wavdata_t *pSource, int newEndPosition )
 
 	pChan->pMixer.forcedEndSample = newEndPosition;
 }
-#endif // XASH_DEDICATED
