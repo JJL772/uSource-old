@@ -33,12 +33,6 @@ include(FWGSLib)
 include(CMakeDependentOption)
 include(CPack)
 
-
-# Subprojects go here
-add_subdirectory(Tier0)
-add_subdirectory(Tier1)
-add_subdirectory(Mathlib)
-
 #--------------
 # USER DEFINES \
 ################\
@@ -106,10 +100,6 @@ else()
 	fwgs_string_option(BIN_INSTALL_DIR "Executables install directory" "bin")
 endif()
 
-
-if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	message(FATAL_ERROR "You're building 64 bit Xash3D! Note that there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
-endif()
 if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER AND NOT XASH_NONSTANDARD_LOAD)
 	message(FATAL_ERROR "You must enable XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
