@@ -11,12 +11,24 @@ As such, the engine will not be compatible with source or even gold Source games
 While writing this, I will try to maintain the basic structure of the Source engine.
 For example, I will include things like Tier0, Tier1, VPhysics, etc.
 
-I am just a single person working on this fork, so I do NOT plan on major cross platform support
-like the FWGS fork of Xash3D has. PC platforms like Windows and Linux will be supported only, no
-more Android, iOS, etc. support.
+## Goals
 
-# License
+* Remain completely open source and free by using only open source libraries.
+* Provide the best possible performance for users even with low-end computers.
+* Support multiple platforms like Linux, Windows and FreeBSD, on both ARM and x86/x86-64. (Hey maybe RISC-V too if that becomes more popular!)
+* Provide the best possible toolset and workflow for working with a source-engine clone. 
+* Remain true to the roots and keep backwards compatibility for Source, Gold Source and Quake assets.
+* Use modern programming techniques and libraries. No more unsupported legacy libraries! (Looking at you parsifal...)
+
+The rest of the plans are listed in the github projects!
+
+## Building 
+
+need to finish this...
+
+## License
 Since this is a fork of Xash3D, it retains its initial licesne:
 The library is licensed under GPLv3 license, see [COPYING](https://github.com/FWGS/xash3d/blob/master/COPYING) for details.
 CMakeLists.txt files are licensed under MIT license, you will find it's text
 in every CMakeLists.txt header.
+All credits to the Xash3d developers where due :D
