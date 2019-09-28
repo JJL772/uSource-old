@@ -317,3 +317,6 @@ RPMS/
 build32/
 build/
 build64/
+
+# VSCode files again
+.vscode/
