@@ -1,0 +1,8 @@
+{
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+    "explorer.autoReveal": false,
+    "editor.insertSpaces": false,
+	"editor.detectIndentation": false,
+	"cmake.configureOnOpen": false,
+	"C_Cpp.dimInactiveRegions": false
+}

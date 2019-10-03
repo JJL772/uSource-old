@@ -1,0 +1,38 @@
+import waflib
+ 
+def options(opt):
+	return
+
+def configure(conf):
+	return
+
+def build(bld):
+	defines = []
+	
+	source = list()
+	source += [
+		'vector.cpp',
+		#'mconst.h',
+		#'mathlib.h',
+		#'vector.h',
+		#'matrix.h',
+		'matrix.cpp',
+	]
+
+	includes = list()
+	includes += '.'
+
+	libs = []
+
+	bld.shlib(
+		source   = source,
+		target   = 'mathlib',
+		features = 'c cxx',
+		includes = includes,
+		#defines  = defines,
+		use      = libs,
+		install_path = bld.env.LIBDIR,
+		subsystem = bld.env.MSVC_SUBSYSTEM,
+		idx      = 2
+	)
+

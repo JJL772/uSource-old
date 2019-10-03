@@ -5,7 +5,7 @@
 from __future__ import print_function
 from waflib import Logs
 import sys
-import os
+import os, pathlib
 
 VERSION = '0.99'
 APPNAME = 'xash3d-fwgs'
@@ -56,6 +56,18 @@ def options(opt):
 	grp.add_option('--enable-bsp2', action = 'store_true', dest = 'SUPPORT_BSP2_FORMAT', default = False,
 		help = 'build engine and renderers with BSP2 map support(recommended for Quake, breaks compability!)')
 
+	grp.add_option('--sse', action='store_true', dest='USE_SSE', default=True, 
+		help='Enables the use of SSE and SSE2 on x86 and x86_64 targets. This is automatically enabled on x64 CPUs')
+
+	grp.add_option('--sse4.1', action='store_true', dest='USE_SSE42', default=False,
+		help='Enables the use of SSE4.2 on x86 and x86_64 targets.')
+
+	grp.add_option('--avx', action='store_true', dest='USE_AVX', default=False,
+		help='Enables the use of AVX on x86_64 targets.')
+
+	grp.add_option('--neon', action='store_true', dest='USE_NEON', default=False,
+		help='Enables the use of NEON vectorization on AArch64 and AArch32 targets.')
+
 	opt.load('subproject')
 
 	opt.add_subproject(subdirs())
@@ -87,6 +99,22 @@ def filter_cflags(conf, flags, required_flags, cxx):
 	return supported_flags
 
 def configure(conf):
+	# Dirs
+	conf.env.ROOT = str(pathlib.Path('.').resolve())
+	conf.env.PMSHARED = conf.env.ROOT + "/pm_shared"
+	conf.env.ENGINEDIR = conf.env.ROOT + "/engine"
+	conf.env.SHARED = conf.env.ROOT + "/game/shared"
+	conf.env.SERVER = conf.env.ROOT + "/game/server"
+	conf.env.CLIENT = conf.env.ROOT + "/game/client"
+	conf.env.COMMON = conf.env.ROOT + "/common"
+	conf.env.PUBLIC = conf.env.ROOT + "/public"
+	conf.env.FAKEVGUI = conf.env.ROOT + "/utils/false_vgui/include"
+
+	# Set some opts needed by the server
+	conf.env.GAMEDIR = 'valve'
+	conf.env.CLIENT_DIR  = 'cl_dlls'
+	conf.env.SERVER_DIR  = 'dlls'
+
 	conf.load('fwgslib reconfigure')
 	conf.start_msg('Build type')
 	if conf.options.BUILD_TYPE == None:
@@ -138,6 +166,35 @@ def configure(conf):
 	if conf.env.DEST_OS != 'android' and not conf.options.DEDICATED:
 		conf.load('sdl2')
 
+	# Platform stuff
+	if conf.env.DEST_CPU is "x86_64": 
+		conf.env.append_unique('DEFINES', '_x64_=1')
+		conf.env.append_unique('DEFINES', '_X64_=1')
+	if conf.env.DEST_CPU is "x86":
+		conf.env.append_unique('DEFINES', '_x86_=1')
+		conf.env.append_unique('DEFINES', '_X86_=1')
+	if conf.env.DEST_CPU is "aarch64":
+		conf.env.append_unique('DEFINES', '_AARCH64_=1')
+	if conf.env.DEST_CPU is "aarch32":
+		conf.env.append_unique('DEFINES', '_AARCH32_=1')
+	conf.options.USE_SSE = False if conf.env.DEST_CPU in ['aarch32', 'aarch64'] else True
+	conf.options.USE_SSE42 = False if conf.env.DEST_CPU in ['aarch32', 'aarch64'] else True
+	conf.options.USE_AVX = False if conf.env.DEST_CPU in ['aarch32', 'aarch64', 'x86'] else True
+	conf.options.USE_NEON = False if conf.env.DEST_CPU in ['x86', 'x86_64'] else True
+	opts = list()
+	if conf.options.USE_SSE:
+		opts.append("-msse")
+		conf.env.append_unique('DEFINES', 'USE_SSE=1')
+	if conf.options.USE_SSE42:
+		opts.append("-msse4.2")
+		conf.env.append_unique('DEFINES', 'USE_SSE42=1')
+	if conf.options.USE_AVX:
+		opts.append("-mavx")
+		conf.env.append_unique('DEFINES', 'USE_AVX=1')
+	if conf.options.USE_NEON:
+		conf.env.append_unique('DEFINES', 'USE_NEON=1')
+	
+
 	linker_flags = {
 		'common': {
 			'msvc':    ['/DEBUG'], # always create PDB, doesn't affect result binaries
@@ -182,6 +239,9 @@ def configure(conf):
 			'default': ['-O0']
 		}
 	}
+
+	compiler_c_cxx_flags['common']['gcc'] += opts
+	compiler_c_cxx_flags['common']['clang'] += opts
 
 	compiler_optional_flags = [
 		'-fdiagnostics-color=always',
@@ -251,6 +311,9 @@ def configure(conf):
 			continue
 
 		conf.add_subproject(i.name)
+	conf.add_subproject('mathlib')
+	conf.recurse('game/server')
+	conf.recurse('game/client')
 
 def build(bld):
 	for i in SUBDIRS:
@@ -264,3 +327,6 @@ def build(bld):
 			continue
 
 		bld.add_subproject(i.name)
+	bld.recurse('game/server')
+	bld.recurse('game/server')
+	bld.recurse('mathlib')
