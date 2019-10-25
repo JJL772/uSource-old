@@ -90,7 +90,16 @@ def build(bld):
 			libs.append('RT')
 
 	# HACK: public headers must be put before common, so we don't get wrong mathlib included
-	includes = ['common', 'server', 'client', 'client/vgui', '.', '../public', '../common', '../pm_shared' ]
+	#includes = ['common', 'server', 'client', 'client/vgui', '.', '../public', '../common', '../pm_shared' ]
+	includes = list()
+	includes.append(str(bld.env.COMMON))
+	includes.append(str(bld.env.ENGINE) + "/server")
+	includes.append(str(bld.env.ENGINE) + "/client")
+	includes.append(str(bld.env.ENGINE) + "/client/vgui")
+	includes.append(str(bld.env.ENGINE))
+	includes.append(str(bld.env.PUBLIC))
+	includes.append(str(bld.env.PMSHARED))
+	includes.append(str(bld.env.COMMON))
 
 	if bld.env.SINGLE_BINARY:
 		install_path = bld.env.BINDIR

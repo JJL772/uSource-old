@@ -18,8 +18,11 @@ def configure(conf):
 def build(bld):
 	source = bld.path.ant_glob(['*.c'])
 	libs = []
-	includes = [ '.', '../common', '../engine' ]
-
+	includes = list()
+	includes.append(str(bld.env.COMMON))
+	includes.append(str(bld.env.PUBLIC))
+	includes.append(str(bld.env.ENGINE))
+	includes.append(str(bld.env.ROOT))
 	bld.stlib(
 		source   = source,
 		target   = 'public',

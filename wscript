@@ -101,14 +101,14 @@ def filter_cflags(conf, flags, required_flags, cxx):
 def configure(conf):
 	# Dirs
 	conf.env.ROOT = str(pathlib.Path('.').resolve())
-	conf.env.PMSHARED = conf.env.ROOT + "/pm_shared"
-	conf.env.ENGINEDIR = conf.env.ROOT + "/engine"
-	conf.env.SHARED = conf.env.ROOT + "/game/shared"
-	conf.env.SERVER = conf.env.ROOT + "/game/server"
-	conf.env.CLIENT = conf.env.ROOT + "/game/client"
-	conf.env.COMMON = conf.env.ROOT + "/common"
-	conf.env.PUBLIC = conf.env.ROOT + "/public"
-	conf.env.FAKEVGUI = conf.env.ROOT + "/utils/false_vgui/include"
+	conf.env.PMSHARED = str(conf.env.ROOT + "/pm_shared")
+	conf.env.ENGINE = str(conf.env.ROOT + "/engine")
+	conf.env.SHARED = str(conf.env.ROOT + "/game/shared")
+	conf.env.SERVER = str(conf.env.ROOT + "/game/server")
+	conf.env.CLIENT = str(conf.env.ROOT + "/game/client")
+	conf.env.COMMON = str(conf.env.ROOT + "/common")
+	conf.env.PUBLIC = str(conf.env.ROOT + "/public")
+	conf.env.FAKEVGUI = str(conf.env.ROOT + "/utils/false_vgui/include")
 
 	# Set some opts needed by the server
 	conf.env.GAMEDIR = 'valve'

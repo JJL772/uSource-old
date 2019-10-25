@@ -1,18 +1,14 @@
 #
-# Build script for libpublic
+# CMake script for libpublic
 #
-# Jeremy Lorelli, Sep. 29, 2019
+# Jeremy Lorelli, Oct. 2019
 #
 project(public C CXX)
 
-set(PUBLIC_SRCS		crclib.h
-					crclib.c
-					crtlib.h
-					crtlib.c
-					mathlib.h
-					mathlib.c
-					matrixlib.c
-					build.h)
+file(GLOB_RECURSE SRCS *.c *.cpp *.cc *.h *.hh *.hpp)
 
-add_library(public STATIC ${PUBLIC_SRCS})
-target_include_directories(public PRIVATE ${COMMON} ${ENGINE})
+add_library(public STATIC ${SRCS})
+
+set_target_properties(public PROPERTIES CXX_STANDARD 17)
+set_target_properties(public PROPERTIES C_STANDARD 99)
+target_include_directories(public PRIVATE ${ENGINE} ${COMMON} ${ROOT} ${PUBLIC})

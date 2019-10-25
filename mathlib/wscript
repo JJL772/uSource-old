@@ -20,14 +20,15 @@ def build(bld):
 	]
 
 	includes = list()
-	includes += '.'
+	includes.append('.')
+	includes.append(str(bld.env.ROOT))
 
 	libs = []
 
 	bld.shlib(
 		source   = source,
 		target   = 'mathlib',
-		features = 'c cxx',
+		features = 'cxx',
 		includes = includes,
 		#defines  = defines,
 		use      = libs,

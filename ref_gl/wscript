@@ -55,14 +55,14 @@ def build(bld):
 
 	source = bld.path.ant_glob(['*.c'])
 
-	includes = ['.',
-		'../engine',
-		'../engine/common',
-		'../engine/server',
-		'../engine/client',
-		'../public',
-		'../common',
-		'../pm_shared' ]
+	includes = list()
+	includes.append(str(bld.env.ENGINE))
+	includes.append(str(bld.env.ENGINE) + "/server")
+	includes.append(str(bld.env.ENGINE) + "/client")
+	includes.append(str(bld.env.PUBLIC))
+	includes.append(str(bld.env.COMMON))
+	includes.append(str(bld.env.PMSHARED))
+	includes.append(str(bld.env.ROOT))
 
 	def link_gl( glstatic ):
 		if glstatic: return ['GL']
