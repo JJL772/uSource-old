@@ -327,3 +327,6 @@ __pycache__
 *.vcproj
 *.sln
 *.vcxproj
+.vscode
+.waf*
+
