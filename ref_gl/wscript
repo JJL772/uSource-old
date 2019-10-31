@@ -76,7 +76,7 @@ def build(bld):
 		bld.shlib(
 			source   = source,
 			target   = 'ref_gl',
-			features = 'c',
+			features = 'c cxx',
 			includes = includes,
 			use      = libs + link_gl(bld.env.GL_STATIC),
 			defines  = static_gl(bld.env.GL_STATIC),
@@ -89,7 +89,7 @@ def build(bld):
 		bld.shlib(
 			source   = source,
 			target   = 'ref_gles1',
-			features = 'c',
+			features = 'c cxx',
 			includes = includes,
 			use      = libs + ['DL', 'nanogl'],
 			defines  = ['XASH_NANOGL'],
@@ -101,7 +101,7 @@ def build(bld):
 		bld.shlib(
 			source   = source,
 			target   = 'ref_gles2',
-			features = 'c',
+			features = 'c cxx',
 			includes = includes,
 			use      = libs + ['DL', 'gl-wes-v2'],
 			defines  = ['XASH_WES'],
