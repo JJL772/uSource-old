@@ -16,6 +16,10 @@
 
 #include <math.h>
 
+#include "mathlib/mathlib.h"
+
+#if 0
+
 typedef float vec_t;
 typedef vec_t vec2_t[2];
 typedef vec_t vec3_t[3];
@@ -93,3 +97,5 @@ float	anglemod(float a);
 	)										\
 	:										\
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
+
+#endif

@@ -23,7 +23,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
-
+#include "mathlib/mathlib.h"
+#if 0
 // Header file containing definition of globalvars_t and entvars_t
 typedef unsigned int func_t;					//
 typedef int string_t;				// from engine's pr_comp.h;
@@ -127,4 +128,5 @@ inline float DotProduct( const Vector& a, const Vector& b) { return( a.x * b.x +
 inline Vector CrossProduct(const Vector& a, const Vector& b) { return Vector( a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x ); }
 
 #define vec3_t Vector
+#endif
 #endif // UTIL_VECTOR_H
