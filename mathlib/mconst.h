@@ -13,8 +13,9 @@ Mathematical constants!
 #ifdef USE_SSE
 #define _DEFINE_CONST128(name, val) const static __m128 name = _mm_set_ps1(val)
 #define _DEFINE_CONST128D(name, val) const static __m128d name = _mm_set_pd1(val)
-#define _DEFINE_CONSTVEC128(name, x,y,z,m) const static __m128 name = _mm_set_ps(x,y,z,m)
-#define _DEFINE_CONSTVEC128D(name, x,y) const static __m128 name = _mm_set_pd(x,y)
+#define _DEFINE_CONSTVEC128(name, x,y,z,m) const static __m128 name = _mm_setr_ps(x,y,z,m)
+#define _DEFINE_CONSTVEC128D(name, x,y) const static __m128 name = _mm_setr_pd(x,y)
+#define _DEFINE_CONSTVEC128I(name,x,y,z,m) const static __m128 name = _mm_castsi128_ps(_mm_setr_epi32(x,y,z,m))
 #elif defined(USE_NEON)
 #define _DEFINE_CONST128(name, val) /* stub for now */
 #define _DEFINE_CONST128D(name, val) /* stub for now */
@@ -26,6 +27,7 @@ Mathematical constants!
 #define DEFINE_CONSTANT128D(name, val) _DEFINE_CONST128D(name, val)
 #define DEFINE_CONSTVEC128(name, x, y, z, m) _DEFINE_CONSTVEC128(name, x,y,z,m)
 #define DEFINE_CONSTVEC128D(name, x, y) _DEFINE_CONSTVEC128D(name,x,y)
+#define DEFINE_CONSTVEC128I(name, x, y, z, m) _DEFINE_CONSTVEC128I(name,x,y,z,m)
 
 /* Doing an xorps with this constant will clear the sign */
 DEFINE_CONSTANT128	(m128_abs,	-0.0f);
@@ -50,3 +52,4 @@ DEFINE_CONSTANT128	(m128_fourth, 1.0f/4.0f);
 DEFINE_CONSTANT128D (m128d_fourth, 1.0/4.0);
 
 DEFINE_CONSTVEC128	(m128_vec4clear, 0.0f,0.0f,0.0f,1.0f);
+DEFINE_CONSTVEC128I	(m128_vec4low3hi0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0);

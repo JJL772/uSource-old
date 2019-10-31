@@ -89,7 +89,7 @@ Vector2 Vector2::Normalize() const
 
 float Vector2::Dot(const Vector2& other) const
 {
-
+	return this->x * other.x + this->y * other.y;
 }
 
 /* Linear interp:
@@ -434,7 +434,7 @@ Vector3 Vector3::AvgVector(const Vector3& other) const
 	_mm_store_ps(vec.vec.v, _mm_mul_ps(_mm_add_ps(v1,v2), m128_third));
 	return vec.vec;
 #else
-
+	return Vector3((x+other.x)/2.0f, (y+other.y)/2.0f, (z+other.z)/2.0f);
 #endif
 }
 
@@ -487,7 +487,7 @@ float Vector3::DotProductAbs(const Vector3& other) const
 	_mm_store_ps(ret, _mm_dp_ps(_v1, _v2, 0b01110000));
 	return ret[0];
 #else
-	return (v1.v[0]*v2.v[0] + v1.v[1]*v2.v[1] + v1.v[2]*v2.v[2]);
+	return (absf(x*other.x) + absf(y*other.y) + absf(z*other.z));
 #endif //USE_SSE
 }
 
@@ -595,9 +595,9 @@ void Vector3::AbsThis() const
 	static const __m128 abs_tmp = _mm_set_ps(-0.0f, -0.0f, -0.0f, 0.0f);
 	_mm_store_ps((float*)this->v, _mm_xor_ps(_mm_load_ps(this->v), abs_tmp));
 #else
-	this->v[0] = absf(this->v[0]);
-	this->v[1] = absf(this->v[1]);
-	this->v[2] = absf(this->v[2]);
+	this->x = absf(this->x);
+	this->y = absf(this->y);
+	this->z = absf(this->z);
 #endif
 }
 
@@ -699,6 +699,11 @@ void Vector4::AbsThis()
 
 float Vector4::Avg() const
 {
+#ifdef USE_SSE
+
+#else
+	return (x+y+z)/3.0f;
+#endif
 }
 
 void Vector4::Clear()
@@ -747,6 +752,11 @@ float Vector4::Dot(const Vector4& other) const
 
 bool Vector4::IsNAN() const
 {
+#ifdef USE_SSE
+
+#else
+	return isnanf(x) || isnanf(y) || isnanf(z);
+#endif
 }
 
 float Vector4::Lerp(const Vector4& other, float bias) const
@@ -755,14 +765,74 @@ float Vector4::Lerp(const Vector4& other, float bias) const
 
 float Vector4::Max() const
 {
+#ifdef USE_SSE 
+	
+#else
+	return (x > y ? (x > z ? x : z) : (y > z ? y : z));
+#endif 
+}
+
+Vector4 Vector4::DeNorm() const
+{
+#ifdef USE_SSE
+	__m128 v1 = _mm_load_ps(this->v);
+	__m128 c = _mm_shuffle_ps(v1,v1,0b11111111);
+	__m128 res = _mm_and_ps(_mm_mul_ps(v1,c), m128_vec4low3hi0);
+	Vector4 vec;
+	_mm_store_ps(vec.v, res);
+#else
+	return Vector4(x*m,y*m,z*m,1.0f);
+#endif //USE_SSE
+}
+
+void Vector4::DeNormThis() const
+{
+#ifdef USE_SSE
+
+#else
+	this->x = x*m;
+	this->y = y*m;
+	this->z = z*m;
+	this->m = 1.0f;
+#endif
 }
 
 Vector4 Vector4::Normalize() const
 {
+#ifdef USE_SSE 
+	const __m128 _v = _mm_load_ps(this->v);
+	__m128 c = _mm_shuffle_ps(_v,_v,0b11111111);
+	__m128 v2 = _mm_mul_ps(_v,c);
+	__m128 v3 = _mm_mul_ps(v2,v3);
+	__m128 v1 = _mm_shuffle_ps(v3,v3,0b11100101);
+	v2 = _mm_shuffle_ps(v2,v2,0b11100110);
+	c = _mm_sqrt_ps(_mm_add_ps(_mm_add_ps(v1,v2),v3));
+	v1 = _mm_mul_ps(_mm_rcp_ps(c), _v);
+	Vector4 vec;
+	_mm_store_ps(vec.v, v1);
+	return vec;	
+#else
+	float coe = sqrtf((x*x+y*y+z*z) * m);
+	return Vector4(x/coe,y/coe,z/coe,coe);
+#endif 
 }
 
 float Vector4::NormalizeThis() const
 {
+#ifdef USE_SSE
+	const __m128 _v = _mm_load_ps(this->v);
+	__m128 c = _mm_shuffle_ps(_v,_v,0b11111111);
+	__m128 v2 = _mm_mul_ps(_v,c);
+	__m128 v3 = _mm_mul_ps(v2,v3);
+	__m128 v1 = _mm_shuffle_ps(v3,v3,0b11100101);
+	v2 = _mm_shuffle_ps(v2,v2,0b11100110);
+	c = _mm_sqrt_ps(_mm_add_ps(_mm_add_ps(v1,v2),v3));
+	v1 = _mm_mul_ps(_mm_rcp_ps(c), _v);
+	_mm_store_ps((float*)this->v, v1);
+#else
+	float c = sqrtf((x*x+y*y+z*z) * m);
+	x /= 
+#endif 
 }
 
 Vector4 Vector4::operator*(float f) const

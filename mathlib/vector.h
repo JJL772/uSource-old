@@ -242,7 +242,7 @@ public:
 		};
 		struct
 		{
-			uint32_t x,y,z,m;
+			uint32_t ux,uy,uz,um;
 		};
 	};
 public:
@@ -303,6 +303,12 @@ public:
 
 	/* Store absolute value of all vector components */
 	void AbsThis();
+
+	/* Denormalize this and return */
+	Vector4 DeNorm() const;
+
+	/* Denormalize this */
+	void DeNormThis() const;
 
 public:
 	/* Extras for debugging and the likes */
