@@ -443,7 +443,7 @@ float Vector3::Distance(const Vector3& other) const
 #ifdef USE_SSE
 
 #else
-
+	return sqrt((other.x-x)*(other.x-x) + (other.y-y)*(other.y-y) + (other.z-z)*(other.z-z));
 #endif
 }
 
@@ -768,7 +768,7 @@ float Vector4::Max() const
 #ifdef USE_SSE 
 	
 #else
-	return (x > y ? (x > z ? x : z) : (y > z ? y : z));
+	return ((x > y ? (x > z ? x : z) : (y > z ? y : z)))*m;
 #endif 
 }
 
@@ -831,7 +831,10 @@ float Vector4::NormalizeThis() const
 	_mm_store_ps((float*)this->v, v1);
 #else
 	float c = sqrtf((x*x+y*y+z*z) * m);
-	x /= 
+	x /= c;
+	y /= c;
+	z /= c;
+	m = 1.0f;
 #endif 
 }
 

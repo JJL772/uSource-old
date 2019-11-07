@@ -54,37 +54,37 @@ def configure(conf):
 def build(bld):
 	libs = [ 'public' ]
 	source = bld.path.ant_glob([
-		'common/*.c',
-		'common/imagelib/*.c',
-		'common/soundlib/*.c',
-		'common/soundlib/libmpg/*.c',
-		'server/*.c'])
+		'common/*.cpp',
+		'common/imagelib/*.cpp',
+		'common/soundlib/*.cpp',
+		'common/soundlib/libmpg/*.cpp',
+		'server/*.cpp'])
 
 	# basic build: dedicated only, no dependencies
 	if bld.env.DEST_OS != 'win32':
 		libs += [ 'DL' , 'M', 'PTHREAD' ]
-		source += bld.path.ant_glob(['platform/posix/*.c'])
+		source += bld.path.ant_glob(['platform/posix/*.cpp'])
 	else:
 		libs += ['USER32', 'SHELL32', 'GDI32', 'ADVAPI32', 'DBGHELP', 'PSAPI', 'WS2_32' ]
-		source += bld.path.ant_glob(['platform/win32/*.c'])
+		source += bld.path.ant_glob(['platform/win32/*.cpp'])
 
 	if bld.env.DEST_OS == 'linux':
-		source += bld.path.ant_glob(['platform/linux/*.c'])
+		source += bld.path.ant_glob(['platform/linux/*.cpp'])
 
 	if bld.env.HAVE_SDL2:
 		libs.append('SDL2')
-		source += bld.path.ant_glob(['platform/sdl/*.c'])
+		source += bld.path.ant_glob(['platform/sdl/*.cpp'])
 
 	if bld.env.DEST_OS == 'android':
 		libs += ['LOG', 'EGL', 'ANDROID']
-		source += bld.path.ant_glob(['platform/android/*.cpp', 'platform/android/*.c', 'platform/linux/*.c'])
+		source += bld.path.ant_glob(['platform/android/*.cpp', 'platform/android/*.cpp', 'platform/linux/*.cpp'])
 
 	# add client files
 	if not bld.env.DEDICATED:
 		source += bld.path.ant_glob([
-			'client/*.c',
-			'client/vgui/*.c',
-			'client/avi/*.c'])
+			'client/*.cpp',
+			'client/vgui/*.cpp',
+			'client/avi/*.cpp'])
 	else:
 		if bld.env.DEST_OS == 'linux':
 			libs.append('RT')
@@ -103,10 +103,10 @@ def build(bld):
 
 	if bld.env.SINGLE_BINARY:
 		install_path = bld.env.BINDIR
-		features = 'c cprogram'
+		features = 'c cxx cxxprogram cprogram'
 	else:
 		install_path = bld.env.LIBDIR
-		features = 'c cshlib'
+		features = 'c cxx cxxshlib cshlib'
 
 	bld(source   = source,
 		target   = 'xash',

@@ -56,7 +56,7 @@ def options(opt):
 	grp.add_option('--enable-bsp2', action = 'store_true', dest = 'SUPPORT_BSP2_FORMAT', default = False,
 		help = 'build engine and renderers with BSP2 map support(recommended for Quake, breaks compability!)')
 
-	grp.add_option('--sse', action='store_true', dest='USE_SSE', default=True, 
+	grp.add_option('--sse', action='store_true', dest='USE_SSE', default=True,
 		help='Enables the use of SSE and SSE2 on x86 and x86_64 targets. This is automatically enabled on x64 CPUs')
 
 	grp.add_option('--sse4.1', action='store_true', dest='USE_SSE42', default=False,
@@ -82,7 +82,7 @@ def filter_cflags(conf, flags, required_flags, cxx):
 	supported_flags = []
 	check_flags = required_flags + ['-Werror']
 	conf.msg('Detecting supported flags for %s' % ('C++' if cxx else 'C'),'...')
-	
+
 	for flag in flags:
 		conf.start_msg('Checking for %s' % flag)
 		try:
@@ -167,7 +167,7 @@ def configure(conf):
 		conf.load('sdl2')
 
 	# Platform stuff
-	if conf.env.DEST_CPU is "x86_64": 
+	if conf.env.DEST_CPU is "x86_64":
 		conf.env.append_unique('DEFINES', '_x64_=1')
 		conf.env.append_unique('DEFINES', '_X64_=1')
 	if conf.env.DEST_CPU is "x86":
@@ -193,7 +193,7 @@ def configure(conf):
 		conf.env.append_unique('DEFINES', 'USE_AVX=1')
 	if conf.options.USE_NEON:
 		conf.env.append_unique('DEFINES', 'USE_NEON=1')
-	
+
 
 	linker_flags = {
 		'common': {
@@ -245,8 +245,6 @@ def configure(conf):
 
 	compiler_optional_flags = [
 		'-fdiagnostics-color=always',
-		'-Werror=implicit-function-declaration',
-		'-Werror=int-conversion',
 		'-Werror=return-type',
 		'-Werror=parentheses',
 	]
@@ -258,7 +256,7 @@ def configure(conf):
 	else:
 		conf.check_cc(cflags=cflags, msg= 'Checking for required C flags')
 		conf.check_cxx(cxxflags=cflags, msg= 'Checking for required C++ flags')
-	
+
 		conf.env.append_unique('CFLAGS', cflags + filter_cflags(conf, compiler_optional_flags, cflags, False))
 		conf.env.append_unique('CXXFLAGS', cflags + filter_cflags(conf, compiler_optional_flags, cflags, True))
 
