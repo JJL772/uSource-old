@@ -398,7 +398,7 @@ float Vector3::Length2D() const
 	return res[0];
 #else
 	return sqrtf(x*x + y*y);
-#endif 
+#endif
 }
 
 float Vector3::Dot(const Vector3& other) const
@@ -765,11 +765,11 @@ float Vector4::Lerp(const Vector4& other, float bias) const
 
 float Vector4::Max() const
 {
-#ifdef USE_SSE 
-	
+#ifdef USE_SSE
+
 #else
 	return ((x > y ? (x > z ? x : z) : (y > z ? y : z)))*m;
-#endif 
+#endif
 }
 
 Vector4 Vector4::DeNorm() const
@@ -799,7 +799,7 @@ void Vector4::DeNormThis() const
 
 Vector4 Vector4::Normalize() const
 {
-#ifdef USE_SSE 
+#ifdef USE_SSE
 	const __m128 _v = _mm_load_ps(this->v);
 	__m128 c = _mm_shuffle_ps(_v,_v,0b11111111);
 	__m128 v2 = _mm_mul_ps(_v,c);
@@ -810,11 +810,11 @@ Vector4 Vector4::Normalize() const
 	v1 = _mm_mul_ps(_mm_rcp_ps(c), _v);
 	Vector4 vec;
 	_mm_store_ps(vec.v, v1);
-	return vec;	
+	return vec;
 #else
 	float coe = sqrtf((x*x+y*y+z*z) * m);
 	return Vector4(x/coe,y/coe,z/coe,coe);
-#endif 
+#endif
 }
 
 float Vector4::NormalizeThis() const
@@ -835,7 +835,7 @@ float Vector4::NormalizeThis() const
 	y /= c;
 	z /= c;
 	m = 1.0f;
-#endif 
+#endif
 }
 
 Vector4 Vector4::operator*(float f) const
@@ -933,7 +933,7 @@ Vector3 Vector4::ToVector3() const
 	Vector3 vec;
 #else
 	return Vector3(x*m,y*m,z*m);
-#endif	
+#endif
 }
 
 void Vector4::Printf() const
@@ -979,6 +979,8 @@ float DotProduct(const Vector3& v1, const Vector3& v2)
 	alignas(16) float ret[4];
 	_mm_store_ps(ret, _mm_dp_ps(_v1, _v2, 0b01110000));
 	return ret[0];
+#elif defined(USE_NEON)
+
 #else
 	return (v1.v[0]*v2.v[0] + v1.v[1]*v2.v[1] + v1.v[2]*v2.v[2]);
 #endif //USE_SSE
@@ -990,8 +992,7 @@ float DotProduct(const Vector3& v1, const Vector3& v2)
 Vector3 CrossProduct(const Vector3& v1, const Vector3& v2)
 {
 #ifdef USE_SSE
-	volatile float f = 0.0f; /* NOTE: this is required to prevent stack corruption, however, shadow space should prevent this too. */
-	Vector3 vec;
+	UVector3 vec;
 	__m128 _v1 = _mm_load_ps(v1.v);
 	__m128 _v2 = _mm_load_ps(v2.v);
 	__m128 res = _mm_set1_ps(0.0f);
@@ -1003,6 +1004,8 @@ Vector3 CrossProduct(const Vector3& v1, const Vector3& v2)
 		_mm_shuffle_ps(_v2, _v2, 0b11011000)));
 	_mm_store_ps(vec.v, res);
 	return vec;
+#elif defined(USE_NEON)
+
 #else
 	return Vector3(v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x);
 #endif
