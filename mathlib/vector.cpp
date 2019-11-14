@@ -619,9 +619,22 @@ Vector4 stuff
 
 */
 
+inline Vector4 Denorm(const Vector4& vec)
+{
+#ifdef USE_SSE
+	__m128 v1 = _mm_load_ps(vec.v);
+
+#elif defined(USE_NEON)
+
+#else
+
+#endif
+}
+
 /* Default constructor does nothing */
 Vector4::Vector4()
 {
+
 }
 
 Vector4::Vector4(const Vector4& vec)
@@ -744,10 +757,20 @@ void Vector4::CopyToArrayAligned(float* arr) const
 
 float Vector4::Distance(const Vector4& other) const
 {
+#ifdef USE_SSE
+
+#else
+
+#endif
 }
 
 float Vector4::Dot(const Vector4& other) const
 {
+#ifdef USE_SSE 
+
+#else
+
+#endif
 }
 
 bool Vector4::IsNAN() const
@@ -761,6 +784,11 @@ bool Vector4::IsNAN() const
 
 float Vector4::Lerp(const Vector4& other, float bias) const
 {
+#ifdef USE_SSE
+
+#else
+
+#endif
 }
 
 float Vector4::Max() const
