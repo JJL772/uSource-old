@@ -330,3 +330,8 @@ __pycache__
 .vscode
 .waf*
 
+# Clangdb stuff
+.clangdb/
+
+# Kdev
+.kdev4/
