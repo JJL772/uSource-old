@@ -9,8 +9,8 @@ Jeremy Lorelli, Sep. 2019
 */
 #pragma once
 
-#include "mathlib/mathlib.h"
-#include "mathlib/vector.h"
+#include "mathlib.h"
+#include "vector.h"
 
 class Plane
 {

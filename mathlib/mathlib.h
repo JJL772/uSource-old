@@ -9,7 +9,7 @@ Include this for all mathlib functionality.
 */
 #pragma once
 
-#include "mathlib/vector.h"
+#include "vector.h"
 #include "matrix.h"
 #include <stddef.h>
 #include <stdint.h>

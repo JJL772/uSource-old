@@ -21,8 +21,8 @@ Common definitions and such
 #include <sys/types.h> // off_t
 
 /* For the vector types and stuff */
-#include "mathlib/matrix.h"
-#include "mathlib/vector.h"
+#include "matrix.h"
+#include "vector.h"
 
 typedef unsigned char byte;
 typedef int		sound_t;
@@ -37,6 +37,8 @@ typedef byte		rgb_t[3];		// unsigned byte colorpack
 typedef vec_t		matrix3x4[3][4];
 typedef vec_t		matrix4x4[4][4];
 */
+typedef byte rgba_t[4];
+typedef byte rgb_t[3];
 
 /*============================
 Disable warnings 

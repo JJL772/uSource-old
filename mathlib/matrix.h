@@ -7,8 +7,8 @@ Matrix math stuff!
 */
 #pragma once
 
-#include "mathlib/vector.h"
-#include "mathlib/plane.h"
+#include "vector.h"
+#include "plane.h"
 
 class alignas(16) Matrix3x4
 {
