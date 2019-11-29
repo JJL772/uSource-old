@@ -211,7 +211,7 @@ public: /* additional functions */
 	Vector3 Abs() const;
 
 	/* Compute absolute value and store result in this vector */
-	void AbsThis() const;
+	void AbsThis();
 
 public:
 	/* Extras for debugging and the likes */
@@ -284,7 +284,7 @@ public:
 	Vector4 Normalize() const;
 
 	/* Normalize this vector and return the magnitude */
-	float NormalizeThis() const;
+	float NormalizeThis();
 
 	/* Return the biggest element in this vector */
 	float Max() const;
@@ -308,7 +308,7 @@ public:
 	Vector4 DeNorm() const;
 
 	/* Denormalize this */
-	void DeNormThis() const;
+	void DeNormThis();
 
 public:
 	/* Extras for debugging and the likes */

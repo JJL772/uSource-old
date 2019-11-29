@@ -487,7 +487,7 @@ float Vector3::DotProductAbs(const Vector3& other) const
 	_mm_store_ps(ret, _mm_dp_ps(_v1, _v2, 0b01110000));
 	return ret[0];
 #else
-	return (absf(x*other.x) + absf(y*other.y) + absf(z*other.z));
+	return (fabsf(x*other.x) + fabsf(y*other.y) + fabsf(z*other.z));
 #endif //USE_SSE
 }
 
@@ -582,22 +582,22 @@ Vector3 Vector3::Abs() const
 	return vec;
 #else
 	Vector3 vec;
-	vec.v[0] = absf(this->v[0]);
-	vec.v[1] = absf(this->v[1]);
-	vec.v[2] = absf(this->v[2]);
+	vec.v[0] = fabsf(this->v[0]);
+	vec.v[1] = fabsf(this->v[1]);
+	vec.v[2] = fabsf(this->v[2]);
 	return vec;
 #endif
 }
 
-void Vector3::AbsThis() const
+void Vector3::AbsThis()
 {
 #ifdef USE_SSE
 	static const __m128 abs_tmp = _mm_set_ps(-0.0f, -0.0f, -0.0f, 0.0f);
 	_mm_store_ps((float*)this->v, _mm_xor_ps(_mm_load_ps(this->v), abs_tmp));
 #else
-	this->x = absf(this->x);
-	this->y = absf(this->y);
-	this->z = absf(this->z);
+	this->x = fabsf(this->x);
+	this->y = fabsf(this->y);
+	this->z = fabsf(this->z);
 #endif
 }
 
@@ -637,10 +637,10 @@ Vector4::Vector4()
 
 }
 
-Vector4::Vector4(const Vector4& vec)
+Vector4::Vector4(const Vector4& other)
 {
 #ifdef USE_SSE
-	_mm_store_ps(v, _mm_load_ps(vec.v));
+	_mm_store_ps(v, _mm_load_ps(other.v));
 #else
 	this->v[0] = other.v[0];
 	this->v[1] = other.v[1];
@@ -662,10 +662,10 @@ Vector4::Vector4(float f)
 #endif
 }
 
-Vector4::Vector4(Vector4 && vec)
+Vector4::Vector4(Vector4 && other)
 {
 #ifdef USE_SSE
-	_mm_store_ps(v, _mm_load_ps(vec.v));
+	_mm_store_ps(v, _mm_load_ps(other.v));
 #else
 	this->v[0] = other.v[0];
 	this->v[1] = other.v[1];
@@ -694,7 +694,7 @@ Vector4 Vector4::Abs() const
 	_mm_store_ps(vec.v, _mm_xor_ps(v1, m128_abs));
 	return vec;
 #else
-	return Vector4(absf(x), absf(y), absf(z), absf(m));
+	return Vector4(fabsf(x), fabsf(y), fabsf(z), fabsf(m));
 #endif
 }
 
@@ -703,10 +703,10 @@ void Vector4::AbsThis()
 #ifdef USE_SSE
 	_mm_store_ps(this->v, _mm_xor_ps(_mm_load_ps(this->v), m128_abs));
 #else
-	x = absf(x);
-	y = absf(y);
-	z = absf(z);
-	m = absf(m);
+	x = fabsf(x);
+	y = fabsf(y);
+	z = fabsf(z);
+	m = fabsf(m);
 #endif
 }
 
@@ -769,7 +769,7 @@ float Vector4::Dot(const Vector4& other) const
 #ifdef USE_SSE 
 
 #else
-
+	return ((x*m)*(other.x*m)+ (y*m)*(other.y*m) + (z*m)*(other.z*m));
 #endif
 }
 
@@ -813,7 +813,7 @@ Vector4 Vector4::DeNorm() const
 #endif //USE_SSE
 }
 
-void Vector4::DeNormThis() const
+void Vector4::DeNormThis()
 {
 #ifdef USE_SSE
 
@@ -845,7 +845,7 @@ Vector4 Vector4::Normalize() const
 #endif
 }
 
-float Vector4::NormalizeThis() const
+float Vector4::NormalizeThis()
 {
 #ifdef USE_SSE
 	const __m128 _v = _mm_load_ps(this->v);
@@ -1030,8 +1030,8 @@ Vector3 CrossProduct(const Vector3& v1, const Vector3& v2)
 	/* Noew we move z,x,y and y,z,x */
 	res = _mm_sub_ps(res, _mm_mul_ps(_mm_shuffle_ps(_v1, _v1, 0b11010010),
 		_mm_shuffle_ps(_v2, _v2, 0b11011000)));
-	_mm_store_ps(vec.v, res);
-	return vec;
+	_mm_store_ps(vec._vec, res);
+	return vec.vec;
 #elif defined(USE_NEON)
 
 #else
