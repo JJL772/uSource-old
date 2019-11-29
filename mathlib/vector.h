@@ -334,7 +334,8 @@ Vector3 CrossProduct		(const Vector3& v1, const Vector3& v2);
 #define Vector Vector3
 #define Vector2D Vector2
 #define vec3_t Vector3
-
+#define Vector4D Vector4
+#define vec4_t Vector4
 /*
 
 More vector functions we must implement to build the engine

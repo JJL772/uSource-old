@@ -213,7 +213,7 @@ def configure(conf):
                         # disable thread-safe local static initialization for C++11 code, as it cause crashes on Windows XP
                         'msvc':    ['/D_USING_V110_SDK71_', '/Zi', '/FS', '/Zc:threadSafeInit-', '/MT'],
                         'clang': ['-g', '-gdwarf-2', '-fvisibility=hidden'],
-                        'gcc': ['-g', '-fvisibility=hidden']
+                        'gcc': ['-g', '-fvisibility=hidden', '-fpermissive']
                 },
                 'fast': {
                         'msvc':    ['/O2', '/Oy'], #todo: check /GL /LTCG

@@ -802,7 +802,7 @@ static int wetwork( mpg123_handle_t *fr, ulong *newheadp )
 	// now we got something bad at hand, try to recover.
 	if( !( fr->p.flags & MPG123_NO_RESYNC ))
 	{
-		long	try = 0;
+		long	_try = 0;
 		long	limit = fr->p.resync_limit;
 		uint	forgetcount = 0;
 
@@ -811,9 +811,9 @@ static int wetwork( mpg123_handle_t *fr, ulong *newheadp )
 
 		do	// ... shift the header with additional single bytes until be found something that could be a header.
 		{
-			try++;
+			_try++;
 
-			if( limit >= 0 && try >= limit )
+			if( limit >= 0 && _try >= limit )
 				break;				
 
 			if( ++forgetcount > FORGET_INTERVAL )
@@ -829,7 +829,7 @@ static int wetwork( mpg123_handle_t *fr, ulong *newheadp )
 		*newheadp = newhead;
 
 		// now we either got something that could be a header, or we gave up.
-		if( limit >= 0 && try >= limit )
+		if( limit >= 0 && _try >= limit )
 		{
 			fr->err = MPG123_RESYNC_FAIL;
 			return PARSE_ERR;

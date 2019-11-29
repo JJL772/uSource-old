@@ -9,10 +9,12 @@ Jeremy Lorelli, Sep. 2019
 */
 #pragma once
 
-#include "mathlib.h"
 #include "vector.h"
 
 class Plane
 {
 
 };
+
+#define mplane_s Plane
+#define mplane_t Plane

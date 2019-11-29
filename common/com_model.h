@@ -18,8 +18,12 @@ GNU General Public License for more details.
 
 #include "bspfile.h"	// we need some declarations from it
 
+#include "vector.h"
+
+#if 0
 typedef vec_t		vec2_t[2];
 typedef vec_t		vec4_t[4];
+#endif
 
 /*
 ==============================================================================
@@ -47,6 +51,7 @@ typedef enum
 	mod_studio
 } modtype_t;
 
+#if 0
 typedef struct mplane_s
 {
 	vec3_t		normal;
@@ -55,6 +60,7 @@ typedef struct mplane_s
 	byte		signbits;		// signx + (signy<<1) + (signz<<1)
 	byte		pad[2];
 } mplane_t;
+#endif
 
 typedef struct
 {

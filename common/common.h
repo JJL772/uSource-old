@@ -8,9 +8,11 @@ Common definitions and such
 #pragma once
 
 #ifndef Q_min
+#undef Q_min
 #define Q_min(a,b)  (((a) < (b)) ? (a) : (b))
 #endif
 #ifndef Q_max
+#undef Q_max
 #define Q_max(a,b)  (((a) > (b)) ? (a) : (b))
 #endif
 
@@ -21,8 +23,8 @@ Common definitions and such
 #include <sys/types.h> // off_t
 
 /* For the vector types and stuff */
-#include "matrix.h"
-#include "vector.h"
+#include "../mathlib/matrix.h"
+#include "../mathlib/vector.h"
 
 typedef unsigned char byte;
 typedef int		sound_t;

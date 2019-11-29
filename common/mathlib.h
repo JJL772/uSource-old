@@ -16,7 +16,7 @@
 
 #include <math.h>
 
-#include "mathlib/mathlib.h"
+#include "../mathlib/mathlib.h"
 
 #if 0
 

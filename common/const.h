@@ -12,6 +12,9 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
+#include "common.h"
+
 #ifndef CONST_H
 #define CONST_H
 //
@@ -726,8 +729,10 @@ enum
 	kRenderFxClampMinScale,		// Keep this sprite from getting very small (SPRITES only!)
 };
 
+#if 0
 typedef int		func_t;
 typedef int		string_t;
+#endif
 
 typedef unsigned char	byte;
 typedef unsigned short	word;
@@ -757,6 +762,7 @@ typedef struct
 	vec3_t	normal;
 	float	dist;
 } plane_t;
+
 
 typedef struct
 {
