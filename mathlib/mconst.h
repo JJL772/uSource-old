@@ -23,11 +23,19 @@ Mathematical constants!
 #define _DEFINE_CONSTVEC128D(name, x,y) 
 #endif
 
+#if defined(USE_SSE) || defined(USE_NEON)
 #define DEFINE_CONSTANT128(name, val) _DEFINE_CONST128(name, val)
 #define DEFINE_CONSTANT128D(name, val) _DEFINE_CONST128D(name, val)
 #define DEFINE_CONSTVEC128(name, x, y, z, m) _DEFINE_CONSTVEC128(name, x,y,z,m)
 #define DEFINE_CONSTVEC128D(name, x, y) _DEFINE_CONSTVEC128D(name,x,y)
 #define DEFINE_CONSTVEC128I(name, x, y, z, m) _DEFINE_CONSTVEC128I(name,x,y,z,m)
+#else
+#define DEFINE_CONSTANT128(name, val)
+#define DEFINE_CONSTANT128D(name, val)
+#define DEFINE_CONSTVEC128(name, x, y, z, m)
+#define DEFINE_CONSTVEC128D(name, x, y)
+#define DEFINE_CONSTVEC128I(name, x, y, z, m)
+#endif
 
 /* Doing an xorps with this constant will clear the sign */
 DEFINE_CONSTANT128	(m128_abs,	-0.0f);
