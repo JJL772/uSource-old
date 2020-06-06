@@ -335,3 +335,9 @@ __pycache__
 
 # Kdev
 .kdev4/
+
+# clangd
+compile_commands.json
+
+# Stuff from intellij
+.idea
