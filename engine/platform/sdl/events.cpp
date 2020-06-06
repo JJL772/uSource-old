@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #if defined( XASH_SDL ) && !defined( XASH_DEDICATED )
 #include <SDL.h>
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "keydefs.h"
 #include "input.h"
 #include "client.h"

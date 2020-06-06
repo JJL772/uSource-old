@@ -18,7 +18,7 @@ GNU General Public License for more details.
 
 #include "bspfile.h"	// we need some declarations from it
 
-#include "vector.h"
+#include "mathlib/vector.h"
 
 #if 0
 typedef vec_t		vec2_t[2];

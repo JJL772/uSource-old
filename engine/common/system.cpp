@@ -109,7 +109,7 @@ void Sys_Sleep( int msec )
 	if( !msec )
 		return;
 
-	msec = min( msec, 1000 );
+	msec = Q_min( msec, 1000 );
 	Platform_Sleep( msec );
 }
 
@@ -427,7 +427,7 @@ void Sys_Error( const char *error, ... )
 	if( !Host_IsDedicated() )
 	{
 #ifdef XASH_SDL
-		if( host.hWnd ) SDL_HideWindow( host.hWnd );
+		if( host.hWnd ) SDL_HideWindow( (SDL_Window*)host.hWnd );
 #endif
 	}
 

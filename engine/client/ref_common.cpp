@@ -1,6 +1,6 @@
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "cl_tent.h"
 #include "platform/platform.h"
 #include "vid_common.h"
@@ -228,13 +228,13 @@ static ref_api_t gEngfuncs =
 {
 	pfnEngineGetParm,
 
-	(void*)Cvar_Get,
-	(void*)Cvar_FindVarExt,
+	reinterpret_cast<cvar_t *(*)(const char *, const char *, int, const char *)>((void *) Cvar_Get),
+	reinterpret_cast<cvar_t *(*)(const char *, int)>((void *) Cvar_FindVarExt),
 	Cvar_VariableValue,
 	Cvar_VariableString,
 	Cvar_SetValue,
 	Cvar_Set,
-	(void*)Cvar_RegisterVariable,
+	reinterpret_cast<void (*)(cvar_t *)>((void *) Cvar_RegisterVariable),
 	Cvar_FullSet,
 
 	Cmd_AddRefCommand,

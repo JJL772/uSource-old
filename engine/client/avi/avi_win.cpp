@@ -14,7 +14,7 @@ GNU General Public License for more details.
 */
 
 #ifdef _WIN32
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include <vfw.h> // video for windows
 

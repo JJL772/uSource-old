@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
 #include "const.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "event_flags.h"
 #include "studio.h"
 
@@ -621,7 +621,7 @@ void SV_InitClientMove( void )
 	svgame.pmove->RandomFloat = COM_RandomFloat;
 	svgame.pmove->PM_GetModelType = pfnGetModelType;
 	svgame.pmove->PM_GetModelBounds = pfnGetModelBounds;	
-	svgame.pmove->PM_HullForBsp = (void*)pfnHullForBsp;
+	svgame.pmove->PM_HullForBsp = reinterpret_cast<void *(*)(physent_t *, float *)>((void *) pfnHullForBsp);
 	svgame.pmove->PM_TraceModel = pfnTraceModel;
 	svgame.pmove->COM_FileSize = COM_FileSize;
 	svgame.pmove->COM_LoadFile = COM_LoadFile;

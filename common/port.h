@@ -17,8 +17,6 @@ GNU General Public License for more details.
 #ifndef PORT_H
 #define PORT_H
 
-#include "build.h"
-
 #if !defined(_WIN32)
 	#include <dlfcn.h>
 	#include <unistd.h>

@@ -13,11 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "sound.h"
 #include "client.h"
 #include "con_nprint.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "platform/platform.h"
 
 #define SND_CLIP_DISTANCE		1000.0f
@@ -1042,7 +1042,7 @@ rawchan_t *S_FindRawChannel( int entnum, qboolean create )
 	if( !raw_channels[best] )
 	{
 		raw_samples = MAX_RAW_SAMPLES;
-		raw_channels[best] = Mem_Calloc( sndpool, sizeof( *ch ) + sizeof( portable_samplepair_t ) * ( raw_samples - 1 ));
+		raw_channels[best] = (rawchan_t*)Mem_Calloc( sndpool, sizeof( *ch ) + sizeof( portable_samplepair_t ) * ( raw_samples - 1 ));
 	}
 
 	ch = raw_channels[best];
@@ -1180,7 +1180,7 @@ void S_StreamAviSamples( void *Avi, int entnum, float fvol, float attn, float sy
 
 	if( ch->sound_info.rate == 0 )
 	{
-		if( !AVI_GetAudioInfo( Avi, &ch->sound_info ))
+		if( !AVI_GetAudioInfo( (movie_state_t*)Avi, &ch->sound_info ))
 			return; // no audiotrack
 	}
 
@@ -1193,7 +1193,7 @@ void S_StreamAviSamples( void *Avi, int entnum, float fvol, float attn, float sy
 
 	// position is changed, synchronization is lost etc
 	if( fabs( ch->oldtime - synctime ) > s_mixahead->value )
-		ch->sound_info.loopStart = AVI_TimeToSoundPosition( Avi, synctime * 1000 );
+		ch->sound_info.loopStart = AVI_TimeToSoundPosition( (movie_state_t*)Avi, synctime * 1000 );
 	ch->oldtime = synctime; // keep actual time
 
 	while( ch->s_rawend < soundtime + ch->max_samples )
@@ -1216,7 +1216,7 @@ void S_StreamAviSamples( void *Avi, int entnum, float fvol, float attn, float sy
 		}
 
 		// read audio stream
-		r = AVI_GetAudioChunk( Avi, raw, info->loopStart, fileBytes );
+		r = AVI_GetAudioChunk((movie_state_t*)Avi, reinterpret_cast<char *>(raw), info->loopStart, fileBytes );
 		info->loopStart += r; // advance play position
 
 		if( r < fileBytes )

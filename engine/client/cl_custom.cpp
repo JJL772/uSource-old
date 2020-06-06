@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 
 qboolean CL_CheckFile( sizebuf_t *msg, resource_t *pResource )
 {

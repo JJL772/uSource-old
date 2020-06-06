@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "keydefs.h"
-#include "protocol.h"		// get the protocol version
+#include "engine/common/protocol.h"		// get the protocol version
 #include "con_nprint.h"
 #include "qfont.h"
 #include "wadfile.h"
@@ -2143,7 +2143,7 @@ void Con_DrawSolidConsole( int lines )
 	Con_DrawInput( lines );
 
 	y = lines - ( con.curFont->charHeight * 1.2f );
-	SCR_DrawFPS( max( y, 4 )); // to avoid to hide fps counter
+	SCR_DrawFPS( Q_max( y, 4 )); // to avoid to hide fps counter
 
 	ref.dllFuncs.Color4ub( 255, 255, 255, 255 );
 }

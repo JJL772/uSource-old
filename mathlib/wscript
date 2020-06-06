@@ -17,6 +17,7 @@ def build(bld):
 		#'vector.h',
 		#'matrix.h',
 		'matrix.cpp',
+		'mathlib.cpp'
 	]
 
 	includes = list()
@@ -25,7 +26,7 @@ def build(bld):
 
 	libs = []
 
-	bld.shlib(
+	bld.stlib(
 		source   = source,
 		target   = 'mathlib',
 		features = 'cxx',

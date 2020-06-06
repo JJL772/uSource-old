@@ -1,5 +1,5 @@
 /*
-mathlib.c - internal mathlib
+xash3d_mathlib.c - internal mathlib
 Copyright (C) 2010 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify
@@ -12,37 +12,33 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-#if 0
-#include "port.h"
-#include "xash3d_types.h"
-#include "const.h"
-#include "com_model.h"
-#include <math.h>
 #include "mathlib.h"
-#include "eiface.h"
+#include "common/types.h"
+#include "common/common.h"
 
+#define ARRAYSIZE(x) (sizeof(x) / sizeof(*x))
 #define NUM_HULL_ROUNDS	ARRAYSIZE( hull_table )
 #define HULL_PRECISION	4
 
 vec3_t vec3_origin = { 0, 0, 0 };
 
-static word hull_table[] = { 2, 4, 6, 8, 12, 16, 18, 24, 28, 32, 36, 40, 48, 54, 56, 60, 64, 72, 80, 112, 120, 128, 140, 176 };
+static uint16_t hull_table[] = { 2, 4, 6, 8, 12, 16, 18, 24, 28, 32, 36, 40, 48, 54, 56, 60, 64, 72, 80, 112, 120, 128, 140, 176 };
 
 int boxpnt[6][4] =
-{
-{ 0, 4, 6, 2 }, // +X
-{ 0, 1, 5, 4 }, // +Y
-{ 0, 2, 3, 1 }, // +Z
-{ 7, 5, 1, 3 }, // -X
-{ 7, 3, 2, 6 }, // -Y
-{ 7, 6, 4, 5 }, // -Z
-};	
+	{
+		{ 0, 4, 6, 2 }, // +X
+		{ 0, 1, 5, 4 }, // +Y
+		{ 0, 2, 3, 1 }, // +Z
+		{ 7, 5, 1, 3 }, // -X
+		{ 7, 3, 2, 6 }, // -Y
+		{ 7, 6, 4, 5 }, // -Z
+	};
 
 // pre-quantized table normals from Quake1
 const float m_bytenormals[NUMVERTEXNORMALS][3] =
-{
-#include "anorms.h"
-};
+	{
+#include "engine/anorms.h"
+	};
 
 /*
 =================
@@ -51,7 +47,7 @@ anglemod
 */
 float anglemod( float a )
 {
-	a = (360.0 / 65536) * ((int)(a*(65536/360.0)) & 65535);
+	a = (360.0f / 65536) * ((int)(a*(65536/360.0f)) & 65535);
 	return a;
 }
 
@@ -73,7 +69,7 @@ float SimpleSpline( float value )
 	return (3.0f * valueSquared - 2.0f * valueSquared * value);
 }
 
-word FloatToHalf( float v )
+uint16_t FloatToHalf( float v )
 {
 	unsigned int	i = *((unsigned int *)&v);
 	unsigned int	e = (i >> 23) & 0x00ff;
@@ -89,7 +85,7 @@ word FloatToHalf( float v )
 	return h;
 }
 
-float HalfToFloat( word h )
+float HalfToFloat( uint16_t h )
 {
 	unsigned int	f = (h << 16) & 0x80000000;
 	unsigned int	em = h & 0x7fff;
@@ -130,7 +126,7 @@ round the hullsize to nearest 'right' value
 void RoundUpHullSize( vec3_t size )
 {
 	int	i, j;
-	
+
 	for( i = 0; i < 3; i++)
 	{
 		qboolean	negative = false;
@@ -151,7 +147,7 @@ void RoundUpHullSize( vec3_t size )
 			{
 				result = ( value - hull_table[j] );
 				if( result <= HULL_PRECISION )
-				{ 
+				{
 					result = -hull_table[j];
 					break;
 				}
@@ -160,7 +156,7 @@ void RoundUpHullSize( vec3_t size )
 			{
 				result = ( value - hull_table[j] );
 				if( result <= HULL_PRECISION )
-				{ 
+				{
 					result = hull_table[j];
 					break;
 				}
@@ -326,8 +322,8 @@ void SinCos( float radians, float *sine, float *cosine )
 		fstp dword ptr [eax]
 	}
 #else
-	*sine = sinf(radians);
-	*cosine = cosf(radians);
+	*sine = sin(radians);
+	*cosine = cos(radians);
 #endif
 }
 
@@ -389,7 +385,7 @@ AngleVectors
 
 =================
 */
-void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
+void GAME_EXPORT AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
 {
 	float	sr, sp, sy, cr, cp, cy;
 
@@ -425,7 +421,7 @@ VectorAngles
 
 =================
 */
-void VectorAngles( const float *forward, float *angles )
+void GAME_EXPORT VectorAngles( const float *forward, float *angles )
 {
 	float	tmp, yaw, pitch;
 
@@ -445,15 +441,15 @@ void VectorAngles( const float *forward, float *angles )
 	}
 	else
 	{
-		yaw = ( atan2( forward[1], forward[0] ) * 180 / M_PI );
+		yaw = ( atan2( forward[1], forward[0] ) * 180 / M_PI_F );
 		if( yaw < 0 ) yaw += 360;
 
 		tmp = sqrt( forward[0] * forward[0] + forward[1] * forward[1] );
-		pitch = ( atan2( forward[2], tmp ) * 180 / M_PI );
+		pitch = ( atan2( forward[2], tmp ) * 180 / M_PI_F );
 		if( pitch < 0 ) pitch += 360;
 	}
 
-	VectorSet( angles, pitch, yaw, 0 ); 
+	VectorSet( angles, pitch, yaw, 0 );
 }
 
 /*
@@ -681,20 +677,20 @@ void QuaternionAlign( const vec4_t p, const vec4_t q, vec4_t qt )
 	float	b = 0.0f;
 	int	i;
 
-	for( i = 0; i < 4; i++ ) 
+	for( i = 0; i < 4; i++ )
 	{
 		a += (p[i] - q[i]) * (p[i] - q[i]);
 		b += (p[i] + q[i]) * (p[i] + q[i]);
 	}
 
-	if( a > b ) 
+	if( a > b )
 	{
-		for( i = 0; i < 4; i++ ) 
+		for( i = 0; i < 4; i++ )
 			qt[i] = -q[i];
 	}
 	else
 	{
-		for( i = 0; i < 4; i++ ) 
+		for( i = 0; i < 4; i++ )
 			qt[i] = q[i];
 	}
 }
@@ -738,8 +734,8 @@ void QuaternionSlerpNoAlign( const vec4_t p, const vec4_t q, float t, vec4_t qt 
 		qt[1] = q[0];
 		qt[2] = -q[3];
 		qt[3] = q[2];
-		sclp = sin(( 1.0f - t ) * ( 0.5f * M_PI ));
-		sclq = sin( t * ( 0.5f * M_PI ));
+		sclp = sin(( 1.0f - t ) * ( 0.5f * M_PI_F ));
+		sclq = sin( t * ( 0.5f * M_PI_F ));
 
 		for( i = 0; i < 3; i++ )
 		{
@@ -801,7 +797,7 @@ void V_AdjustFov( float *fov_x, float *fov_y, float width, float height, qboolea
 
 	if( lock_x )
 	{
-		*fov_y = 2 * atan((width * 3) / (height * 4) * tan( *fov_y * M_PI / 360.0 * 0.5 )) * 360 / M_PI;
+		*fov_y = 2 * atan((width * 3) / (height * 4) * tan( *fov_y * M_PI_F / 360.0f * 0.5f )) * 360 / M_PI_F;
 		return;
 	}
 
@@ -828,42 +824,42 @@ int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const mplane_t *p )
 	// general case
 	switch( p->signbits )
 	{
-	case 0:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		break;
-	case 1:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		break;
-	case 2:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		break;
-	case 3:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		break;
-	case 4:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		break;
-	case 5:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-		break;
-	case 6:
-		dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		break;
-	case 7:
-		dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-		dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-		break;
-	default:
-		// shut up compiler
-		dist1 = dist2 = 0;
-		break;
+		case 0:
+			dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+			dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+			break;
+		case 1:
+			dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+			dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+			break;
+		case 2:
+			dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+			dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+			break;
+		case 3:
+			dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+			dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+			break;
+		case 4:
+			dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+			dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+			break;
+		case 5:
+			dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+			dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+			break;
+		case 6:
+			dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+			dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+			break;
+		case 7:
+			dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+			dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+			break;
+		default:
+			// shut up compiler
+			dist1 = dist2 = 0;
+			break;
 	}
 
 	if( dist1 >= p->dist )
@@ -874,4 +870,3 @@ int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const mplane_t *p )
 	return sides;
 }
 
-#endif

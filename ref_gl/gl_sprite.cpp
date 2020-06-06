@@ -14,7 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "gl_local.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "sprite.h"
 #include "studio.h"
 #include "entity_types.h"
@@ -87,7 +87,8 @@ static const dframetype_t *R_SpriteLoadFrame( model_t *mod, const void *pin, msp
 	pspriteframe->gl_texturenum = gl_texturenum;
 	*ppframe = pspriteframe;
 
-	return ( (const byte*)pin + sizeof(dspriteframe_t) + pinframe.width * pinframe.height * bytes );
+	return reinterpret_cast<const dframetype_t *>((const byte *) pin + sizeof(dspriteframe_t) +
+	                                              pinframe.width * pinframe.height * bytes);
 }
 
 /*
@@ -206,7 +207,7 @@ void Mod_LoadSpriteModel( model_t *mod, const void *buffer, qboolean *loaded, ui
 	for( i = 0; i < mod->numframes; i++ )
 	{
 		frametype_t frametype = pframetype->type;
-		psprite->frames[i].type = frametype;
+		psprite->frames[i].type = static_cast<spriteframetype_t>(frametype);
 
 		switch( frametype )
 		{

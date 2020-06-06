@@ -15,10 +15,10 @@ GNU General Public License for more details.
 
 #ifndef XASH_DEDICATED
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "mobility_int.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "input.h"
 #include "platform/platform.h"
 
@@ -105,7 +105,7 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	Touch_AddDefaultButton,
 	Touch_HideButtons,
 	Touch_RemoveButton,
-	(void*)Touch_SetClientOnly,
+	reinterpret_cast<void (*)(unsigned char)>(Touch_SetClientOnly),
 	Touch_ResetDefaultButtons,
 	pfnDrawScaledCharacter,
 	Sys_Warn,
@@ -119,7 +119,8 @@ qboolean Mobile_Init( void )
 	pfnMobilityInterface ExportToClient;
 
 	// find a mobility interface
-	ExportToClient = COM_GetProcAddress( clgame.hInstance, MOBILITY_CLIENT_EXPORT );
+	ExportToClient = reinterpret_cast<pfnMobilityInterface>(COM_GetProcAddress(clgame.hInstance,
+	                                                                      MOBILITY_CLIENT_EXPORT));
 	gMobileEngfuncs = &gpMobileEngfuncs;
 
 	if( ExportToClient && !ExportToClient( gMobileEngfuncs ) )

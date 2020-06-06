@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
 #include "const.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "triangleapi.h"
 #include "ref_common.h"
 
@@ -1987,7 +1987,7 @@ const byte *pfnLoadImagePixels( const char *filename, int *width, int *height )
 
 	if( !pic ) return NULL;
 
-	buffer = Mem_Malloc( svgame.mempool, pic->size );
+	buffer = (byte*)Mem_Malloc( svgame.mempool, pic->size );
 	if( buffer ) memcpy( buffer, pic->buffer, pic->size );
 	if( width ) *width = pic->width;
 	if( height ) *height = pic->height;
@@ -2017,7 +2017,7 @@ static server_physics_api_t gPhysicsAPI =
 	SV_LinkEdict,
 	SV_GetServerTime,
 	SV_GetFrameTime,
-	(void*)SV_ModelHandle,
+	reinterpret_cast<void *(*)(int)>((void *) SV_ModelHandle),
 	SV_GetHeadNode,
 	SV_ServerState,
 	Host_Error,
@@ -2044,7 +2044,7 @@ static server_physics_api_t gPhysicsAPI =
 	pfnPointContents,
 	SV_MoveNormal,
 	SV_MoveNoEnts,
-	(void*)SV_BoxInPVS,
+	reinterpret_cast<int (*)(const float *, const float *, const float *)>((void *) SV_BoxInPVS),
 	pfnWriteBytes,
 	Mod_CheckLump,
 	Mod_ReadLump,

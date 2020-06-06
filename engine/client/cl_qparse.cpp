@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 #include "particledef.h"
 #include "cl_tent.h"
 #include "shake.h"
@@ -274,7 +274,7 @@ static void CL_ParseQuakeServerInfo( sizebuf_t *msg )
 		if( !COM_CheckString( pResName ))
 			break; // end of list
 
-		pResource = Mem_Calloc( cls.mempool, sizeof( resource_t ));
+		pResource = (resource_t*)Mem_Calloc( cls.mempool, sizeof( resource_t ));
 		pResource->type = t_model;
 
 		Q_strncpy( pResource->szFileName, pResName, sizeof( pResource->szFileName ));
@@ -292,7 +292,7 @@ static void CL_ParseQuakeServerInfo( sizebuf_t *msg )
 		if( !COM_CheckString( pResName ))
 			break; // end of list
 
-		pResource = Mem_Calloc( cls.mempool, sizeof( resource_t ));
+		pResource = (resource_t*)Mem_Calloc( cls.mempool, sizeof( resource_t ));
 		pResource->type = t_sound;
 
 		Q_strncpy( pResource->szFileName, pResName, sizeof( pResource->szFileName ));

@@ -194,11 +194,11 @@ int frame_buffers( mpg123_handle_t *fr )
 		return -1;
 
 	fr->rawbuffss = buffssize;
-	fr->short_buffs[0][0] = aligned_pointer( fr->rawbuffs, 16 );
+	fr->short_buffs[0][0] = static_cast<short *>(aligned_pointer(fr->rawbuffs, 16));
 	fr->short_buffs[0][1] = fr->short_buffs[0][0] + 0x110;
 	fr->short_buffs[1][0] = fr->short_buffs[0][1] + 0x110;
 	fr->short_buffs[1][1] = fr->short_buffs[1][0] + 0x110;
-	fr->float_buffs[0][0] = aligned_pointer( fr->rawbuffs, 16 );
+	fr->float_buffs[0][0] = static_cast<float *>(aligned_pointer(fr->rawbuffs, 16));
 	fr->float_buffs[0][1] = fr->float_buffs[0][0] + 0x110;
 	fr->float_buffs[1][0] = fr->float_buffs[0][1] + 0x110;
 	fr->float_buffs[1][1] = fr->float_buffs[1][0] + 0x110;
@@ -235,11 +235,11 @@ int frame_buffers( mpg123_handle_t *fr )
 		scratchsize += sizeof( float ) * 2 * SBLIMIT * SSLIMIT; // hybrid_in
 		scratchsize += sizeof( float ) * 2 * SSLIMIT * SBLIMIT; // hybrid_out
 
-		fr->layerscratch = malloc( scratchsize + 63 );
+		fr->layerscratch = static_cast<float *>(malloc(scratchsize + 63));
 		if(fr->layerscratch == NULL) return -1;
 
 		// get aligned part of the memory, then divide it up.
-		scratcher = aligned_pointer( fr->layerscratch, 64 );
+		scratcher = static_cast<float *>(aligned_pointer(fr->layerscratch, 64));
 
 		// those funky pointer casts silence compilers...
 		// One might change the code at hand to really just use 1D arrays,
@@ -313,7 +313,7 @@ int frame_outbuffer( mpg123_handle_t *fr )
 		return MPG123_ERR;
 	}
 
-	fr->buffer.data = aligned_pointer( fr->buffer.rdata, 16 );
+	fr->buffer.data = static_cast<byte *>(aligned_pointer(fr->buffer.rdata, 16));
 	fr->own_buffer = TRUE;
 	fr->buffer.fill = 0;
 
@@ -333,7 +333,7 @@ static void frame_free_toc( mpg123_handle_t *fr )
 int frame_fill_toc( mpg123_handle_t *fr, byte *in )
 {
 	if( fr->xing_toc == NULL )
-		fr->xing_toc = malloc( 100 );
+		fr->xing_toc = static_cast<byte *>(malloc(100));
 
 	if( fr->xing_toc != NULL )
 	{

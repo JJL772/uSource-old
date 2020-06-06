@@ -14,9 +14,9 @@ GNU General Public License for more details.
 */
 #ifndef XASH_DEDICATED
 #include <SDL.h>
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "mod_local.h"
+#include "engine/common/mod_local.h"
 #include "input.h"
 #include "vid_common.h"
 #include "platform/sdl/events.h"

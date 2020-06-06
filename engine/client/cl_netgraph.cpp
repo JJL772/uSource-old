@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 
 #define NET_TIMINGS			1024
@@ -246,7 +246,7 @@ NetGraph_DrawTimes
 void NetGraph_DrawTimes( wrect_t rect, int x, int w )
 {
 	int	i, j, extrap_point = NETGRAPH_LERP_HEIGHT / 3, a, h;
-	rgba_t	colors = { 0.9 * 255, 0.9 * 255, 0.7 * 255, 255 };
+	rgba_t	colors = { static_cast<byte>(0.9 * 255), static_cast<byte>(0.9 * 255), static_cast<byte>(0.7 * 255), 255 };
 	wrect_t	fill;
 
 	for( a = 0; a < w; a++ )
@@ -350,7 +350,7 @@ NetGraph_DrawTextFields
 void NetGraph_DrawTextFields( int x, int y, int w, wrect_t rect, int count, float avg, int packet_loss, int packet_choke )
 {
 	static int	lastout;
-	rgba_t		colors = { 0.9 * 255, 0.9 * 255, 0.7 * 255, 255 };
+	rgba_t		colors = { static_cast<byte>(0.9 * 255), static_cast<byte>(0.9 * 255), static_cast<byte>(0.7 * 255), 255 };
 	int		ptx = Q_max( x + w - NETGRAPH_LERP_HEIGHT - 1, 1 );
 	int		pty = Q_max( rect.top + rect.bottom - NETGRAPH_LERP_HEIGHT - 3, 1 );
 	int		out, i = ( cls.netchan.outgoing_sequence - 1 ) & NET_TIMINGS_MASK;

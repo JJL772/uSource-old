@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "imagelib.h"
 #include "mathlib.h"
-#include "mod_local.h"
+#include "engine/common/mod_local.h"
 
 #define LERPBYTE( i )	r = resamplerow1[i]; out[i] = (byte)(((( resamplerow2[i] - r ) * lerp)>>16 ) + r )
 #define FILTER_SIZE		5
@@ -460,8 +460,8 @@ void Image_PaletteHueReplace( byte *palSrc, int newHue, int start, int end, int 
 		g = palSrc[i*pal_size+1];
 		b = palSrc[i*pal_size+2];
 		
-		maxcol = max( max( r, g ), b ) / 255.0f;
-		mincol = min( min( r, g ), b ) / 255.0f;
+		maxcol = Q_max( Q_max( r, g ), b ) / 255.0f;
+		mincol = Q_min( Q_min( r, g ), b ) / 255.0f;
 
 		if( maxcol == 0 ) continue;
 		

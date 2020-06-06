@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 
 #define HEARTBEAT_SECONDS	300.0f 		// 300 seconds
 
@@ -313,7 +313,7 @@ void SV_ProcessFile( sv_client_t *cl, const char *filename )
 		return;
 	}
 
-	HPAK_AddLump( true, CUSTOM_RES_PATH, resource, cl->netchan.tempbuffer, NULL );
+	HPAK_AddLump( true, CUSTOM_RES_PATH, resource, (byte*)cl->netchan.tempbuffer, NULL );
 	ClearBits( resource->ucFlags, RES_WASMISSING );
 	SV_MoveToOnHandList( cl, resource );
 
@@ -658,7 +658,7 @@ Host_SetServerState
 void Host_SetServerState( int state )
 {
 	Cvar_FullSet( "host_serverstate", va( "%i", state ), FCVAR_READ_ONLY );
-	sv.state = state;
+	sv.state = static_cast<sv_state_t>(state);
 }
 
 //============================================================================

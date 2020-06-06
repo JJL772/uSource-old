@@ -51,9 +51,9 @@ def configure(conf):
 		conf.check_cc(lib='log')
 
 def build(bld):
-	libs = [ 'public', 'M' ]
+	libs = [ 'public', 'M', 'mathlib' ]
 
-	source = bld.path.ant_glob(['*.c'])
+	source = bld.path.ant_glob(['*.cpp'])
 
 	includes = list()
 	includes.append(str(bld.env.ENGINE))

@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "const.h"
 #include "render_api.h"	// decallist_t
 #include "sound.h"		// S_GetDynamicSounds
@@ -288,7 +288,7 @@ static void InitEntityTable( SAVERESTOREDATA *pSaveData, int entityCount )
 	ENTITYTABLE	*pTable;
 	int		i;
 
-	pSaveData->pTable = Mem_Calloc( host.mempool, sizeof( ENTITYTABLE ) * entityCount );
+	pSaveData->pTable = (ENTITYTABLE*)Mem_Calloc( host.mempool, sizeof( ENTITYTABLE ) * entityCount );
 	pSaveData->tableCount = entityCount;
 
 	// setup entitytable
@@ -733,7 +733,7 @@ static char *StoreHashTable( SAVERESTOREDATA *pSaveData )
 	{
 		for( i = 0; i < pSaveData->tokenCount; i++ )
 		{
-			char *pszToken = pSaveData->pTokens[i] ? pSaveData->pTokens[i] : "";
+			char *pszToken = const_cast<char *>(pSaveData->pTokens[i] ? pSaveData->pTokens[i] : "");
 
 			// just copy the token byte-by-byte
 			while( *pszToken )
@@ -2259,7 +2259,7 @@ int SV_GetSaveComment( const char *savename, char *comment )
 	// allocate a table for the strings, and parse the table
 	if( tokenSize > 0 )
 	{
-		pTokenList = Mem_Calloc( host.mempool, tokenCount * sizeof( char* ));
+		pTokenList = (char**)Mem_Calloc( host.mempool, tokenCount * sizeof( char* ));
 
 		// make sure the token strings pointed to by the pToken hashtable.
 		for( i = 0; i < tokenCount; i++ )
@@ -2368,5 +2368,6 @@ int SV_GetSaveComment( const char *savename, char *comment )
 
 void SV_InitSaveRestore( void )
 {
-	pfnSaveGameComment = COM_GetProcAddress( svgame.hInstance, "SV_SaveGameComment" );
+	pfnSaveGameComment = reinterpret_cast<void (*)(char *, int)>(COM_GetProcAddress(svgame.hInstance,
+	                                                                           "SV_SaveGameComment"));
 }

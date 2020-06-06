@@ -11,10 +11,14 @@ Jeremy Lorelli, Sep. 2019
 
 #include "vector.h"
 
-class Plane
+#include "common/types.h"
+
+typedef struct mplane_s
 {
+	vec3_t		normal;
+	float		dist;
+	byte		type;		// for fast side tests
+	byte		signbits;		// signx + (signy<<1) + (signz<<1)
+	byte		pad[2];
+} mplane_t;
 
-};
-
-#define mplane_s Plane
-#define mplane_t Plane

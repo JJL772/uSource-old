@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "const.h"
 #include "server.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 #include "net_api.h"
 
 const char *clc_strings[clc_lastmsg+1] =
@@ -613,10 +613,10 @@ void SV_BeginRedirect( netadr_t adr, int target, char *buffer, int buffersize, v
 	if( !target || !buffer || !buffersize || !flush )
 		return;
 
-	host.rd.target = target;
+	host.rd.target = static_cast<rdtype_t>(target);
 	host.rd.buffer = buffer;
 	host.rd.buffersize = buffersize;
-	host.rd.flush = flush;
+	host.rd.flush = reinterpret_cast<void (*)(netadr_t, rdtype_t, char *)>(flush);
 	host.rd.address = adr;
 	host.rd.buffer[0] = 0;
 }
@@ -647,7 +647,7 @@ void SV_EndRedirect( void )
 	if( host.rd.flush )
 		host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
 
-	host.rd.target = 0;
+	host.rd.target = static_cast<rdtype_t>(0);
 	host.rd.buffer = NULL;
 	host.rd.buffersize = 0;
 	host.rd.flush = NULL;
@@ -959,7 +959,7 @@ void SV_RemoteCommand( netadr_t from, sizebuf_t *msg )
 
 	Con_Printf( "Rcon from %s:\n%s\n", NET_AdrToString( from ), MSG_GetData( msg ) + 4 );
 	Log_Printf( "Rcon: \"%s\" from \"%s\"\n", MSG_GetData( msg ) + 4, NET_AdrToString( from ));
-	SV_BeginRedirect( from, RD_PACKET, outputbuf, sizeof( outputbuf ) - 16, SV_FlushRedirect );
+	SV_BeginRedirect(from, RD_PACKET, outputbuf, sizeof( outputbuf ) - 16, reinterpret_cast<void *>(SV_FlushRedirect));
 
 	if( Rcon_Validate( ))
 	{
@@ -1147,7 +1147,7 @@ void SV_FullClientUpdate( sv_client_t *cl, sizebuf_t *msg )
 
 		MD5Init( &ctx );
 		MD5Update( &ctx, (byte *)cl->hashedcdkey, sizeof( cl->hashedcdkey ));
-		MD5Final( digest, &ctx );
+		MD5Final(reinterpret_cast<byte *>(digest), &ctx );
 
 		MSG_WriteBytes( msg, digest, sizeof( digest ));
 	}
@@ -2398,9 +2398,9 @@ void SV_ParseResourceList( sv_client_t *cl, sizebuf_t *msg )
 
 	for( i = 0; i < total; i++ )
 	{
-		resource = Z_Calloc( sizeof( resource_t ) );
+		resource = (resource_t*)Z_Calloc( sizeof( resource_t ) );
 		Q_strncpy( resource->szFileName, MSG_ReadString( msg ), sizeof( resource->szFileName ));
-		resource->type = MSG_ReadByte( msg );
+		resource->type = static_cast<resourcetype_t>(MSG_ReadByte(msg));
 		resource->nIndex = MSG_ReadShort( msg );
 		resource->nDownloadSize = MSG_ReadLong( msg );
 		resource->ucFlags = MSG_ReadByte( msg );

@@ -27,12 +27,12 @@ void *create_decoder( int *error )
 	mpg = mpg123_new( &ret );
 	if( !mpg ) return NULL;
 
-	ret = mpg123_param( mpg, MPG123_FLAGS, MPG123_FUZZY|MPG123_SEEKBUFFER|MPG123_GAPLESS );
+	ret = mpg123_param( (mpg123_handle_t*)mpg, MPG123_FLAGS, MPG123_FUZZY|MPG123_SEEKBUFFER|MPG123_GAPLESS );
 	if( ret != MPG123_OK && error )
 		*error = 1;
 
 	// let the seek index auto-grow and contain an entry for every frame
-	ret = mpg123_param( mpg, MPG123_INDEX_SIZE, -1 );
+	ret = mpg123_param( (mpg123_handle_t*)mpg, MPG123_INDEX_SIZE, -1 );
 	if( ret != MPG123_OK && error )
 		*error = 1;
 
@@ -69,7 +69,7 @@ int feed_mpeg_header( void *mpg, const byte *data, long bufsize, long streamsize
 
 int feed_mpeg_stream( void *mpg, const byte *data, long bufsize, byte *outbuf, size_t *outsize )
 {
-	switch( mpg123_decode( mpg, data, bufsize, outbuf, OUTBUF_SIZE, outsize ))
+	switch( mpg123_decode( (mpg123_handle_t*)mpg, data, bufsize, outbuf, OUTBUF_SIZE, outsize ))
 	{
 	case MPG123_NEED_MORE:
 		return MP3_NEED_MORE;
@@ -87,7 +87,7 @@ int open_mpeg_stream( void *mpg, void *file, pfread f_read, pfseek f_seek, wavin
 
 	if( !mh || !sc ) return 0;
 
-	ret = mpg123_replace_reader_handle( mh, (void *)f_read, (void *)f_seek, NULL );
+	ret = mpg123_replace_reader_handle( mh, (mpg_ssize_t (*)( void*, void*, size_t))f_read, ( mpg_off_t (*)(void*, mpg_off_t, int))f_seek, NULL );
 	if( ret != MPG123_OK )
 		return 0;
 
@@ -108,7 +108,7 @@ int open_mpeg_stream( void *mpg, void *file, pfread f_read, pfseek f_seek, wavin
 
 int read_mpeg_stream( void *mpg, byte *outbuf, size_t *outsize  )
 {
-	switch( mpg123_read( mpg, outbuf, OUTBUF_SIZE, outsize ))
+	switch( mpg123_read( (mpg123_handle_t*)mpg, outbuf, OUTBUF_SIZE, outsize ))
 	{
 	case MPG123_OK:
 		return MP3_OK;
@@ -119,16 +119,16 @@ int read_mpeg_stream( void *mpg, byte *outbuf, size_t *outsize  )
 
 int get_stream_pos( void *mpg )
 {
-	return mpg123_tell( mpg );
+	return mpg123_tell( (mpg123_handle_t*)mpg );
 }
 
 int set_stream_pos( void *mpg, int curpos )
 {
-	return mpg123_seek( mpg, curpos, SEEK_SET );
+	return mpg123_seek( (mpg123_handle_t*)mpg, curpos, SEEK_SET );
 }
 
 void close_decoder( void *mpg )
 {
-	mpg123_delete( mpg );
+	mpg123_delete( (mpg123_handle_t*)mpg );
 	mpg123_exit();
 }

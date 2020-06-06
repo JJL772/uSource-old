@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "sound.h"
 
 // during registration it is possible to have more sounds
@@ -106,7 +106,7 @@ static wavdata_t *S_CreateDefaultSound( void )
 {
 	wavdata_t	*sc;
 
-	sc = Mem_Calloc( sndpool, sizeof( wavdata_t ));
+	sc = (wavdata_t*)Mem_Calloc( sndpool, sizeof( wavdata_t ));
 
 	sc->width = 2;
 	sc->channels = 1;
@@ -114,7 +114,7 @@ static wavdata_t *S_CreateDefaultSound( void )
 	sc->rate = SOUND_DMA_SPEED;
 	sc->samples = SOUND_DMA_SPEED;
 	sc->size = sc->samples * sc->width * sc->channels;
-	sc->buffer = Mem_Calloc( sndpool, sc->size );
+	sc->buffer = (byte*)Mem_Calloc( sndpool, sc->size );
 
 	return sc;
 }

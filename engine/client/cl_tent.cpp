@@ -13,13 +13,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "r_efx.h"
 #include "entity_types.h"
 #include "triangleapi.h"
 #include "cl_tent.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "studio.h"
 #include "wadfile.h"	// acess decal size
 #include "sound.h"
@@ -126,10 +126,10 @@ void CL_AddClientResource( const char *filename, int type )
 	if( p != &cl.resourcesneeded )
 		return; // already in list?
 
-	pResource = Mem_Calloc( cls.mempool, sizeof( resource_t ));
+	pResource = (resource_t*)Mem_Calloc( cls.mempool, sizeof( resource_t ));
 
 	Q_strncpy( pResource->szFileName, filename, sizeof( pResource->szFileName ));
-	pResource->type = type;
+	pResource->type = (resourcetype_t)type;
 	pResource->nIndex = -1; // client resource marker
 	pResource->nDownloadSize = 1;
 	pResource->ucFlags |= RES_WASMISSING;
@@ -205,7 +205,7 @@ CL_InitTempents
 */
 void CL_InitTempEnts( void )
 {
-	cl_tempents = Mem_Calloc( cls.mempool, sizeof( TEMPENTITY ) * GI->max_tents );
+	cl_tempents = (tempent_s*)Mem_Calloc( cls.mempool, sizeof( TEMPENTITY ) * GI->max_tents );
 	CL_ClearTempEnts();
 
 	// load tempent sprites (glowshell, muzzleflashes etc)
@@ -361,8 +361,8 @@ void CL_TempEntPlaySound( TEMPENTITY *pTemp, float damp )
 		sound_t	handle;
 		
 		if( isshellcasing )
-			fvol *= min ( 1.0f, ((float)zvel) / 350.0f ); 
-		else fvol *= min ( 1.0f, ((float)zvel) / 450.0f ); 
+			fvol *= Q_min ( 1.0f, ((float)zvel) / 350.0f );
+		else fvol *= Q_min ( 1.0f, ((float)zvel) / 450.0f );
 		
 		if( !COM_RandomLong( 0, 3 ) && !isshellcasing )
 			pitch = COM_RandomLong( 95, 105 );
@@ -2917,7 +2917,7 @@ void CL_PlayerDecal( int playernum, int customIndex, int entityIndex, float *pos
 			if( !pCust->nUserData1 && pCust->pInfo != NULL )
 			{
 				const char *decalname = va( "player%dlogo%d", playernum, customIndex );
-				pCust->nUserData1 = GL_LoadTextureInternal( decalname, pCust->pInfo, TF_DECAL );
+				pCust->nUserData1 = GL_LoadTextureInternal( decalname, (rgbdata_t*)pCust->pInfo, TF_DECAL );
 			}
 			textureIndex = pCust->nUserData1;
 		}

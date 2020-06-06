@@ -17,8 +17,8 @@ GNU General Public License for more details.
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include "common.h"
-#include "system.h"
+#include "engine/common/common.h"
+#include "engine/common/system.h"
 #include "defaults.h"
 
 /*

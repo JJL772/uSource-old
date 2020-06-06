@@ -1096,7 +1096,8 @@ qboolean NET_QueuePacket( netsrc_t sock, netadr_t *from, byte *data, size_t *len
 	if( NET_IsSocketValid( net_socket ) )
 	{
 		addr_len = sizeof( addr );
-		ret = recvfrom( net_socket, buf, sizeof( buf ), 0, (struct sockaddr *)&addr, &addr_len );
+		ret = recvfrom(net_socket, buf, sizeof( buf ), 0, (struct sockaddr *)&addr,
+		               reinterpret_cast<socklen_t *>(&addr_len));
 
 		if( !NET_IsSocketError( ret ) )
 		{
@@ -1532,7 +1533,8 @@ void NET_GetLocalAddress( void )
 		{
 			namelen = sizeof( address );
 
-			if( NET_IsSocketError( getsockname( net.ip_sockets[NS_SERVER], (struct sockaddr *)&address, &namelen ) ) )
+			if( NET_IsSocketError( getsockname(net.ip_sockets[NS_SERVER], (struct sockaddr *)&address,
+			                                   reinterpret_cast<socklen_t *>(&namelen)) ) )
 			{
 				// this may happens if multiple clients running on single machine
 				Con_DPrintf( S_ERROR "Could not get TCP/IP address. Reason:  %s\n", NET_ErrorString( ));
@@ -2298,7 +2300,7 @@ Add new download to end of queue
 */
 void HTTP_AddDownload( const char *path, int size, qboolean process )
 {
-	httpfile_t *httpfile = Z_Calloc( sizeof( httpfile_t ) );
+	httpfile_t *httpfile = (httpfile_t*)Z_Calloc( sizeof( httpfile_t ) );
 
 	Con_Reportf( "File %s queued to download\n", path );
 

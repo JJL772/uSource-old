@@ -78,7 +78,7 @@ int fi_resize( frame_index_t *fi, size_t newsize )
 			fi_shrink( fi );
 	}
 
-	newdata = realloc( fi->data, newsize * sizeof( mpg_off_t ));
+	newdata = static_cast<mpg_off_t *>(realloc(fi->data, newsize * sizeof(mpg_off_t)));
 	if( newsize == 0 || newdata != NULL )
 	{
 		fi->data = newdata;

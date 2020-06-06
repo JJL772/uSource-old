@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 #ifndef XASH_DEDICATED
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "input.h"
 #include "keydefs.h"
 #include "client.h"
@@ -268,9 +268,9 @@ void Joy_AxisMotionEvent( byte axis, short value )
 		return; // it is not an update
 
 	if( engineAxis >= JOY_AXIS_RT )
-		Joy_ProcessTrigger( engineAxis, value );
+		Joy_ProcessTrigger(static_cast<const engineAxis_t>(engineAxis), value );
 	else
-		Joy_ProcessStick( engineAxis, value );
+		Joy_ProcessStick(static_cast<const engineAxis_t>(engineAxis), value );
 }
 
 /*

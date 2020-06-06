@@ -8,6 +8,8 @@ Vector implementation
 
 #include <math.h>
 
+#ifdef NEW_VEC_TYPES
+
 #ifdef USE_SSE
 #include <xmmintrin.h>
 #include <immintrin.h>
@@ -627,7 +629,7 @@ inline Vector4 Denorm(const Vector4& vec)
 #elif defined(USE_NEON)
 
 #else
-
+	return vec.DeNorm();
 #endif
 }
 
@@ -760,7 +762,7 @@ float Vector4::Distance(const Vector4& other) const
 #ifdef USE_SSE
 
 #else
-
+	return 0.0f;
 #endif
 }
 
@@ -787,7 +789,7 @@ float Vector4::Lerp(const Vector4& other, float bias) const
 #ifdef USE_SSE
 
 #else
-
+	return 0.0f;
 #endif
 }
 
@@ -863,6 +865,7 @@ float Vector4::NormalizeThis()
 	y /= c;
 	z /= c;
 	m = 1.0f;
+	return c;
 #endif
 }
 
@@ -1038,3 +1041,6 @@ Vector3 CrossProduct(const Vector3& v1, const Vector3& v2)
 	return Vector3(v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x);
 #endif
 }
+
+
+#endif

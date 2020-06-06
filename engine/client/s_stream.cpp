@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "sound.h"
 #include "client.h"
 
@@ -326,7 +326,7 @@ void S_StreamSoundTrack( void )
 		}
 
 		// read audio stream
-		r = SCR_GetAudioChunk( raw, fileBytes );
+		r = SCR_GetAudioChunk(reinterpret_cast<char *>(raw), fileBytes );
 
 		if( r < fileBytes )
 		{

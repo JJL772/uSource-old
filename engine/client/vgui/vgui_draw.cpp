@@ -16,11 +16,11 @@ GNU General Public License for more details.
 #ifndef XASH_DEDICATED
 
 #include <string.h>
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "vgui_draw.h"
 #include "vgui_api.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "keydefs.h"
 #include "ref_common.h"
 #include "input.h"
@@ -293,7 +293,7 @@ void VGui_Startup( const char *clientlib, int width, int height )
 		}
 		else
 		{
-			F = COM_GetProcAddress( s_pVGuiSupport, "InitAPI" );
+			F = reinterpret_cast<void (*)(vguiapi_t *)>(COM_GetProcAddress(s_pVGuiSupport, "InitAPI"));
 			if( F )
 			{
 				F( &vgui );

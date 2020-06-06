@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "input.h"
 #include "client.h"
 #include "vgui_draw.h"
@@ -130,7 +130,7 @@ static void IN_ActivateCursor( void )
 	if( cls.key_dest == key_menu )
 	{
 #ifdef XASH_SDL
-		SDL_SetCursor( in_mousecursor );
+		SDL_SetCursor( (SDL_Cursor*)in_mousecursor );
 #endif
 	}
 }
@@ -198,12 +198,12 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 		if( CVAR_TO_BOOL(touch_enable) )
 		{
 			SDL_SetRelativeMouseMode( SDL_FALSE );
-			SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
+			SDL_SetWindowGrab( (SDL_Window*)host.hWnd, SDL_FALSE );
 		}
 		else
 		{
 			Platform_SetMousePos( host.window_center_x, host.window_center_y );
-			SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
+			SDL_SetWindowGrab( (SDL_Window*)host.hWnd, SDL_TRUE );
 			if( clgame.dllFuncs.pfnLookEvent )
 				SDL_SetRelativeMouseMode( SDL_TRUE );
 		}
@@ -215,7 +215,7 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 	if( ( newstate == key_menu  || newstate == key_console || newstate == key_message ) && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo( )))
 	{
 #ifdef XASH_SDL
-		SDL_SetWindowGrab(host.hWnd, SDL_FALSE);
+		SDL_SetWindowGrab((SDL_Window*)host.hWnd, SDL_FALSE);
 		if( clgame.dllFuncs.pfnLookEvent )
 			SDL_SetRelativeMouseMode( SDL_FALSE );
 #endif
@@ -603,7 +603,7 @@ Called from cl_main.c after generating command in client
 void IN_EngineAppendMove( float frametime, void *cmd1, qboolean active )
 {
 	float forward, side, pitch, yaw;
-	usercmd_t *cmd = cmd1;
+	usercmd_t *cmd = (usercmd_t*)cmd1;
 
 	if( clgame.dllFuncs.pfnLookEvent )
 		return;

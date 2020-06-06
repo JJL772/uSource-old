@@ -10,10 +10,10 @@ top = '.'
 def options(opt):
 	grp = opt.add_option_group('Engine options')
 	grp.add_option('--enable-bsp2', action = 'store_true', dest = 'SUPPORT_BSP2_FORMAT', default = False,
-		help = 'build engine with BSP2 map support(recommended for Quake, breaks compatibility!)')
+				   help = 'build engine with BSP2 map support(recommended for Quake, breaks compatibility!)')
 
 	grp.add_option('--stdin-input', action = 'store_true', dest = 'USE_SELECT', default = None,
-		help = 'enable console input from stdin (default for dedicated)')
+				   help = 'enable console input from stdin (default for dedicated)')
 
 	opt.load('sdl2')
 
@@ -52,7 +52,7 @@ def configure(conf):
 		conf.env.append_unique('DEFINES', 'XASH_64BIT')
 
 def build(bld):
-	libs = [ 'public' ]
+	libs = [ 'public', 'mathlib' ]
 	source = bld.path.ant_glob([
 		'common/*.cpp',
 		'common/imagelib/*.cpp',
@@ -92,14 +92,17 @@ def build(bld):
 	# HACK: public headers must be put before common, so we don't get wrong mathlib included
 	#includes = ['common', 'server', 'client', 'client/vgui', '.', '../public', '../common', '../pm_shared' ]
 	includes = list()
+	includes.append(str(bld.env.MATHLIB))
 	includes.append(str(bld.env.COMMON))
 	includes.append(str(bld.env.ENGINE) + "/server")
 	includes.append(str(bld.env.ENGINE) + "/client")
 	includes.append(str(bld.env.ENGINE) + "/client/vgui")
+	#includes.append(str(bld.env.ENGINE) + "/common") Go fuck yourself
 	includes.append(str(bld.env.ENGINE))
 	includes.append(str(bld.env.PUBLIC))
 	includes.append(str(bld.env.PMSHARED))
 	includes.append(str(bld.env.COMMON))
+	includes.append('../')
 
 	if bld.env.SINGLE_BINARY:
 		install_path = bld.env.BINDIR
@@ -108,11 +111,13 @@ def build(bld):
 		install_path = bld.env.LIBDIR
 		features = 'c cxx cxxshlib cshlib'
 
+	print(libs)
 	bld(source   = source,
 		target   = 'xash',
 		features = features,
 		includes = includes,
 		use      = libs,
 		install_path = install_path,
+		defines = bld.env['DEFINES'],
 		subsystem = bld.env.MSVC_SUBSYSTEM
-	)
+		)

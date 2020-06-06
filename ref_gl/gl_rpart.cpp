@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include "event_flags.h"
 #include "entity_types.h"
 #include "triangleapi.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "cl_tent.h"
 #include "studio.h"
 

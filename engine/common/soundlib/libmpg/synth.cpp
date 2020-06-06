@@ -218,8 +218,10 @@ void init_synth( mpg123_handle_t *fr )
 
 static int find_synth(func_synth synth,  const func_synth synths[r_limit][f_limit])
 {
-	enum synth_resample	ri;
-	enum synth_format	fi;
+	//enum synth_resample	ri;
+	//enum synth_format	fi;
+	int ri;
+	int fi;
 
 	for( ri = 0; ri < r_limit; ++ri )
 	{

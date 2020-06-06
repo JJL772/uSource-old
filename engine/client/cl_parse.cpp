@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 #include "particledef.h"
 #include "cl_tent.h"
 #include "shake.h"
@@ -660,7 +660,7 @@ void CL_RemoveCustomization( int nPlayerNum, customization_t *pRemove )
 			{
 				if( cls.state == ca_active )
 					ref.dllFuncs.R_DecalRemoveAll( pList->nUserData1 );
-				FS_FreeImage( pList->pInfo );
+				FS_FreeImage( (rgbdata_t *)pList->pInfo );
 			}
 		}
 
@@ -688,8 +688,8 @@ void CL_ParseCustomization( sizebuf_t *msg )
 	if( i >= MAX_CLIENTS )
 		Host_Error( "Bogus player index during customization parsing.\n" );
 
-	pRes = Mem_Calloc( cls.mempool, sizeof( resource_t ));
-	pRes->type = MSG_ReadByte( msg );
+	pRes = (resource_t*)Mem_Calloc( cls.mempool, sizeof( resource_t ));
+	pRes->type = static_cast<resourcetype_t>((int) MSG_ReadByte(msg));
 
 	Q_strncpy( pRes->szFileName, MSG_ReadString( msg ), sizeof( pRes->szFileName ));
 	pRes->nIndex = MSG_ReadShort( msg );
@@ -1402,8 +1402,8 @@ void CL_ParseResource( sizebuf_t *msg )
 {
 	resource_t	*pResource;
 
-	pResource = Mem_Calloc( cls.mempool, sizeof( resource_t ));
-	pResource->type = MSG_ReadUBitLong( msg, 4 );
+	pResource = (resource_t*)Mem_Calloc( cls.mempool, sizeof( resource_t ));
+	pResource->type = static_cast<resourcetype_t>(MSG_ReadUBitLong(msg, 4));
 
 	Q_strncpy( pResource->szFileName, MSG_ReadString( msg ), sizeof( pResource->szFileName ));
 	pResource->nIndex = MSG_ReadUBitLong( msg, MAX_MODEL_BITS );
@@ -1657,8 +1657,8 @@ void CL_ParseResourceList( sizebuf_t *msg )
 
 	for( i = 0; i < total; i++ )
 	{
-		pResource = Mem_Calloc( cls.mempool, sizeof( resource_t ));
-		pResource->type = MSG_ReadUBitLong( msg, 4 );
+		pResource = (resource_t*)Mem_Calloc( cls.mempool, sizeof( resource_t ));
+		pResource->type = static_cast<resourcetype_t>(MSG_ReadUBitLong(msg, 4));
 
 		Q_strncpy( pResource->szFileName, MSG_ReadString( msg ), sizeof( pResource->szFileName ));
 		pResource->nIndex = MSG_ReadUBitLong( msg, MAX_MODEL_BITS );
@@ -1794,7 +1794,7 @@ void CL_ParseScreenShake( sizebuf_t *msg )
 	clgame.shake.amplitude = (float)(word)MSG_ReadShort( msg ) * (1.0f / (float)(1<<12));
 	clgame.shake.duration = (float)(word)MSG_ReadShort( msg ) * (1.0f / (float)(1<<12));
 	clgame.shake.frequency = (float)(word)MSG_ReadShort( msg ) * (1.0f / (float)(1<<8));
-	clgame.shake.time = cl.time + max( clgame.shake.duration, 0.01f );
+	clgame.shake.time = cl.time + Q_max( clgame.shake.duration, 0.01f );
 	clgame.shake.next_shake = 0.0f; // apply immediately
 }
 

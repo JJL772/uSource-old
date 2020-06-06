@@ -14,14 +14,14 @@ GNU General Public License for more details.
 */
 
 #define MINIZ_HEADER_FILE_ONLY
-#include "miniz.h"
+#include "engine/common/miniz.h"
 #include "imagelib.h"
 #include "mathlib.h"
 #ifndef _WIN32
 #include <netinet/in.h>
 #endif
 
-static const char png_sign[] = {0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
+static const char png_sign[] = {static_cast<char>(0x89), 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
 static const char ihdr_sign[] = {'I', 'H', 'D', 'R'};
 static const char idat_sign[] = {'I', 'D', 'A', 'T'};
 static const char iend_sign[] = {'I', 'E', 'N', 'D'};

@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
-#include "net_encode.h"
-#include "library.h"
+#include "engine/common/net_encode.h"
+#include "engine/common/library.h"
 
 int SV_UPDATE_BACKUP = SINGLEPLAYER_BACKUP;
 
@@ -754,9 +754,9 @@ void SV_SetupClients( void )
 	Cvar_FullSet( "maxplayers", va( "%d", svs.maxclients ), FCVAR_LATCH );
 	SV_UPDATE_BACKUP = ( svs.maxclients == 1 ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 
-	svs.clients = Z_Realloc( svs.clients, sizeof( sv_client_t ) * svs.maxclients );
+	svs.clients = (sv_client_t*)Z_Realloc( svs.clients, sizeof( sv_client_t ) * svs.maxclients );
 	svs.num_client_entities = svs.maxclients * SV_UPDATE_BACKUP * NUM_PACKET_ENTITIES;
-	svs.packet_entities = Z_Realloc( svs.packet_entities, sizeof( entity_state_t ) * svs.num_client_entities );
+	svs.packet_entities = (entity_state_t*)Z_Realloc( svs.packet_entities, sizeof( entity_state_t ) * svs.num_client_entities );
 	Con_Reportf( "%s alloced by server packet entities\n", Q_memprint( sizeof( entity_state_t ) * svs.num_client_entities ));
 
 	// init network stuff

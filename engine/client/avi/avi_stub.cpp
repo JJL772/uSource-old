@@ -14,7 +14,7 @@ GNU General Public License for more details.
 */
 
 #ifndef _WIN32
-#include "common.h"
+#include "engine/common/common.h"
 
 int AVI_GetVideoFrameNumber( movie_state_t *Avi, float time )
 {

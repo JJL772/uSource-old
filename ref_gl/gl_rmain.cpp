@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "gl_local.h"
 #include "mathlib.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "beamdef.h"
 #include "particledef.h"
 #include "entity_types.h"
@@ -379,7 +379,7 @@ static void R_SetupProjectionMatrix( matrix4x4 m )
 	RI.farClip = R_GetFarClip();
 
 	zNear = 4.0f;
-	zFar = max( 256.0f, RI.farClip );
+	zFar = Q_max( 256.0f, RI.farClip );
 
 	yMax = zNear * tan( RI.fov_y * M_PI / 360.0 );
 	yMin = -yMax;

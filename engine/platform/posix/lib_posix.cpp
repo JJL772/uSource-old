@@ -16,9 +16,9 @@ GNU General Public License for more details.
 #ifndef _WIN32 // see win_lib.c
 #define _GNU_SOURCE
 
-#include "common.h"
-#include "library.h"
-#include "filesystem.h"
+#include "engine/common/common.h"
+#include "engine/common/library.h"
+#include "engine/common/filesystem.h"
 #include "server.h"
 #include "platform/android/lib_android.h"
 #include "platform/emscripten/lib_em.h"

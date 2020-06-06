@@ -13,11 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 #include "event_flags.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "pm_defs.h"
 #include "studio.h"
 #include "const.h"
@@ -863,7 +863,7 @@ static char *SV_ReadEntityScript( const char *filename, int *flags )
 	if( !ents && lumplen >= 32 )
 	{
 		FS_Seek( f, lumpofs, SEEK_SET );
-		ents = Z_Calloc( lumplen + 1 );
+		ents = (char*)Z_Calloc( lumplen + 1 );
 		FS_Read( f, ents, lumplen );
 	}
 	FS_Close( f ); // all done
@@ -3086,34 +3086,34 @@ void SV_AllocStringPool( void )
 	{
 		size_t pagesize = sysconf( _SC_PAGESIZE );
 		int arrlen = (str64.maxstringarray * 2) & ~(pagesize - 1);
-		void *base = svgame.dllFuncs.pfnGameInit;
-		void *start = svgame.hInstance - arrlen;
+		void *base = reinterpret_cast<void *>(svgame.dllFuncs.pfnGameInit);
+		void *start = (void*)((uintptr_t)svgame.hInstance - (uintptr_t)arrlen);
 
-		while( start - base > INT_MIN )
+		while( (uintptr_t)start - (uintptr_t)base > INT_MIN )
 		{
 			void *mapptr = mmap((void*)((unsigned long)start & ~(pagesize - 1)), arrlen, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 );
-			if( mapptr && mapptr != (void*)-1 && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
+			if( mapptr && mapptr != (void*)-1 && (uintptr_t)mapptr - (uintptr_t)base > INT_MIN && (uintptr_t)mapptr - (uintptr_t)base < INT_MAX )
 			{
 				ptr = mapptr;
 				break;
 			}
 			if( mapptr ) munmap( mapptr, arrlen );
-			start -= arrlen;
+			start = (void*)((uintptr_t)start - (uintptr_t)arrlen);
 		}
 
 		if( !ptr )
 		{
 			start = base;
-			while( start - base < INT_MAX )
+			while( (uintptr_t)start - (uintptr_t)base < INT_MAX )
 			{
 				void *mapptr = mmap((void*)((unsigned long)start & ~(pagesize - 1)), arrlen, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 );
-				if( mapptr && mapptr != (void*)-1  && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
+				if( mapptr && mapptr != (void*)-1  && (uintptr_t)mapptr - (uintptr_t)base > INT_MIN && (uintptr_t)mapptr - (uintptr_t)base < INT_MAX )
 				{
 					ptr = mapptr;
 					break;
 				}
 				if( mapptr ) munmap( mapptr, arrlen );
-				start += arrlen;
+				start = (void*)((uintptr_t)start + (uintptr_t)arrlen);
 			}
 		}
 
@@ -3126,18 +3126,18 @@ void SV_AllocStringPool( void )
 		else
 		{
 			Con_Reportf( "SV_AllocStringPool: Failed to allocate string array near the server library!\n" );
-			ptr = str64.staticstringarray = Mem_Calloc(host.mempool, str64.maxstringarray * 2);
+			ptr = str64.staticstringarray = (char*)Mem_Calloc(host.mempool, str64.maxstringarray * 2);
 		}
 	}
 #else
 	ptr = str64.staticstringarray = Mem_Calloc(host.mempool, str64.maxstringarray * 2);
 #endif
 
-	str64.pstringarray = ptr;
-	str64.pstringarraystatic = ptr + str64.maxstringarray;
-	str64.pstringbase = str64.poldstringbase = ptr;
-	str64.plast = ptr + 1;
-	svgame.globals->pStringBase = ptr;
+	str64.pstringarray = static_cast<char *>(ptr);
+	str64.pstringarraystatic = (char*)((uintptr_t)ptr + str64.maxstringarray);
+	str64.pstringbase = str64.poldstringbase = static_cast<char *>(ptr);
+	str64.plast = (char*)((uintptr_t)ptr + 1);
+	svgame.globals->pStringBase = static_cast<const char *>(ptr);
 #else
 	svgame.stringspool = Mem_AllocPool( "Server Strings" );
 	svgame.globals->pStringBase = "";
@@ -4631,13 +4631,13 @@ static enginefuncs_t gEngfuncs =
 	pfnRegUserMsg,
 	pfnAnimationAutomove,
 	pfnGetBonePosition,
-	(void*)pfnFunctionFromName,
-	(void*)pfnNameForFunction,
+	reinterpret_cast<unsigned long (*)(const char *)>((void *) pfnFunctionFromName),
+	reinterpret_cast<const char *(*)(unsigned long)>((void *) pfnNameForFunction),
 	pfnClientPrintf,
 	pfnServerPrint,	
 	Cmd_Args,
 	Cmd_Argv,
-	(void*)Cmd_Argc,
+	reinterpret_cast<int (*)(void)>((void *) Cmd_Argc),
 	pfnGetAttachment,
 	CRC32_Init,
 	CRC32_ProcessBuffer,
@@ -4671,7 +4671,7 @@ static enginefuncs_t gEngfuncs =
 	pfnIsDedicatedServer,
 	pfnCVarGetPointer,
 	pfnGetPlayerWONId,
-	(void*)Info_RemoveKey,
+	reinterpret_cast<void (*)(char *, const char *)>((void *) Info_RemoveKey),
 	pfnGetPhysicsKeyValue,
 	pfnSetPhysicsKeyValue,
 	pfnGetPhysicsInfoString,
@@ -5129,9 +5129,9 @@ qboolean SV_LoadProgs( const char *name )
 
 	svgame.globals->maxEntities = GI->max_edicts;
 	svgame.globals->maxClients = svs.maxclients;
-	svgame.edicts = Mem_Calloc( svgame.mempool, sizeof( edict_t ) * GI->max_edicts );
-	svs.static_entities = Z_Calloc( sizeof( entity_state_t ) * MAX_STATIC_ENTITIES );
-	svs.baselines = Z_Calloc( sizeof( entity_state_t ) * GI->max_edicts );
+	svgame.edicts = (edict_t*)Mem_Calloc( svgame.mempool, sizeof( edict_t ) * GI->max_edicts );
+	svs.static_entities = (entity_state_t*)Z_Calloc( sizeof( entity_state_t ) * MAX_STATIC_ENTITIES );
+	svs.baselines = (entity_state_t*)Z_Calloc( sizeof( entity_state_t ) * GI->max_edicts );
 	svgame.numEntities = svs.maxclients + 1; // clients + world
 
 	for( i = 0, e = svgame.edicts; i < GI->max_edicts; i++, e++ )

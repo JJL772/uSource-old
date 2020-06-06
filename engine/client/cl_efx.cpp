@@ -1,11 +1,11 @@
 
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "customentity.h"
 #include "r_efx.h"
 #include "cl_tent.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #define PART_SIZE	Q_max( 0.5f, cl_draw_particles->value )
 
 /*

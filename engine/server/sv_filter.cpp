@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
 
 
@@ -101,7 +101,7 @@ qboolean SV_CheckID( const char *id )
 	for( filter = cidfilter; filter; filter = filter->next )
 	{
 		int len1 = Q_strlen( id ), len2 = Q_strlen( filter->id );
-		int len = min( len1, len2 );
+		int len = Q_min( len1, len2 );
 
 		while( filter->endTime && host.realtime > filter->endTime )
 		{
@@ -214,7 +214,7 @@ static void SV_BanID_f( void )
 
 	SV_RemoveID( id );
 
-	filter = Mem_Malloc( host.mempool, sizeof( cidfilter_t ) );
+	filter = (cidfilter_t*)Mem_Malloc( host.mempool, sizeof( cidfilter_t ) );
 	filter->endTime = time;
 	filter->next = cidfilter;
 	Q_strncpy( filter->id, id, sizeof( filter->id ) );
@@ -360,7 +360,7 @@ static void SV_AddIP_f( void )
 
 	SV_RemoveIP( ip, mask );
 
-	filter = Mem_Malloc( host.mempool, sizeof( ipfilter_t ) );
+	filter = (ipfilter_t*)Mem_Malloc( host.mempool, sizeof( ipfilter_t ) );
 	filter->endTime = time;
 	filter->ip = ip;
 	filter->mask = mask;

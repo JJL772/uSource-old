@@ -13,14 +13,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 #include "cl_tent.h"
 #include "input.h"
 #include "kbutton.h"
 #include "vgui_draw.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "vid_common.h"
 
 #define MAX_TOTAL_CMDS		32
@@ -523,7 +523,7 @@ qboolean CL_ProcessShowTexturesCmds( usercmd_t *cmd )
 	if( released & ( IN_RIGHT|IN_MOVERIGHT ))
 		Cvar_SetValue( "r_showtextures", gl_showtextures->value + 1 );
 	if( released & ( IN_LEFT|IN_MOVELEFT ))
-		Cvar_SetValue( "r_showtextures", max( 1, gl_showtextures->value - 1 ));
+		Cvar_SetValue( "r_showtextures", Q_max( 1, gl_showtextures->value - 1 ));
 	oldbuttons = cmd->buttons;
 
 	return true;
@@ -1943,7 +1943,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		}
 
 #ifdef XASH_SDL
-		SDL_ShowWindow( host.hWnd );
+		SDL_ShowWindow( (SDL_Window*)host.hWnd );
 #endif
 		args = MSG_ReadString( msg );
 		Cbuf_AddText( args );
@@ -2150,9 +2150,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 				net_adrlist_t	*list;
 
 				// adding addresses into list
-				list = Z_Malloc( sizeof( *list ));
+				list = (net_adrlist_t*)Z_Malloc( sizeof( *list ));
 				list->remote_address = servadr;
-				list->next = nr->resp.response;
+				list->next = static_cast<net_adrlist_s *>(nr->resp.response);
 				nr->resp.response = list;
 			}
 			else if( clgame.request_type == NET_REQUEST_GAMEUI )
@@ -2470,7 +2470,7 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 				{
 					if( p->ucFlags & RES_CUSTOM )
 					{
-						HPAK_AddLump( true, CUSTOM_RES_PATH, p, cls.netchan.tempbuffer, NULL );
+						HPAK_AddLump( true, CUSTOM_RES_PATH, p, (byte*)cls.netchan.tempbuffer, NULL );
 						CL_RegisterCustomization( p );
 					}
 				}

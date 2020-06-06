@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#if 0
 #include "port.h"
 #include "xash3d_types.h"
 #include "const.h"
@@ -849,3 +850,4 @@ qboolean Matrix4x4_Invert_Full( matrix4x4 out, const matrix4x4 in1 )
 	}
 	return false;
 }
+#endif

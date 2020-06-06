@@ -15,9 +15,9 @@ GNU General Public License for more details.
 
 #ifndef XASH_DEDICATED
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "platform/platform.h"
 
 int R_FatPVS( const vec3_t org, float radius, byte *visbuffer, qboolean merge, qboolean fullvis )
@@ -119,7 +119,7 @@ static void R_EnvShot( const float *vieworg, const char *name, qboolean skyshot,
 	else cls.scrshot_action = scrshot_envshot;
 
 	// catch negative values
-	cls.envshot_viewsize = max( 0, shotsize );
+	cls.envshot_viewsize = Q_max( 0, shotsize );
 }
 
 /*

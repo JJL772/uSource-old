@@ -15,7 +15,7 @@ GNU General Public License for more details.
 #ifndef XASH_DEDICATED
 #include <SDL.h>
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "keydefs.h"
 #include "input.h"
 #include "client.h"
@@ -46,7 +46,7 @@ Platform_SetMousePos
 */
 void Platform_SetMousePos( int x, int y )
 {
-	SDL_WarpMouseInWindow( host.hWnd, x, y );
+	SDL_WarpMouseInWindow( (SDL_Window*)host.hWnd, x, y );
 }
 
 /*

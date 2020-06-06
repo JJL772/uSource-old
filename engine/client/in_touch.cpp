@@ -14,7 +14,7 @@ GNU General Public License for more details.
 */
 
 #ifndef XASH_DEDICATED
-#include "common.h"
+#include "engine/common/common.h"
 #include "input.h"
 #include "client.h"
 #include "math.h"
@@ -672,7 +672,7 @@ void Touch_ReloadConfig_f( void )
 
 touch_button_t *Touch_AddButton( touchbuttonlist_t *list, const char *name,  const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color )
 {
-	touch_button_t *button = Mem_Calloc( touch.mempool, sizeof( touch_button_t ) );
+	touch_button_t *button = (touch_button_t*)Mem_Calloc( touch.mempool, sizeof( touch_button_t ) );
 	button->texture = -1;
 	Q_strncpy( button->texturefile, texture, sizeof( button->texturefile ) );
 	Q_strncpy( button->name, name, 32 );
@@ -769,7 +769,7 @@ void Touch_AddDefaultButton( const char *name, const char *texturefile, const ch
 	g_DefaultButtons[g_LastDefaultButton].x2 = x2;
 	g_DefaultButtons[g_LastDefaultButton].y2 = y2;
 	MakeRGBA( g_DefaultButtons[g_LastDefaultButton].color, color[0], color[1], color[2], color[3] );
-	g_DefaultButtons[g_LastDefaultButton].round = round;
+	g_DefaultButtons[g_LastDefaultButton].round = static_cast<touchRound>(round);
 	g_DefaultButtons[g_LastDefaultButton].aspect = aspect;
 	g_DefaultButtons[g_LastDefaultButton].flags = flags;
 	g_LastDefaultButton++;

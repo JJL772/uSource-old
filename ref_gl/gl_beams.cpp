@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #include "triangleapi.h"
 #include "customentity.h"
 #include "cl_tent.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 
 #include "studio.h"
 

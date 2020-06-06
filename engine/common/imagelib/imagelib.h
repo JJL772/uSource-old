@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef IMAGELIB_H
 #define IMAGELIB_H
 
-#include "common.h"
+#include "common/common.h"
 
 // skyorder_q2[6] = { 2, 3, 1, 0, 4, 5, }; // Quake, Half-Life skybox ordering
 // skyorder_ms[6] = { 4, 5, 1, 0, 2, 3  }; // Microsoft DDS ordering (reverse)

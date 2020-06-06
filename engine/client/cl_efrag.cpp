@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "entity_types.h"
 #include "studio.h"
-#include "world.h" // BOX_ON_PLANE_SIDE
+#include "engine/common/world.h" // BOX_ON_PLANE_SIDE
 #include "client.h"
 #include "mathlib.h"
 

@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "sound.h"
 
@@ -441,7 +441,7 @@ void DLY_CheckNewDelayVal( void )
 		}
 		else
 		{
-			delay = min( delay, MAX_MONO_DELAY );
+			delay = Q_min( delay, MAX_MONO_DELAY );
 			dly->delaysamples = (int)(delay * idsp_dma_speed) << sxhires;
 
 			// init dly

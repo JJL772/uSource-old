@@ -1,4 +1,5 @@
 
+#define GL_IMPL
 #include "gl_local.h"
 
 cvar_t	*gl_extensions;

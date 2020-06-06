@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include "r_studioint.h"
 #include "triangleapi.h"
 #include "alias.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "pmtrace.h"
 
 extern cvar_t r_shadows;

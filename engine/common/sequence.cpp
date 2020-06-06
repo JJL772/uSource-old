@@ -14,7 +14,7 @@ GNU General Public License for more details.
 */
 
 #include <ctype.h>
-#include "common.h"
+#include "engine/common/common.h"
 #include "eiface.h"
 #include "sequence.h"
 
@@ -786,7 +786,7 @@ char Sequence_ParseModifierLine( sequenceEntry_s *entry, sequenceCommandType_e m
 		switch( modifierType )
 		{
 		case SEQUENCE_TYPE_COMMAND:
-			newCommandLine = Z_Malloc( sizeof( sequenceCommandLine_s ) );
+			newCommandLine = (sequenceCommandLine_s*)Z_Malloc( sizeof( sequenceCommandLine_s ) );
 			memset( newCommandLine, 0, sizeof( sequenceCommandLine_s ) );
 			newCommandLine->commandType = SEQUENCE_COMMAND_MODIFIER;
 			Sequence_AddCommandLineToEntry( newCommandLine, entry );
@@ -822,7 +822,7 @@ char Sequence_ParseCommand( sequenceCommandLine_s *newCommandLine )
 
 	if( Sequence_IsCommandAModifier( commandEnum ) )
 	{
-		modifierCommandLine = Z_Malloc( sizeof( sequenceCommandLine_s ) );
+		modifierCommandLine = (sequenceCommandLine_s*)Z_Malloc( sizeof( sequenceCommandLine_s ) );
 		memset( modifierCommandLine, 0, sizeof( sequenceCommandLine_s ) );
 		modifierCommandLine->commandType = SEQUENCE_COMMAND_POSTMODIFIER;
 
@@ -852,7 +852,7 @@ char Sequence_ParseCommandLine( sequenceEntry_s *entry )
 	char symbol;
 	sequenceCommandLine_s *newCommandLine;
 
-	newCommandLine = Z_Malloc( sizeof( sequenceCommandLine_s ) );
+	newCommandLine = (sequenceCommandLine_s*)Z_Malloc( sizeof( sequenceCommandLine_s ) );
 	memset( newCommandLine, 0, sizeof( sequenceCommandLine_s ) );
 
 	Sequence_ResetDefaults( newCommandLine, &g_blockScopeDefaults );
@@ -1356,7 +1356,7 @@ Sequence_CopyCommandList
 */
 sequenceCommandLine_s *Sequence_CopyCommandList( sequenceCommandLine_s *list )
 {
-	sequenceCommandLine_s *scan, *copy, *new, *prev;
+	sequenceCommandLine_s *scan, *copy, *_new, *prev;
 
 	copy = NULL;
 	prev = NULL;
@@ -1365,17 +1365,17 @@ sequenceCommandLine_s *Sequence_CopyCommandList( sequenceCommandLine_s *list )
 	{
 		if( scan->commandType != SEQUENCE_COMMAND_SETDEFAULTS )
 		{
-			new = Sequence_CopyCommand( scan );
+			_new = Sequence_CopyCommand( scan );
 
 			if( prev )
 			{
-				prev->nextCommandLine = new;
-				prev                  = new;
+				prev->nextCommandLine = _new;
+				prev                  = _new;
 			}
 			else
 			{
-				prev = new;
-				copy = new;
+				prev = _new;
+				copy = _new;
 			}
 		}
 	}

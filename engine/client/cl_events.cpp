@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "event_flags.h"
-#include "net_encode.h"
+#include "engine/common/net_encode.h"
 #include "con_nprint.h"
 
 /*
@@ -161,7 +161,7 @@ void CL_RegisterEvent( int lastnum, const char *szEvName, pfnEventHook func )
 
 	// clear existing or allocate new one
 	if( !clgame.events[lastnum] )
-		clgame.events[lastnum] = Mem_Calloc( cls.mempool, sizeof( cl_user_event_t ));
+		clgame.events[lastnum] = (cl_user_event_t*)Mem_Calloc( cls.mempool, sizeof( cl_user_event_t ));
 	else memset( clgame.events[lastnum], 0, sizeof( cl_user_event_t ));
 
 	ev = clgame.events[lastnum];

@@ -16,14 +16,14 @@ def configure(conf):
 	return
 
 def build(bld):
-	source = bld.path.ant_glob(['*.c'])
+	source = ['crtlib.cpp', 'crclib.cpp']
 	libs = []
 	includes = list()
 	includes.append(str(bld.env.COMMON))
 	includes.append(str(bld.env.PUBLIC))
 	includes.append(str(bld.env.ENGINE))
 	includes.append(str(bld.env.ROOT))
-	bld.stlib(
+	bld.shlib(
 		source   = source,
 		target   = 'public',
 		features = 'c',

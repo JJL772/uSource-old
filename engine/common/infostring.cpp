@@ -414,7 +414,7 @@ char *Info_FindLargestKey( char *s )
 
 qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, int maxsize )
 {
-	char	new[1024], *v;
+	char	_new[1024], *v;
 	int	c, team;
 
 	if( Q_strstr( key, "\\" ) || Q_strstr( value, "\\" ))
@@ -440,8 +440,8 @@ qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, i
 	if( !value || !Q_strlen( value ))
 		return true; // just clear variable
 
-	Q_snprintf( new, sizeof( new ), "\\%s\\%s", key, value );
-	if( Q_strlen( new ) + Q_strlen( s ) > maxsize )
+	Q_snprintf( _new, sizeof( _new ), "\\%s\\%s", key, value );
+	if( Q_strlen( _new ) + Q_strlen( s ) > maxsize )
 	{
 		// no more room in buffer to add key/value
 		if( Info_IsKeyImportant( key ))
@@ -453,7 +453,7 @@ qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, i
 			{
 				largekey = Info_FindLargestKey( s );
 				Info_RemoveKey( s, largekey );
-			} while((( Q_strlen( new ) + Q_strlen( s )) >= maxsize ) && *largekey != 0 );
+			} while((( Q_strlen( _new ) + Q_strlen( s )) >= maxsize ) && *largekey != 0 );
 
 			if( largekey[0] == 0 )
 			{
@@ -470,7 +470,7 @@ qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, i
 
 	// only copy ascii values
 	s += Q_strlen( s );
-	v = new;
+	v = _new;
 
 	team = ( Q_stricmp( key, "team" ) == 0 ) ? true : false;
 

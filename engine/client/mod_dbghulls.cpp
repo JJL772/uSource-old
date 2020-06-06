@@ -12,11 +12,11 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "mod_local.h"
+#include "engine/common/mod_local.h"
 #include "mathlib.h"
-#include "world.h"
+#include "engine/common/world.h"
 
 
 #define MAX_CLIPNODE_DEPTH		256	// should never exceeds
@@ -39,12 +39,12 @@ GNU General Public License for more details.
 
 #define LIST_HEAD_INIT( name ) { &(name), &(name) }
 
-_inline void list_add__( hullnode_t *new, hullnode_t *prev, hullnode_t *next )
+_inline void list_add__( hullnode_t *_new, hullnode_t *prev, hullnode_t *next )
 {
-	next->prev = new;
-	new->next = next;
-	new->prev = prev;
-	prev->next = new;
+	next->prev = _new;
+	_new->next = next;
+	_new->prev = prev;
+	prev->next = _new;
 }
 
 // add the new entry after the give list entry
@@ -663,7 +663,7 @@ void Mod_InitDebugHulls( void )
 {
 	int	i;
 
-	world.hull_models = Mem_Calloc( loadmodel->mempool, sizeof( hull_model_t ) * loadmodel->numsubmodels );
+	world.hull_models = (hull_model_t*)Mem_Calloc( loadmodel->mempool, sizeof( hull_model_t ) * loadmodel->numsubmodels );
 	world.num_hull_models = loadmodel->numsubmodels;
 
 	// initialize list

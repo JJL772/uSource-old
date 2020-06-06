@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
-#include "mod_local.h"
+#include "engine/common/mod_local.h"
 #include "input.h"
 #include "vid_common.h"
 #include "platform/platform.h"

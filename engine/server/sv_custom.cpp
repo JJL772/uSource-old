@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
 
 void SV_CreateCustomizationList( sv_client_t *cl )
@@ -131,7 +131,7 @@ void SV_ParseConsistencyResponse( sv_client_t *cl, sizebuf_t *msg )
 			MSG_ReadBytes( msg, cmaxs, sizeof( cmaxs ));
 
 			memcpy( resbuffer, r->rguc_reserved, 32 );
-			ft = resbuffer[0];
+			ft = static_cast<FORCE_TYPE>(resbuffer[0]);
 
 			switch( ft )
 			{

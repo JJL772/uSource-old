@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "server.h"
 #include "const.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "studio.h"
 
 typedef struct moveclip_s
@@ -225,7 +225,7 @@ hull_t *SV_HullForBsp( edict_t *ent, const vec3_t mins, const vec3_t maxs, vec3_
 
 	if( svgame.physFuncs.SV_HullForBsp != NULL )
 	{
-		hull = svgame.physFuncs.SV_HullForBsp( ent, mins, maxs, offset );
+		hull = static_cast<hull_t *>(svgame.physFuncs.SV_HullForBsp(ent, mins, maxs, offset));
 		if( hull ) return hull;
 	}
 
@@ -373,7 +373,7 @@ hull_t *SV_HullForStudioModel( edict_t *ent, vec3_t mins, vec3_t maxs, vec3_t of
 			vec3_t		angles;
 			int		iBlend;
 
-			pstudio = Mod_StudioExtradata( mod );
+			pstudio = static_cast<studiohdr_t *>(Mod_StudioExtradata(mod));
 			pseqdesc = (mstudioseqdesc_t *)((byte *)pstudio + pstudio->seqindex) + ent->v.sequence;
 			VectorCopy( ent->v.angles, angles );
 

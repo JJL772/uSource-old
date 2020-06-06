@@ -13,10 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "const.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "input.h"
 #include "server.h" // !!svgame.hInstance
 #include "vid_common.h"
@@ -1191,8 +1191,8 @@ static ui_enginefuncs_t gEngfuncs =
 	GL_ProcessTexture,
 	COM_CompareFileTime,
 	VID_GetModeString,
-	(void*)COM_SaveFile,
-	(void*)FS_Delete
+	reinterpret_cast<int (*)(const char *, const void *, int)>((void *) COM_SaveFile),
+	reinterpret_cast<int (*)(const char *)>((void *) FS_Delete)
 };
 
 static void pfnEnableTextInput( int enable )
@@ -1342,7 +1342,7 @@ qboolean UI_LoadProgs( void )
 	// setup gameinfo
 	for( i = 0; i < SI.numgames; i++ )
 	{
-		gameui.modsInfo[i] = Mem_Calloc( gameui.mempool, sizeof( GAMEINFO ));
+		gameui.modsInfo[i] = (GAMEINFO*)Mem_Calloc( gameui.mempool, sizeof( GAMEINFO ));
 		UI_ConvertGameInfo( gameui.modsInfo[i], SI.games[i] );
 	}
 

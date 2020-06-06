@@ -16,10 +16,6 @@ GNU General Public License for more details.
 #ifndef COMMON_H
 #define COMMON_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
 ===================================================================================================================================
 Legend:
@@ -992,7 +988,4 @@ qboolean NET_SendToMasters( netsrc_t sock, size_t len, const void *data );
 #error "common.h in ref_dll"
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 #endif//COMMON_H

@@ -13,19 +13,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
+#include "engine/common/common.h"
 #include "client.h"
 #include "const.h"
 #include "triangleapi.h"
 #include "r_efx.h"
 #include "demo_api.h"
 #include "ivoicetweak.h"
-#include "pm_local.h"
+#include "engine/common/pm_local.h"
 #include "cl_tent.h"
 #include "input.h"
 #include "shake.h"
 #include "sprite.h"
-#include "library.h"
+#include "engine/common/library.h"
 #include "vgui_draw.h"
 #include "sound.h"		// SND_STOP_LOOPING
 #include "platform/platform.h"
@@ -1126,9 +1126,9 @@ void CL_InitEdicts( void )
 
 	CL_UPDATE_BACKUP = ( cl.maxclients == 1 ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 	cls.num_client_entities = CL_UPDATE_BACKUP * NUM_PACKET_ENTITIES;
-	cls.packet_entities = Mem_Realloc( clgame.mempool, cls.packet_entities, sizeof( entity_state_t ) * cls.num_client_entities );
-	clgame.entities = Mem_Calloc( clgame.mempool, sizeof( cl_entity_t ) * clgame.maxEntities );
-	clgame.static_entities = Mem_Calloc( clgame.mempool, sizeof( cl_entity_t ) * MAX_STATIC_ENTITIES );
+	cls.packet_entities = (entity_state_t*)Mem_Realloc( clgame.mempool, cls.packet_entities, sizeof( entity_state_t ) * cls.num_client_entities );
+	clgame.entities = (cl_entity_t*)Mem_Calloc( clgame.mempool, sizeof( cl_entity_t ) * clgame.maxEntities );
+	clgame.static_entities = (cl_entity_t*)Mem_Calloc( clgame.mempool, sizeof( cl_entity_t ) * MAX_STATIC_ENTITIES );
 	clgame.numStatics = 0;
 
 	if(( clgame.maxRemapInfos - 1 ) != clgame.maxEntities )
@@ -1558,7 +1558,7 @@ static client_sprite_t *pfnSPR_GetList( char *psz, int *piCount )
 	Q_strncpy( pEntry->szListName, psz, sizeof( pEntry->szListName ));
 
 	// name, res, pic, x, y, w, h
-	pEntry->pList = Mem_Calloc( cls.mempool, sizeof( client_sprite_t ) * numSprites );
+	pEntry->pList = (client_sprite_t*)Mem_Calloc( cls.mempool, sizeof( client_sprite_t ) * numSprites );
 
 	for( index = 0; index < numSprites; index++ )
 	{
@@ -1988,7 +1988,7 @@ static int pfnGetWindowCenterX( void )
 #endif
 
 #ifdef XASH_SDL
-	SDL_GetWindowPosition( host.hWnd, &x, NULL );
+	SDL_GetWindowPosition( (SDL_Window*)host.hWnd, &x, NULL );
 #endif
 
 	return host.window_center_x + x;
@@ -2013,7 +2013,7 @@ static int pfnGetWindowCenterY( void )
 #endif
 
 #ifdef XASH_SDL
-	SDL_GetWindowPosition( host.hWnd, NULL, &y );
+	SDL_GetWindowPosition( (SDL_Window*)host.hWnd, NULL, &y );
 #endif
 
 	return host.window_center_y + y;
@@ -3873,9 +3873,9 @@ static cl_enginefunc_t gEngfuncs =
 	Platform_SetMousePos,
 	pfnSetMouseEnable,
 	Cvar_GetList,
-	(void*)Cmd_GetFirstFunctionHandle,
-	(void*)Cmd_GetNextFunctionHandle,
-	(void*)Cmd_GetName,
+	reinterpret_cast<void *(*)(void)>((void *) Cmd_GetFirstFunctionHandle),
+	reinterpret_cast<void *(*)(void *)>((void *) Cmd_GetNextFunctionHandle),
+	reinterpret_cast<const char *(*)(void *)>((void *) Cmd_GetName),
 	pfnGetClientOldTime,
 	pfnGetGravity,
 	Mod_Handle,
@@ -3890,9 +3890,9 @@ static cl_enginefunc_t gEngfuncs =
 	LocalPlayerInfo_ValueForKey,
 	pfnVGUI2DrawCharacter,
 	pfnVGUI2DrawCharacterAdditive,
-	(void*)Sound_GetApproxWavePlayLen,
+	reinterpret_cast<unsigned int (*)(char *)>((void *) Sound_GetApproxWavePlayLen),
 	GetCareerGameInterface,
-	(void*)Cvar_Set,
+	reinterpret_cast<void (*)(char *, char *)>((void *) Cvar_Set),
 	pfnIsCareerMatch,
 	pfnPlaySoundVoiceByName,
 	pfnMP3_InitStream,
@@ -3985,7 +3985,8 @@ qboolean CL_LoadProgs( const char *name )
 		*func->func = NULL;
 
 	// trying to get single export
-	if(( GetClientAPI = (void *)COM_GetProcAddress( clgame.hInstance, "GetClientAPI" )) != NULL )
+	if(( GetClientAPI = reinterpret_cast<CL_EXPORT_FUNCS>((void *) COM_GetProcAddress(clgame.hInstance,
+	                                                                             "GetClientAPI"))) != NULL )
 	{
 		Con_Reportf( "CL_LoadProgs: found single callback export\n" );		
 

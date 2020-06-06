@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "gl_local.h"
 #include "mathlib.h"
-#include "mod_local.h"
+#include "engine/common/mod_local.h"
 			
 typedef struct
 {
@@ -360,13 +360,13 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 		for( i = 0; i < lnumverts; i++ )
 		{
 			vec3_t	v1, v2;
-			float	*prev, *this, *next;
+			float	*prev, *_this, *next;
 
 			prev = poly->verts[(i + lnumverts - 1) % lnumverts];
 			next = poly->verts[(i + 1) % lnumverts];
-			this = poly->verts[i];
+			_this = poly->verts[i];
 
-			VectorSubtract( this, prev, v1 );
+			VectorSubtract( _this, prev, v1 );
 			VectorNormalize( v1 );
 			VectorSubtract( next, prev, v2 );
 			VectorNormalize( v2 );
@@ -2932,8 +2932,8 @@ static qboolean R_CheckLightMap( msurface_t *fa )
 		}
 		else
 		{
-			smax = min( smax, 132 );
-			tmax = min( tmax, 132 );
+			smax = Q_min( smax, 132 );
+			tmax = Q_min( tmax, 132 );
 			//Host_MapDesignError( "R_RenderBrushPoly: bad surface extents: %d %d", fa->extents[0], fa->extents[1] );
 			memset( temp, 255, sizeof( temp ) );
 		}
