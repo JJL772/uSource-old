@@ -931,7 +931,7 @@ void Host_FreeCommon( void )
 Host_Main
 =================
 */
-int EXPORT Host_Main( int argc, char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
+extern "C" int EXPORT Host_Main( int argc, char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
 {
 	static double	oldtime, newtime;
 

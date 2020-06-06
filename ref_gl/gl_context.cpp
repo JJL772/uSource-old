@@ -459,7 +459,7 @@ ref_interface_t gReffuncs =
 	VGUI_GenerateTexture,
 };
 
-int EXPORT GetRefAPI( int version, ref_interface_t *funcs, ref_api_t *engfuncs, ref_globals_t *globals )
+extern "C" int EXPORT GetRefAPI( int version, ref_interface_t *funcs, ref_api_t *engfuncs, ref_globals_t *globals )
 {
 	if( version != REF_API_VERSION )
 		return 0;
@@ -472,7 +472,7 @@ int EXPORT GetRefAPI( int version, ref_interface_t *funcs, ref_api_t *engfuncs, 
 	return REF_API_VERSION;
 }
 
-void EXPORT GetRefHumanReadableName( char *out, size_t size )
+extern "C" void EXPORT GetRefHumanReadableName( char *out, size_t size )
 {
 #if defined XASH_NANOGL
 	Q_strncpy( out, "GLES1(NanoGL)", size );
