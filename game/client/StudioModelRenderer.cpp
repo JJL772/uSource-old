@@ -17,6 +17,7 @@
 #include "cl_entity.h"
 #include "dlight.h"
 #include "triangleapi.h"
+#include "crtlib.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -1020,7 +1021,7 @@ void CStudioModelRenderer::StudioMergeBones( model_t *m_pSubModel )
 	{
 		for( j = 0; j < m_nCachedBones; j++ )
 		{
-			if( stricmp( pbones[i].name, m_nCachedBoneNames[j] ) == 0 )
+			if( Q_stricmp( pbones[i].name, m_nCachedBoneNames[j] ) == 0 )
 			{
 				MatrixCopy( m_rgCachedBoneTransform[j], (*m_pbonetransform)[i] );
 				MatrixCopy( m_rgCachedLightTransform[j], (*m_plighttransform)[i] );

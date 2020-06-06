@@ -36,6 +36,7 @@
 #include "game.h"
 #include "pm_shared.h"
 #include "hltv.h"
+#include "crtlib.h"
 
 // #define DUCKFIX
 
@@ -3822,7 +3823,7 @@ int CBasePlayer::GetAmmoIndex( const char *psz )
 		if( !CBasePlayerItem::AmmoInfoArray[i].pszName )
 			continue;
 
-		if( stricmp( psz, CBasePlayerItem::AmmoInfoArray[i].pszName ) == 0 )
+		if( Q_stricmp( psz, CBasePlayerItem::AmmoInfoArray[i].pszName ) == 0 )
 			return i;
 	}
 

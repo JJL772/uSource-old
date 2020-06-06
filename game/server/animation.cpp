@@ -29,6 +29,7 @@ typedef unsigned char byte;
 #include "progdefs.h"
 #include "edict.h"
 #include "eiface.h"
+#include "crtlib.h"
 
 #include "studio.h"
 
@@ -162,7 +163,7 @@ int LookupSequence( void *pmodel, const char *label )
 
 	for( int i = 0; i < pstudiohdr->numseq; i++ )
 	{
-		if( stricmp( pseqdesc[i].label, label ) == 0 )
+		if( Q_stricmp( pseqdesc[i].label, label ) == 0 )
 			return i;
 	}
 

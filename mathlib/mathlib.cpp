@@ -870,3 +870,37 @@ int BoxOnPlaneSide( const vec3_t emins, const vec3_t emaxs, const mplane_t *p )
 	return sides;
 }
 
+void AngleVectorsTranspose( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
+{
+	float angle;
+	float sr, sp, sy, cr, cp, cy;
+
+	angle = angles[YAW] * ( M_PI * 2 / 360 );
+	sy = sin( angle );
+	cy = cos( angle );
+	angle = angles[PITCH] * ( M_PI * 2 / 360 );
+	sp = sin( angle );
+	cp = cos( angle );
+	angle = angles[ROLL] * ( M_PI * 2 / 360 );
+	sr = sin( angle );
+	cr = cos( angle );
+
+	if( forward )
+	{
+		forward[0] = cp * cy;
+		forward[1] = ( sr * sp * cy + cr * -sy );
+		forward[2] = ( cr * sp * cy + -sr * -sy );
+	}
+	if( right )
+	{
+		right[0] = cp * sy;
+		right[1] = ( sr * sp * sy + cr * cy );
+		right[2] = ( cr * sp * sy + -sr * cy );
+	}
+	if( up )
+	{
+		up[0] = -sp;
+		up[1] = sr * cp;
+		up[2] = cr * cp;
+	}
+}

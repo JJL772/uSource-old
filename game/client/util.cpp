@@ -30,14 +30,13 @@
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
 #endif
 
-extern vec3_t vec3_origin;
-
 #ifdef _MSC_VER
 vec3_t vec3_origin;
 #endif
 
 double sqrt( double x );
 
+#if 0
 float Length( const float *v )
 {
 	int	i;
@@ -50,7 +49,9 @@ float Length( const float *v )
 
 	return length;
 }
+#endif
 
+#if 0
 void VectorAngles( const float *forward, float *angles )
 {
 	float tmp, yaw, pitch;
@@ -79,6 +80,9 @@ void VectorAngles( const float *forward, float *angles )
 	angles[1] = yaw;
 	angles[2] = 0;
 }
+#endif
+
+#if 0
 
 float VectorNormalize( float *v )
 {
@@ -97,13 +101,16 @@ float VectorNormalize( float *v )
 
 	return length;
 }
+#endif
 
+#if 0
 void VectorInverse( float *v )
 {
 	v[0] = -v[0];
 	v[1] = -v[1];
 	v[2] = -v[2];
 }
+#endif
 
 void VectorScale( const float *in, float scale, float *out )
 {

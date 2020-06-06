@@ -24,6 +24,7 @@ extern "C"
 #include "const.h"
 #include "camera.h"
 #include "in_defs.h"
+#include "crtlib.h"
 //#include "view.h"
 #include <string.h>
 #include <ctype.h>
@@ -42,7 +43,7 @@ extern int g_weaponselect;
 extern cl_enginefunc_t gEngfuncs;
 
 // Defined in pm_math.c
-extern "C" float anglemod( float a );
+//extern "C" float anglemod( float a );
 
 void IN_Init( void );
 void IN_Move( float frametime, usercmd_t *cmd );
@@ -223,7 +224,7 @@ struct kbutton_s DLLEXPORT *KB_Find( const char *name )
 	p = g_kbkeys;
 	while( p )
 	{
-		if( !stricmp( name, p->name ) )
+		if( !Q_stricmp( name, p->name ) )
 			return p->pkey;
 
 		p = p->next;
@@ -304,7 +305,7 @@ void KeyDown( kbutton_t *b )
 	int	k;
 	char	*c;
 
-	c = gEngfuncs.Cmd_Argv( 1 );
+	c = const_cast<char *>(gEngfuncs.Cmd_Argv(1));
 	if( c[0] )
 		k = atoi( c );
 	else
@@ -338,7 +339,7 @@ void KeyUp( kbutton_t *b )
 	int	k;
 	char	*c;
 	
-	c = gEngfuncs.Cmd_Argv( 1 );
+	c = const_cast<char *>(gEngfuncs.Cmd_Argv(1));
 	if( c[0] )
 		k = atoi(c);
 	else

@@ -29,6 +29,7 @@
 #include "decals.h"
 #include "player.h"
 #include "weapons.h"
+#include "crtlib.h"
 #include "gamerules.h"
 
 float UTIL_WeaponTimeBase( void )
@@ -1319,7 +1320,7 @@ BOOL UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 )
 	// Both on a team?
 	if( *pTeamName1 != 0 && *pTeamName2 != 0 )
 	{
-		if( !stricmp( pTeamName1, pTeamName2 ) )	// Same Team?
+		if( !Q_stricmp( pTeamName1, pTeamName2 ) )	// Same Team?
 			return TRUE;
 	}
 
@@ -1917,7 +1918,7 @@ void CSave::WriteFunction( const char *pname, void **data, int count )
 {
 	const char *functionName;
 
-	functionName = NAME_FOR_FUNCTION( *data );
+	functionName = NAME_FOR_FUNCTION(reinterpret_cast<unsigned long>(*data));
 	if( functionName )
 		BufferField( pname, strlen( functionName ) + 1, functionName );
 	else
@@ -1933,7 +1934,7 @@ void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd )
 	{
 		pField = &gEntvarsDescription[i];
 
-		if( !stricmp( pField->fieldName, pkvd->szKeyName ) )
+		if( !Q_stricmp( pField->fieldName, pkvd->szKeyName ) )
 		{
 			switch( pField->fieldType )
 			{
@@ -2157,7 +2158,7 @@ int CRestore::ReadField( void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCou
 	{
 		fieldNumber = ( i + startField ) % fieldCount;
 		pTest = &pFields[fieldNumber];
-		if( !stricmp( pTest->fieldName, pName ) )
+		if( !Q_stricmp( pTest->fieldName, pName ) )
 		{
 			if( !m_global || !(pTest->flags & FTYPEDESC_GLOBAL ) )
 			{

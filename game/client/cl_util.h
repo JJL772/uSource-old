@@ -41,7 +41,8 @@
 							}
 
 inline float CVAR_GET_FLOAT( const char *x ) {	return gEngfuncs.pfnGetCvarFloat( (char*)x ); }
-inline char* CVAR_GET_STRING( const char *x ) {	return gEngfuncs.pfnGetCvarString( (char*)x ); }
+inline char* CVAR_GET_STRING( const char *x ) {	return const_cast<char *>(gEngfuncs.pfnGetCvarString(
+		(char *) x)); }
 inline struct cvar_s *CVAR_CREATE( const char *cv, const char *val, const int flags ) {	return gEngfuncs.pfnRegisterVariable( (char*)cv, (char*)val, flags ); }
 
 #define SPR_Load ( *gEngfuncs.pfnSPR_Load )
@@ -154,6 +155,14 @@ inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( 
 
 void ScaleColors( int &r, int &g, int &b, int a );
 
+#undef DotProduct
+#undef VectorSubtract
+#undef VectorAdd
+#undef VectorCopy
+#undef VectorClear
+#undef VectorMA
+#undef VectorScale
+
 #define DotProduct(x, y) ((x)[0] * (y)[0] + (x)[1] * (y)[1] + (x)[2] * (y)[2])
 #define VectorSubtract(a, b, c) { (c)[0] = (a)[0] - (b)[0]; (c)[1] = (a)[1] - (b)[1]; (c)[2] = (a)[2] - (b)[2]; }
 #define VectorAdd(a, b, c) { (c)[0] = (a)[0] + (b)[0]; (c)[1] = (a)[1] + (b)[1]; (c)[2] = (a)[2] + (b)[2]; }
@@ -165,7 +174,7 @@ void VectorScale( const float *in, float scale, float *out );
 float VectorNormalize( float *v );
 void VectorInverse( float *v );
 
-extern vec3_t vec3_origin;
+//extern vec3_t vec3_origin;
 
 // disable 'possible loss of data converting float to int' warning message
 #pragma warning( disable: 4244 )

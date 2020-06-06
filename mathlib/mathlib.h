@@ -105,6 +105,9 @@ void QuaternionSlerp( const vec4_t p, const vec4_t q, float t, vec4_t qt );
 float RemapVal( float val, float A, float B, float C, float D );
 float ApproachVal( float target, float value, float speed );
 
+void AngleVectorsTranspose (const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
+
+
 extern vec3_t		vec3_origin;
 extern int		boxpnt[6][4];
 extern const matrix3x4	matrix3x4_identity;

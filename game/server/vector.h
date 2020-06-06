@@ -16,6 +16,9 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#define NO_VECTOR_FUNCTIONS
+#include "mathlib/mathlib.h"
+
 //=========================================================
 // 2DVector - used for many pathfinding and many other 
 // operations that are treated as planar rather than 3d.

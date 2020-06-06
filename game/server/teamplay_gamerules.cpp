@@ -24,6 +24,7 @@
 #include	"gamerules.h"
 #include	"teamplay_gamerules.h"
 #include	"game.h"
+#include        "crtlib.h"
 
 static char team_names[MAX_TEAMS][MAX_TEAMNAME_LENGTH];
 static int team_scores[MAX_TEAMS];
@@ -182,7 +183,8 @@ void CHalfLifeTeamplay::UpdateGameMode( CBasePlayer *pPlayer )
 const char *CHalfLifeTeamplay::SetDefaultPlayerTeam( CBasePlayer *pPlayer )
 {
 	// copy out the team name from the model
-	char *mdls = g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" );
+	char *mdls = const_cast<char *>(g_engfuncs.pfnInfoKeyValue(g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()),
+	                                                           "model"));
 	strncpy( pPlayer->m_szTeamName, mdls, TEAM_NAME_LENGTH );
 
 	RecountTeams();
@@ -227,7 +229,8 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 
 	RecountTeams();
 
-	char *mdls = g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" );
+	char *mdls = const_cast<char *>(g_engfuncs.pfnInfoKeyValue(g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()),
+	                                                           "model"));
 	// update the current player of the team he is joining
 	char text[1024];
 	if( !strcmp( mdls, pPlayer->m_szTeamName ) )
@@ -315,9 +318,9 @@ void CHalfLifeTeamplay::ClientUserInfoChanged( CBasePlayer *pPlayer, char *infob
 	char text[1024];
 
 	// prevent skin/color/model changes
-	char *mdls = g_engfuncs.pfnInfoKeyValue( infobuffer, "model" );
+	char *mdls = const_cast<char *>(g_engfuncs.pfnInfoKeyValue(infobuffer, "model"));
 
-	if( !stricmp( mdls, pPlayer->m_szTeamName ) )
+	if( !Q_stricmp( mdls, pPlayer->m_szTeamName ) )
 		return;
 
 	if( defaultteam.value )
@@ -433,7 +436,7 @@ int CHalfLifeTeamplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pT
 	if( !pPlayer || !pTarget || !pTarget->IsPlayer() )
 		return GR_NOTTEAMMATE;
 
-	if( ( *GetTeamID( pPlayer ) != '\0' ) && ( *GetTeamID( pTarget ) != '\0' ) && !stricmp( GetTeamID( pPlayer ), GetTeamID( pTarget ) ) )
+	if( ( *GetTeamID( pPlayer ) != '\0' ) && ( *GetTeamID( pTarget ) != '\0' ) && !Q_stricmp( GetTeamID( pPlayer ), GetTeamID( pTarget ) ) )
 	{
 		return GR_TEAMMATE;
 	}
@@ -490,7 +493,7 @@ int CHalfLifeTeamplay::GetTeamIndex( const char *pTeamName )
 		// try to find existing team
 		for( int tm = 0; tm < num_teams; tm++ )
 		{
-			if( !stricmp( team_names[tm], pTeamName ) )
+			if( !Q_stricmp( team_names[tm], pTeamName ) )
 				return tm;
 		}
 	}

@@ -25,6 +25,7 @@
 #include "screenfade.h"
 #include "shake.h"
 #include "hltv.h"
+#include "crtlib.h"
 
 // Spectator Mode
 extern "C" 
@@ -40,24 +41,21 @@ extern "C"
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
 #endif
 
-extern "C" 
-{
-	int CL_IsThirdPerson( void );
-	void CL_CameraOffset( float *ofs );
+extern "C" int CL_IsThirdPerson( void );
+extern "C" void CL_CameraOffset( float *ofs );
 
-	void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams );
+extern "C" void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams );
 
-	void PM_ParticleLine( float *start, float *end, int pcolor, float life, float vert );
-	int PM_GetVisEntInfo( int ent );
-	int PM_GetPhysEntInfo( int ent );
-	void InterpolateAngles( float * start, float * end, float * output, float frac );
-	void NormalizeAngles( float * angles );
-	float Distance( const float * v1, const float * v2 );
-	float AngleBetweenVectors(  const float * v1,  const float * v2 );
+void PM_ParticleLine( float *start, float *end, int pcolor, float life, float vert );
+int PM_GetVisEntInfo( int ent );
+int PM_GetPhysEntInfo( int ent );
+void InterpolateAngles( float * start, float * end, float * output, float frac );
+void NormalizeAngles( float * angles );
+float Distance( const float * v1, const float * v2 );
+float AngleBetweenVectors(  const float * v1,  const float * v2 );
+float vJumpOrigin[3];
+float vJumpAngles[3];
 
-	float vJumpOrigin[3];
-	float vJumpAngles[3];
-}
 
 void V_DropPunchAngle( float frametime, float *ev_punchangle );
 void VectorAngles( const float *forward, float *angles );
@@ -1340,7 +1338,7 @@ int V_FindViewModelByWeaponModel( int weaponindex )
 
 		while( modelmap[i][0] != NULL )
 		{
-			if( !strnicmp( weaponModel->name, modelmap[i][0], len ) )
+			if( !Q_strnicmp( weaponModel->name, modelmap[i][0], len ) )
 			{
 				return gEngfuncs.pEventAPI->EV_FindModelIndex( modelmap[i][1] );
 			}

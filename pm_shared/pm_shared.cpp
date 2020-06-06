@@ -21,6 +21,8 @@
 #include "pm_shared.h"
 #include "pm_movevars.h"
 #include "pm_debug.h"
+#include "crtlib.h"
+#include "com_model.h"
 //#include <stdio.h>  // NULL
 #include <math.h>   // sqrt
 #include <string.h> // strcpy
@@ -153,7 +155,7 @@ void PM_SortTextures( void )
 	{
 		for( j = i + 1; j < gcTextures; j++ )
 		{
-			if( stricmp( grgszTextureName[i], grgszTextureName[j] ) > 0 )
+			if( Q_stricmp( grgszTextureName[i], grgszTextureName[j] ) > 0 )
 			{
 				// Swap
 				//
@@ -246,7 +248,7 @@ char PM_FindTextureType( char *name )
 	{
 		pivot = ( left + right ) / 2;
 
-		val = strnicmp( name, grgszTextureName[pivot], CBTEXTURENAMEMAX - 1 );
+		val = Q_strnicmp( name, grgszTextureName[pivot], CBTEXTURENAMEMAX - 1 );
 		if( val == 0 )
 		{
 			return grgchTextureType[pivot];
@@ -286,7 +288,7 @@ void PM_PlayStepSound( int step, float fvol )
 	VectorCopy( pmove->velocity, hvel );
 	hvel[2] = 0.0;
 
-	if( pmove->multiplayer && ( !g_onladder && Length( hvel ) <= 220 ) )
+	if( pmove->multiplayer && ( !g_onladder && VectorLength( hvel ) <= 220 ) )
 		return;
 
 	// irand - 0,1 for right foot, 2,3 for left foot
@@ -572,7 +574,7 @@ void PM_UpdateStepSound( void )
 
 	PM_CatagorizeTextureType();
 
-	speed = Length( pmove->velocity );
+	speed = VectorLength( pmove->velocity );
 
 	// determine if we are on a ladder
 	fLadder = ( pmove->movetype == MOVETYPE_FLY );// IsOnLadder();
@@ -594,7 +596,7 @@ void PM_UpdateStepSound( void )
 	// If we're on a ladder or on the ground, and we're moving fast enough,
 	//  play step sound.  Also, if pmove->flTimeStepSound is zero, get the new
 	//  sound right away - we just started moving in new level.
-	if( ( fLadder || ( pmove->onground != -1 ) ) && ( Length( pmove->velocity ) > 0.0 ) && ( speed >= velwalk || !pmove->flTimeStepSound ) )
+	if( ( fLadder || ( pmove->onground != -1 ) ) && ( VectorLength( pmove->velocity ) > 0.0 ) && ( speed >= velwalk || !pmove->flTimeStepSound ) )
 	{
 		fWalking = speed < velrun;		
 
@@ -1121,7 +1123,7 @@ void PM_WalkMove()
 	// Add in any base velocity to the current velocity.
 	VectorAdd( pmove->velocity, pmove->basevelocity, pmove->velocity );
 
-	spd = Length( pmove->velocity );
+	spd = VectorLength( pmove->velocity );
 
 	if( spd < 1.0f )
 	{
@@ -1817,10 +1819,10 @@ void PM_SpectatorMove( void )
 		}
 #endif
 		// Move around in normal spectator method
-		speed = Length( pmove->velocity );
+		speed = VectorLength( pmove->velocity );
 		if( speed < 1 )
 		{
-			VectorCopy( vec3_origin, pmove->velocity )
+			VectorCopy( vec3_origin, pmove->velocity );
 		}
 		else
 		{
@@ -2392,7 +2394,7 @@ void PM_Physics_Toss()
 			VectorScale( pmove->velocity, ( 1.0 - trace.fraction) * pmove->frametime * 0.9, move );
 			trace = PM_PushEntity( move );
 		}
-		VectorSubtract( pmove->velocity, base, pmove->velocity )
+		VectorSubtract( pmove->velocity, base, pmove->velocity );
 	}
 
 	// check for in water
@@ -2456,7 +2458,7 @@ void PM_PreventMegaBunnyJumping( void )
 	if( maxscaledspeed <= 0.0f )
 		return;
 
-	spd = Length( pmove->velocity );
+	spd = VectorLength( pmove->velocity );
 
 	if( spd <= maxscaledspeed )
 		return;
@@ -2579,7 +2581,7 @@ void PM_Jump( void )
 		// Adjust for super long jump module
 		// UNDONE -- note this should be based on forward angles, not current velocity.
 		if( cansuperjump && ( pmove->cmd.buttons & IN_DUCK ) && ( pmove->flDuckTime > 0 ) &&
-			Length( pmove->velocity ) > 50 )
+			VectorLength( pmove->velocity ) > 50 )
 		{
 			pmove->punchangle[0] = -5;
 

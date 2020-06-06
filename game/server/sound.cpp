@@ -22,6 +22,7 @@
 #include "weapons.h"
 #include "player.h"
 #include "talkmonster.h"
+#include "crtlib.h"
 #include "gamerules.h"
 
 static char *memfgets( byte *pMemFile, int fileSize, int &filePos, char *pBuffer, int bufferSize );
@@ -1375,7 +1376,7 @@ int SENTENCEG_Lookup( const char *sample, char *sentencenum )
 	// this is a sentence name; lookup sentence number
 	// and give to engine as string.
 	for( i = 0; i < gcallsentences; i++ )
-		if( !stricmp( gszallsentencenames[i], sample + 1 ) )
+		if( !Q_stricmp( gszallsentencenames[i], sample + 1 ) )
 		{
 			if( sentencenum )
 			{
@@ -1511,7 +1512,7 @@ static char *memfgets( byte *pMemFile, int fileSize, int &filePos, char *pBuffer
 // NOTE: this routine should ONLY be called if the 
 // current texture under the player changes!
 
-extern "C" char PM_FindTextureType( char *name );
+char PM_FindTextureType( char *name );
 
 char TEXTURETYPE_Find( char *name )
 {

@@ -23,8 +23,9 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
-#include "mathlib/mathlib.h"
-#if 0
+#include "mathlib.h"
+
+#if 1
 // Header file containing definition of globalvars_t and entvars_t
 typedef unsigned int func_t;					//
 typedef int string_t;				// from engine's pr_comp.h;
@@ -64,6 +65,9 @@ public:
 
 	vec_t	x, y;
 };
+
+#undef DotProduct
+#undef CrossProduct
 
 inline float DotProduct( const Vector2D& a, const Vector2D& b ) { return( a.x * b.x + a.y * b.y ); }
 inline Vector2D operator*( float fl, const Vector2D& v ) { return v * fl; }

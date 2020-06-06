@@ -16,8 +16,14 @@ def configure(conf):
 def build(bld):
 	defines = []
 	source = bld.path.parent.ant_glob([
-		'pm_shared/*.c',
+		'pm_shared/*.cpp',
 	])
+	source = []
+	source += [
+		'../../pm_shared/pm_debug.cpp',
+		'../../pm_shared/pm_shared.cpp',
+		'../../pm_shared/pm_math.cpp'
+	]
 	
 	source += [
 		'agrunt.cpp', 'airtank.cpp', 'aflock.cpp', 'animating.cpp', 'animation.cpp', 'apache.cpp', 
@@ -52,14 +58,14 @@ def build(bld):
 		
 	#includes = Utils.to_list('. wpn_shared ../common ../engine ../pm_shared ../game_shared ../public')
 	includes = list()
-	includes += bld.env.ENGINE
-	includes += bld.env.COMMON
-	includes += bld.env.PMSHARED
-	includes += bld.env.SHARED
-	includes += bld.env.PUBLIC
-	includes += bld.env.ROOT
+	includes.append(bld.env.ENGINE)
+	includes.append(bld.env.COMMON)
+	includes.append(bld.env.PMSHARED)
+	includes.append(bld.env.SHARED)
+	includes.append(bld.env.PUBLIC)
+	includes.append(bld.env.ROOT)
 
-	libs = []
+	libs = ['public', 'mathlib']
 
 	if bld.env.DEST_OS2 not in ['android']:
 		install_path = os.path.join(str(bld.env.GAMEDIR), str(bld.env.SERVER_DIR))

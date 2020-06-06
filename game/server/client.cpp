@@ -39,6 +39,7 @@
 #include "usercmd.h"
 #include "netadr.h"
 #include "pm_shared.h"
+#include "crtlib.h"
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
 extern DLL_GLOBAL BOOL		g_fGameOver;
@@ -109,7 +110,7 @@ void ClientDisconnect( edict_t *pEntity )
 
 	char text[256] = "";
 	if( pEntity->v.netname )
-		_snprintf( text, sizeof(text), "- %s has left the game\n", STRING( pEntity->v.netname ) );
+		snprintf( text, sizeof(text), "- %s has left the game\n", STRING( pEntity->v.netname ) );
 	MESSAGE_BEGIN( MSG_ALL, gmsgSayText, NULL );
 		WRITE_BYTE( ENTINDEX( pEntity ) );
 		WRITE_STRING( text );
@@ -334,7 +335,7 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	if( player->m_flNextChatTime > gpGlobals->time )
 		 return;
 
-	if( !stricmp( pcmd, cpSay ) || !stricmp( pcmd, cpSayTeam ) )
+	if( !Q_stricmp( pcmd, cpSay ) || !Q_stricmp( pcmd, cpSayTeam ) )
 	{
 		if( CMD_ARGC() >= 2 )
 		{
@@ -647,7 +648,7 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 	if( pEntity->v.netname && ( STRING( pEntity->v.netname ) )[0] != 0 && !FStrEq( STRING( pEntity->v.netname ), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" ) ) )
 	{
 		char sName[256];
-		char *pName = g_engfuncs.pfnInfoKeyValue( infobuffer, "name" );
+		char *pName = const_cast<char *>(g_engfuncs.pfnInfoKeyValue(infobuffer, "name"));
 		strncpy( sName, pName, sizeof(sName) - 1 );
 		sName[sizeof(sName) - 1] = '\0';
 
@@ -665,7 +666,7 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 		if( gpGlobals->maxClients > 1 )
 		{
 			char text[256];
-			_snprintf( text, 256, "* %s changed name to %s\n", STRING( pEntity->v.netname ), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" ) );
+			snprintf( text, 256, "* %s changed name to %s\n", STRING( pEntity->v.netname ), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" ) );
 			MESSAGE_BEGIN( MSG_ALL, gmsgSayText, NULL );
 				WRITE_BYTE( ENTINDEX( pEntity ) );
 				WRITE_STRING( text );

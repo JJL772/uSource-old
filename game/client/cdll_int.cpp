@@ -29,10 +29,7 @@
 #include "VGUI_App.h"
 #endif
 
-extern "C"
-{
 #include "pm_shared.h"
-}
 
 #include <string.h>
 

@@ -24,9 +24,9 @@
 
 void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
-extern "C" void PM_Move ( struct playermove_s *ppmove, int server );
-extern "C" void PM_Init ( struct playermove_s *ppmove  );
-extern "C" char PM_FindTextureType( const char *name );
+void PM_Move ( struct playermove_s *ppmove, int server );
+void PM_Init ( struct playermove_s *ppmove  );
+char PM_FindTextureType( char *name );
 
 extern Vector VecBModelOrigin( entvars_t* pevBModel );
 extern DLL_GLOBAL Vector g_vecAttackDir;
@@ -79,7 +79,7 @@ static DLL_FUNCTIONS gFunctionTable =
 
 	PM_Move,					//pfnPM_Move
 	PM_Init,					//pfnPM_Init				Server version of player movement initialization
-	PM_FindTextureType,			//pfnPM_FindTextureType
+	reinterpret_cast<char (*)(char *)>(PM_FindTextureType),			//pfnPM_FindTextureType
 
 	SetupVisibility,			//pfnSetupVisibility        Set up PVS and PAS for networking for this client
 	UpdateClientData,			//pfnUpdateClientData       Set up data sent only to specific client

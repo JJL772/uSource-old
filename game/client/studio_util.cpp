@@ -18,6 +18,7 @@ AngleMatrix
 
 ====================
 */
+#if 0
 void AngleMatrix( const float *angles, float (*matrix)[4] )
 {
 	float angle;
@@ -47,6 +48,7 @@ void AngleMatrix( const float *angles, float (*matrix)[4] )
 	matrix[1][3] = 0.0;
 	matrix[2][3] = 0.0;
 }
+#endif
 
 /*
 ====================
@@ -84,12 +86,14 @@ VectorTransform
 
 ====================
 */
+#if 0
 void VectorTransform( const float *in1, float in2[3][4], float *out )
 {
 	out[0] = DotProduct(in1, in2[0]) + in2[0][3];
 	out[1] = DotProduct(in1, in2[1]) + in2[1][3];
 	out[2] = DotProduct(in1, in2[2]) + in2[2][3];
 }
+#endif
 
 /*
 ================

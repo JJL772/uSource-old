@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "parsemsg.h"
 #include "hud_servers.h"
+#include "crtlib.h"
 
 #include "demo.h"
 #include "demo_api.h"
@@ -483,7 +484,7 @@ int HUD_IsGame( const char *game )
 	if( gamedir && gamedir[0] )
 	{
 		COM_FileBase( gamedir, gd );
-		if( !stricmp( gd, game ) )
+		if( !Q_stricmp( gd, game ) )
 			return 1;
 	}
 	return 0;

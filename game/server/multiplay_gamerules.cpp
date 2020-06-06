@@ -22,7 +22,7 @@
 #include	"player.h"
 #include	"weapons.h"
 #include	"gamerules.h"
- 
+#include        "crtlib.h"
 #include	"skill.h"
 #include	"game.h"
 #include	"items.h"
@@ -1364,14 +1364,14 @@ int ReloadMapCycleFile( const char *filename, mapcycle_t *cycle )
 
 				if( hasbuffer )
 				{
-					s = g_engfuncs.pfnInfoKeyValue( szBuffer, "minplayers" );
+					s = const_cast<char *>(g_engfuncs.pfnInfoKeyValue(szBuffer, "minplayers"));
 					if( s && s[0] )
 					{
 						item->minplayers = atoi( s );
 						item->minplayers = Q_max( item->minplayers, 0 );
 						item->minplayers = Q_min( item->minplayers, gpGlobals->maxClients );
 					}
-					s = g_engfuncs.pfnInfoKeyValue( szBuffer, "maxplayers" );
+					s = const_cast<char *>(g_engfuncs.pfnInfoKeyValue(szBuffer, "maxplayers"));
 					if( s && s[0] )
 					{
 						item->maxplayers = atoi( s );
@@ -1541,7 +1541,7 @@ void CHalfLifeMultiplay::ChangeLevel( void )
 	curplayers = CountPlayers();
 
 	// Has the map cycle filename changed?
-	if( stricmp( mapcfile, szPreviousMapCycleFile ) )
+	if( Q_stricmp( mapcfile, szPreviousMapCycleFile ) )
 	{
 		strcpy( szPreviousMapCycleFile, mapcfile );
 
