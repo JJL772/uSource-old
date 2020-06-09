@@ -155,9 +155,9 @@ size_t Q_strncat(char *dst, const char *src, size_t size)
 
 size_t Q_strncpy(char *dst, const char *src, size_t size)
 {
-	register char *d = dst;
-	register const char *s = src;
-	register size_t n = size;
+	char *d = dst;
+	const char *s = src;
+	size_t n = size;
 
 	if (!dst || !src || !size)
 		return 0;
