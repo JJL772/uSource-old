@@ -51,6 +51,10 @@ def configure(conf):
 	if conf.env.DEST_SIZEOF_VOID_P != 4:
 		conf.env.append_unique('DEFINES', 'XASH_64BIT')
 
+	# Memory debugging enabled?
+	if conf.env.MEMORY_DEBUG:
+		conf.env.append_unique('DEFINES', 'MEMORY_DEBUG')
+
 def build(bld):
 	libs = [ 'public', 'mathlib' ]
 	source = bld.path.ant_glob([
@@ -88,6 +92,8 @@ def build(bld):
 	else:
 		if bld.env.DEST_OS == 'linux':
 			libs.append('RT')
+
+	#
 
 	# HACK: public headers must be put before common, so we don't get wrong mathlib included
 	#includes = ['common', 'server', 'client', 'client/vgui', '.', '../public', '../common', '../pm_shared' ]

@@ -502,6 +502,7 @@ qboolean Mem_IsAllocatedExt( byte *poolptr, void *data );
 void Mem_PrintList( size_t minallocationsize );
 void Mem_PrintStats( void );
 
+#ifdef MEMORY_DEBUG
 #define Mem_Malloc( pool, size ) _Mem_Alloc( pool, size, false, __FILE__, __LINE__ )
 #define Mem_Calloc( pool, size ) _Mem_Alloc( pool, size, true, __FILE__, __LINE__ )
 #define Mem_Realloc( pool, ptr, size ) _Mem_Realloc( pool, ptr, size, true, __FILE__, __LINE__ )
@@ -511,7 +512,17 @@ void Mem_PrintStats( void );
 #define Mem_EmptyPool( pool ) _Mem_EmptyPool( pool, __FILE__, __LINE__ )
 #define Mem_IsAllocated( mem ) Mem_IsAllocatedExt( NULL, mem )
 #define Mem_Check() _Mem_Check( __FILE__, __LINE__ )
-
+#else
+static inline void* Mem_Malloc(byte* pool, size_t sz) { return _Mem_Alloc(pool, sz, false, "UNKNOWN", 0); };
+static inline void* Mem_Calloc(byte* pool, size_t sz) { return _Mem_Alloc( pool, sz, true, "UNKNOWN", 0); };
+static inline void* Mem_Realloc(byte* pool, void* ptr, size_t sz) { return _Mem_Realloc( pool, ptr, sz, true, "UNKNOWN", 0); };
+static inline void Mem_Free(void* ptr) { _Mem_Free(ptr, "UNKNOWN", 0); };
+static inline byte* Mem_AllocPool(const char* name) { return _Mem_AllocPool(name, "UKNOWN", 0); };
+static inline void Mem_FreePool(byte** name) { _Mem_FreePool(name, "UNKNOWN", 0); };
+static inline void Mem_EmptyPool(byte* name) { _Mem_EmptyPool(name, "UNKNOWN", 0); };
+static inline qboolean Mem_IsAllocated(byte* pool) { return Mem_IsAllocatedExt(NULL, pool); };
+static inline void Mem_Check() { _Mem_Check("UNKNOWN", NULL); };
+#endif
 //
 // filesystem.c
 //
