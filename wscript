@@ -268,6 +268,10 @@ def configure(conf):
 	]
 
 	cflags = conf.get_flags_by_type(compiler_c_cxx_flags, conf.options.BUILD_TYPE, conf.env.COMPILER_CC)
+
+	conf.env.append_unique('LINKFLAGS', conf.get_flags_by_type(
+		linker_flags, conf.options.BUILD_TYPE, conf.env.COMPILER_CC))
+
 	if conf.env.COMPILER_CC == 'msvc':
 		conf.env.append_unique('CFLAGS', cflags)
 		conf.env.append_unique('CXXFLAGS', cflags)
@@ -277,9 +281,7 @@ def configure(conf):
 		conf.env.append_unique('CFLAGS', cflags + filter_cflags(conf, compiler_optional_flags, cflags, False))
 		conf.env.append_unique('CXXFLAGS', cflags + filter_cflags(conf, compiler_optional_flags, cflags, True))
 
-	conf.env.append_unique('LINKFLAGS', conf.get_flags_by_type(
-		linker_flags, conf.options.BUILD_TYPE, conf.env.COMPILER_CC))
-
+	
 	conf.env.DEDICATED     = conf.options.DEDICATED
 	# we don't need game launcher on dedicated
 	conf.env.SINGLE_BINARY = conf.options.SINGLE_BINARY or conf.env.DEDICATED
