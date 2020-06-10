@@ -873,7 +873,7 @@ byte* COM_LoadFileForMe( const char *filename, int *pLength )
 
 	if( pfile )
 	{
-		file = malloc( iLength + 1 );
+		file = static_cast<byte *>(malloc(iLength + 1));
 		if( file != NULL )
 		{
 			memcpy( file, pfile, iLength );
@@ -1177,7 +1177,7 @@ char *_copystring( byte *mempool, const char *s, const char *filename, int filel
 	if( !s ) return NULL;
 	if( !mempool ) mempool = host.mempool;
 
-	b = _Mem_Alloc( mempool, Q_strlen( s ) + 1, false, filename, fileline );
+	b = static_cast<char *>(_Mem_Alloc(mempool, Q_strlen(s) + 1, false, filename, fileline));
 	Q_strcpy( b, s );
 
 	return b;

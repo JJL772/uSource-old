@@ -376,7 +376,7 @@ mstudioanim_t *CStudioModelRenderer::StudioGetAnim( model_t *m_pSubModel, mstudi
 	mstudioseqgroup_t *pseqgroup;
 	cache_user_t *paSequences;
 
-	pseqgroup = (mstudioseqgroup_t *)( (byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex ) + pseqdesc->seqgroup;
+	pseqgroup = (mstudioseqgroup_t *)( ((byte *)m_pStudioHeader) + m_pStudioHeader->seqgroupindex ) + pseqdesc->seqgroup;
 
 	if( pseqdesc->seqgroup == 0 )
 	{

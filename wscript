@@ -70,6 +70,9 @@ def options(opt):
 	grp.add_option('--neon', action='store_true', dest='USE_NEON', default=False,
 				   help='Enables the use of NEON vectorization on AArch64 and AArch32 targets.')
 
+	grp.add_option('--memory-debug', action='store_true', dest='MEMORY_DEBUG', default=False,
+				   help='Enables the use of memory debugging. This will define various Mem_XXX functions as macros which will include the locations where the allocations tool place')
+
 	opt.load('subproject')
 
 	opt.add_subproject(subdirs())

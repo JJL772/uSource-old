@@ -610,7 +610,7 @@ void *R_StudioGetAnim( studiohdr_t *m_pStudioHeader, model_t *m_pSubModel, mstud
 	if( paSequences == NULL )
 	{
 		paSequences = (cache_user_t *)Mem_Calloc( com_studiocache, MAXSTUDIOGROUPS * sizeof( cache_user_t ));
-		m_pSubModel->submodels = (void *)paSequences;
+		m_pSubModel->submodels = static_cast<dmodel_t *>((void *) paSequences);
 	}
 
 	// check for already loaded
@@ -1106,7 +1106,7 @@ void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded )
 		loadmodel->cache.data = Mem_Calloc( loadmodel->mempool, phdr->length );
 		memcpy( loadmodel->cache.data, buffer, phdr->length );
 
-		phdr = loadmodel->cache.data;
+		phdr = static_cast<studiohdr_t *>(loadmodel->cache.data);
 	}
 
 	// setup bounding box

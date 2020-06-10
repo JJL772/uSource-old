@@ -66,7 +66,7 @@ static void COM_GenerateCommonLibraryName( const char *name, const char *ext, ch
 #if ( XASH_WIN32 || XASH_LINUX || XASH_APPLE ) && XASH_X86
 	Q_snprintf( out, size, "%s.%s", name, ext );
 #elif ( XASH_WIN32 || XASH_LINUX || XASH_APPLE )
-	Q_snprintf( out, size, "%s_%s.%s", name, Q_buildarch(), ext );
+	Q_snprintf( out, size, "%s.%s", name, ext );
 #else
 	Q_snprintf( out, size, "%s_%s_%s.%s", name, Q_buildos(), Q_buildarch(), ext );
 #endif
@@ -126,7 +126,7 @@ static void COM_GenerateServerLibraryPath( char *out, size_t size )
 	Q_strncpy( dllpath, GI->game_dll_linux, sizeof( dllpath ) );
 #endif
 
-	ext = COM_FileExtension( dllpath );
+	ext = const_cast<char *>(COM_FileExtension(dllpath));
 	COM_StripExtension( dllpath );
 
 	COM_GenerateCommonLibraryName( dllpath, ext, out, size );

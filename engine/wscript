@@ -111,7 +111,6 @@ def build(bld):
 		install_path = bld.env.LIBDIR
 		features = 'c cxx cxxshlib cshlib'
 
-	print(libs)
 	bld(source   = source,
 		target   = 'xash',
 		features = features,

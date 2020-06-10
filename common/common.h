@@ -68,9 +68,28 @@ Disable warnings
 #define GAMMA		( 2.2 )		// Valve Software gamma
 #define INVGAMMA		( 1.0 / 2.2 )	// back to 1.0
 #define TEXGAMMA		( 0.9 )		// compensate dim textures
-#define SetBits( iBitVector, bits )	((iBitVector) = (iBitVector) | (bits))
-#define ClearBits( iBitVector, bits )	((iBitVector) = (iBitVector) & ~(bits))
-#define FBitSet( iBitVector, bit )	((iBitVector) & (bit))
+
+#undef SetBits
+#undef ClearBits
+#undef FBitSet
+
+template<class T, class U>
+static void SetBits(T& iBitVector, U bits)
+{
+	iBitVector = iBitVector | bits;
+}
+
+template<class T, class U>
+static void ClearBits(T& iBitVector, U bits)
+{
+	iBitVector = (iBitVector) & ~bits;
+}
+
+template<class T, class U>
+static bool FBitSet(T iBitVec, U bit)
+{
+	return iBitVec & bit;
+}
 
 #ifndef __cplusplus
 #ifdef NULL
@@ -80,9 +99,8 @@ Disable warnings
 #define NULL		((void *)0)
 #endif
 
-// color strings
-#define IsColorString( p )	( p && *( p ) == '^' && *(( p ) + 1) && *(( p ) + 1) >= '0' && *(( p ) + 1 ) <= '9' )
-#define ColorIndex( c )	((( c ) - '0' ) & 7 )
+static bool IsColorString(const char* p) { return (( p && *( p ) == '^' && *(( p ) + 1) && *(( p ) + 1) >= '0' && *(( p ) + 1 ) <= '9' )); };
+static bool ColorIndex(char c) { return (c - '0') & 7; };
 
 #if defined(__GNUC__)
 #ifdef __i386__
