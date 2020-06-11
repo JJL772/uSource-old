@@ -876,9 +876,13 @@ typedef float GLmatrix[16];
 #define GL_FUNCTION( name ) (APIENTRY *p##name)
 #endif
 
-#ifdef GL_IMPL
-#define GL_EXTERN
+#if defined(GL_IMPL) || defined(REF_GL_KEEP_MANGLED_FUNCTIONS)
+#if defined(XASH_GL_STATIC)
+#define GL_EXTERN extern "C"
 #else
+#define GL_EXTERN
+#endif 
+#elif !defined(REF_GL_KEEP_MANGLED_FUNCTIONS)
 #define GL_EXTERN extern
 #endif
 

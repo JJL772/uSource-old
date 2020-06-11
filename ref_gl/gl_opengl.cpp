@@ -384,7 +384,7 @@ GL_GetProcAddress
 defined just for nanogl/glwes, so it don't link to SDL2 directly, nor use dlsym
 ==============
 */
-void GAME_EXPORT *GL_GetProcAddress( const char *name )
+extern "C" void GAME_EXPORT *GL_GetProcAddress( const char *name )
 {
 	return gEngfuncs.GL_GetProcAddress( name );
 }
@@ -1109,11 +1109,13 @@ void GL_SetupAttributes( int safegl )
 	}
 }
 
+extern "C" int nanoGL_Init( void );
+extern "C" void wes_init( const char *gles2 );
+
 void GL_OnContextCreated( void )
 {
 	int colorBits[3];
 #ifdef XASH_NANOGL
-	int nanoGL_Init( void );
 	nanoGL_Init();
 #endif
 
@@ -1130,7 +1132,6 @@ void GL_OnContextCreated( void )
 	gEngfuncs.GL_GetAttribute( REF_GL_MULTISAMPLESAMPLES, &glConfig.msaasamples );
 
 #ifdef XASH_WES
-	void wes_init( const char *gles2 );
 	wes_init( "" );
 #endif
 }
