@@ -256,6 +256,15 @@ typedef struct
 	int		data;		// hack for group 0
 } mstudioseqgroup_t;
 
+/* Fix for using assets compiled with 32-bit tools on 64-bit systems */
+typedef struct
+{
+	char label[32];
+	char name[64];
+	uint32_t cache;
+	int data;
+} mstudioseqgroup32_t;
+
 // sequence descriptions
 typedef struct mstudioseqdesc_s
 {

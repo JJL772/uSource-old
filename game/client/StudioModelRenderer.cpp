@@ -373,10 +373,13 @@ StudioGetAnim
 */
 mstudioanim_t *CStudioModelRenderer::StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
-	mstudioseqgroup_t *pseqgroup;
 	cache_user_t *paSequences;
 
-	pseqgroup = (mstudioseqgroup_t *)( ((byte *)m_pStudioHeader) + m_pStudioHeader->seqgroupindex ) + pseqdesc->seqgroup;
+#ifdef XASH_64BIT
+	mstudioseqgroup32_t* pseqgroup = (mstudioseqgroup32_t *)( ((byte *)m_pStudioHeader) + m_pStudioHeader->seqgroupindex ) + pseqdesc->seqgroup;
+#else
+	mstudioseqgroup_t* pseqgroup = (mstudioseqgroup_t *)( ((byte *)m_pStudioHeader) + m_pStudioHeader->seqgroupindex ) + pseqdesc->seqgroup;
+#endif
 
 	if( pseqdesc->seqgroup == 0 )
 	{
