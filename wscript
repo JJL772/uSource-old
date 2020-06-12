@@ -118,8 +118,10 @@ def configure(conf):
 
 	# Set some opts needed by the server
 	conf.env.GAMEDIR = 'valve'
-	conf.env.CLIENT_DIR  = 'cl_dlls'
-	conf.env.SERVER_DIR  = 'dlls'
+	conf.env.CLIENT_DIR  = 'bin'
+	conf.env.SERVER_DIR  = 'bin'
+
+	conf.options.NO_VGUI = True
 
 	conf.load('fwgslib reconfigure')
 	conf.start_msg('Build type')
@@ -281,7 +283,7 @@ def configure(conf):
 		conf.env.append_unique('CFLAGS', cflags + filter_cflags(conf, compiler_optional_flags, cflags, False))
 		conf.env.append_unique('CXXFLAGS', cflags + filter_cflags(conf, compiler_optional_flags, cflags, True))
 
-	
+
 	conf.env.DEDICATED     = conf.options.DEDICATED
 	# we don't need game launcher on dedicated
 	conf.env.SINGLE_BINARY = conf.options.SINGLE_BINARY or conf.env.DEDICATED

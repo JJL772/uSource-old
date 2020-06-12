@@ -85,5 +85,6 @@ def build(bld):
 		use      = libs,
 		install_path = install_path,
 		subsystem = bld.env.MSVC_SUBSYSTEM,
-		idx      = 1
+		idx      = 1,
+		name = 'client'
 	)
