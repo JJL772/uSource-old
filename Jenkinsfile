@@ -18,7 +18,7 @@ pipeline {
         stage('Configure') {
             steps {
                 script {
-                    sh 'python3 waf configure -T debug -8 -W --prefix=./build-artifacts && mkdir build-artifacts'
+                    sh 'python3 waf configure -T debug -8 -W --prefix=./build-artifacts && mkdir -p build-artifacts'
                 }
             }
         }
