@@ -532,7 +532,6 @@ void Mod_LoadCacheFile( const char *filename, cache_user_t *cu )
 	buf = FS_LoadFile( modname, &size, false );
 	if( !buf || !size )
 	{
-		asm("int3\n\t");
 		Host_Error( "LoadCacheFile: ^1can't load %s^7\n", filename );
 	}
 	cu->data = Mem_Malloc( com_studiocache, size );
