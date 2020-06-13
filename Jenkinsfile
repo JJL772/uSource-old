@@ -35,9 +35,11 @@ pipeline {
             steps {
                 script {
                     sh '''
+                      cd build-artifacts
                       ZIP_FILE="usource-$BRANCH_NAME-$(uname)-$(uname -m)-latest.zip"
                       zip -r "$ZIP_FILE" ./*
                       mv "$ZIP_FILE" "/nfs/repo/public/dist/uSource/$BRANCH_NAME/$ZIP_FILE"
+                      cd ..
                     '''
                 }
             }
