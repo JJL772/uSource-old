@@ -24,8 +24,8 @@
 #include "util.h"
 #include "cbase.h"
 #include "saverestore.h"
-#include "nodes.h"
-#include "doors.h"
+#include "info_node.h"
+#include "func_door.h"
 
 extern CGraph WorldGraph;
 

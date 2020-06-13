@@ -18,7 +18,7 @@
 #include "game/server/util.h"
 #include "game/server/cbase.h"
 #include "game/server/weapons.h"
-#include "game/server/monsters.h"
+#include "game/server/ai_monsters.h"
 #include "game/server/player.h"
 #include "game/server/gamerules.h"
 

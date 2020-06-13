@@ -23,7 +23,7 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "doors.h"
+#include "func_door.h"
 
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 
