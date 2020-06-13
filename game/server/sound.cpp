@@ -21,7 +21,7 @@
 #include "cbase.h"
 #include "weapons.h"
 #include "player.h"
-#include "ai_talkmonster.h"
+#include "game/server/ai/ai_talkmonster.h"
 #include "crtlib.h"
 #include "gamerules.h"
 

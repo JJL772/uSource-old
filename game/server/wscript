@@ -26,28 +26,28 @@ def build(bld):
 	]
 	
 	source += [
-		'npc_agrunt.cpp', 'airtank.cpp', 'npc_aflock.cpp', 'animating.cpp', 'animation.cpp', 'npc_apache.cpp',
-		'npc_barnacle.cpp', 'npc_barney.cpp', 'npc_bigmomma.cpp', 'npc_bloater.cpp', 'bmodels.cpp', 'npc_bullsquid.cpp', 'func_button.cpp',
-		'cbase.cpp', 'client.cpp', 'combat.cpp', 'ai_controller.cpp',
-		'ai_defaultai.cpp', 'func_door.cpp',
+		'npc/npc_agrunt.cpp', 'airtank.cpp', 'npc/npc_aflock.cpp', 'animating.cpp', 'animation.cpp', 'npc/npc_apache.cpp',
+		'npc/npc_barnacle.cpp', 'npc/npc_barney.cpp', 'npc/npc_bigmomma.cpp', 'npc/npc_bloater.cpp', 'bmodels.cpp', 'npc/npc_bullsquid.cpp', 'func_button.cpp',
+		'cbase.cpp', 'client.cpp', 'combat.cpp', 'ai/ai_controller.cpp',
+		'ai/ai_defaultai.cpp', 'func_door.cpp',
 		'effects.cpp', 'explode.cpp',
-		'ai_flyingmonster.cpp', 'func_break.cpp', 'func_tank.cpp',
-		'game.cpp', 'gamerules.cpp', 'npc_gargantua.cpp', 'ai_genericmonster.cpp', 'ggrenade.cpp', 'globals.cpp', 'npc_gman.cpp',
-		'ai.cpp', 'func_recharge.cpp', 'npc_h_cine.cpp', 'npc_h_cycler.cpp', 'h_export.cpp', 'npc_hassassin.cpp', 'npc_headcrab.cpp',
-		'func_healthcharger.cpp', 'npc_hgrunt.cpp', 'npc_hornet.cpp', 'npc_houndeye.cpp',
-		'npc_ichthyosaur.cpp', 'islave.cpp', 'items.cpp',
-		'npc_leech.cpp', 'lights.cpp',
-		'maprules.cpp', 'npc_monstermaker.cpp', 'ai_monsters.cpp', 'ai_monsterstate.cpp', 'func_mortar.cpp', 'multiplay_gamerules.cpp',
-		'npc_nihilanth.cpp', 'info_node.cpp',
-		'observer.cpp', 'npc_osprey.cpp',
+		'ai/ai_flyingmonster.cpp', 'func_break.cpp', 'func_tank.cpp',
+		'game.cpp', 'gamerules.cpp', 'npc/npc_gargantua.cpp', 'ai/ai_genericmonster.cpp', 'ggrenade.cpp', 'globals.cpp', 'npc/npc_gman.cpp',
+		'ai/ai.cpp', 'func_recharge.cpp', 'npc/npc_h_cine.cpp', 'npc/npc_h_cycler.cpp', 'h_export.cpp', 'npc/npc_hassassin.cpp', 'npc/npc_headcrab.cpp',
+		'func_healthcharger.cpp', 'npc/npc_hgrunt.cpp', 'npc/npc_hornet.cpp', 'npc/npc_houndeye.cpp',
+		'npc/npc_ichthyosaur.cpp', 'islave.cpp', 'items.cpp',
+		'npc/npc_leech.cpp', 'lights.cpp',
+		'maprules.cpp', 'npc/npc_monstermaker.cpp', 'ai/ai_monsters.cpp', 'ai/ai_monsterstate.cpp', 'func_mortar.cpp', 'multiplay_gamerules.cpp',
+		'npc/npc_nihilanth.cpp', 'info_node.cpp',
+		'observer.cpp', 'npc/npc_osprey.cpp',
 		'pathcorner.cpp', 'plane.cpp', 'plats.cpp', 'player.cpp', 'playermonster.cpp',
-		'npc_rat.cpp', 'npc_roach.cpp',
-		'ai_schedule.cpp', 'npc_scientist.cpp', 'ai_scripted.cpp', 'singleplay_gamerules.cpp', 'skill.cpp',
-		'sound.cpp', 'soundent.cpp', 'spectator.cpp', 'ai_squadmonster.cpp', 'subs.cpp',
-		'ai_talkmonster.cpp', 'teamplay_gamerules.cpp', 'npc_tempmonster.cpp', 'npc_tentacle.cpp',
-		'triggers.cpp', 'npc_turret.cpp',
+		'npc/npc_rat.cpp', 'npc/npc_roach.cpp',
+		'ai/ai_schedule.cpp', 'npc/npc_scientist.cpp', 'ai/ai_scripted.cpp', 'singleplay_gamerules.cpp', 'skill.cpp',
+		'sound.cpp', 'soundent.cpp', 'spectator.cpp', 'ai/ai_squadmonster.cpp', 'subs.cpp',
+		'ai/ai_talkmonster.cpp', 'teamplay_gamerules.cpp', 'npc/npc_tempmonster.cpp', 'npc/npc_tentacle.cpp',
+		'triggers.cpp', 'npc/npc_turret.cpp',
 		'util.cpp', 
-		'weapons.cpp', 'world.cpp', 'xen.cpp', 'npc_zombie.cpp',
+		'weapons.cpp', 'world.cpp', 'xen.cpp', 'npc/npc_zombie.cpp',
 		'../shared/hl1/weapon_crossbow.cpp',
 		'../shared/hl1/weapon_crowbar.cpp',
 		'../shared/hl1/weapon_egon.cpp',
@@ -78,6 +78,7 @@ def build(bld):
 	includes.append(bld.env.SHARED)
 	includes.append(bld.env.PUBLIC)
 	includes.append(bld.env.ROOT)
+	includes.append('.')
 
 	libs = ['public', 'mathlib']
 

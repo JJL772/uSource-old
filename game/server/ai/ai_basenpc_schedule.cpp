@@ -16,15 +16,15 @@
 // schedule.cpp - functions and data pertaining to the 
 // monsters' AI scheduling system.
 //=========================================================
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
+#include "../extdll.h"
+#include "../util.h"
+#include "../cbase.h"
 #include "ai_monsters.h"
-#include "animation.h"
+#include "../animation.h"
 #include "ai_scripted.h"
-#include "info_node.h"
+#include "../info_node.h"
 #include "ai_defaultai.h"
-#include "soundent.h"
+#include "../soundent.h"
 
 extern CGraph WorldGraph;
 

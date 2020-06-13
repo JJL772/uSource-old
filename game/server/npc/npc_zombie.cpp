@@ -21,8 +21,8 @@
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
-#include        "ai_monsters.h"
-#include        "ai_schedule.h"
+#include        "game/server/ai/ai_monsters.h"
+#include        "game/server/ai/ai_schedule.h"
 
 //=========================================================
 // Monster's Anim Events Go Here

@@ -19,7 +19,7 @@
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
-#include        "ai_monsters.h"
+#include        "game/server/ai/ai_monsters.h"
 #include        "info_node.h"
 #include	"nodes_compat.h"
 #include	"animation.h"

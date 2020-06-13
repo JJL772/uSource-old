@@ -46,10 +46,10 @@ CBaseEntity
 #define		FCAP_FORCE_TRANSITION		0x00000080		// ALWAYS goes across transitions
 
 #include "saverestore.h"
-#include "ai_schedule.h"
+#include "game/server/ai/ai_schedule.h"
 
 #ifndef MONSTEREVENT_H
-#include "ai_monsterevent.h"
+#include "game/server/ai/ai_monsterevent.h"
 #endif
 
 // C functions for external declarations that call the appropriate C++ methods
@@ -656,7 +656,7 @@ class CBaseMonster;
 class CCineMonster;
 class CSound;
 
-#include "ai_basemonster.h"
+#include "game/server/ai/ai_basemonster.h"
 
 const char *ButtonSound( int sound );				// get string of button sound number
 

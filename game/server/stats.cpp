@@ -14,7 +14,7 @@
 #include "info_node.h"
 #include "weapons.h"
 #include "soundent.h"
-#include "ai_monsters.h"
+#include "ai/ai_monsters.h"
 #include "../engine/shake.h"
 #include "decals.h"
 #include "gamerules.h"

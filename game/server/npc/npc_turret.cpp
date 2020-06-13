@@ -27,7 +27,7 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-#include "ai_monsters.h"
+#include "game/server/ai/ai_monsters.h"
 #include "weapons.h"
 #include "effects.h"
 

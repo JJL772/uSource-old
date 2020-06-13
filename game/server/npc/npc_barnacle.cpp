@@ -19,8 +19,8 @@
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
-#include        "ai_monsters.h"
-#include        "ai_schedule.h"
+#include        "game/server/ai/ai_monsters.h"
+#include        "game/server/ai/ai_schedule.h"
 
 #define	BARNACLE_BODY_HEIGHT	44 // how 'tall' the barnacle's model is.
 #define BARNACLE_PULL_SPEED		8

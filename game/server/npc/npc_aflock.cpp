@@ -18,8 +18,8 @@
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
-#include        "ai_monsters.h"
-#include        "ai_squadmonster.h"
+#include        "game/server/ai/ai_monsters.h"
+#include        "game/server/ai/ai_squadmonster.h"
 
 #define		AFLOCK_MAX_RECRUIT_RADIUS		1024
 #define		AFLOCK_FLY_SPEED			125

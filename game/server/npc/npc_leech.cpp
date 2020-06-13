@@ -38,7 +38,7 @@
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
-#include        "ai_monsters.h"
+#include        "game/server/ai/ai_monsters.h"
 
 // Animation events
 #define LEECH_AE_ATTACK		1
