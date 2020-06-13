@@ -14,17 +14,17 @@
 ****/
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "soundent.h"
+#include "game/server/extdll.h"
+#include "game/server/util.h"
+#include "game/server/cbase.h"
+#include "game/server/monsters.h"
+#include "game/server/weapons.h"
+#include "game/server/nodes.h"
+#include "game/server/player.h"
+#include "game/server/soundent.h"
 #include "shake.h"
-#include "gamerules.h"
-#include "game.h"
+#include "game/server/gamerules.h"
+#include "game/server/game.h"
 
 #define	GAUSS_PRIMARY_CHARGE_VOLUME	256// how loud gauss is while charging
 #define GAUSS_PRIMARY_FIRE_VOLUME	450// how loud gauss is when discharged

@@ -14,15 +14,15 @@
 ****/
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "hornet.h"
-#include "gamerules.h"
+#include "game/server/extdll.h"
+#include "game/server/util.h"
+#include "game/server/cbase.h"
+#include "game/server/monsters.h"
+#include "game/server/weapons.h"
+#include "game/server/nodes.h"
+#include "game/server/player.h"
+#include "game/server/hornet.h"
+#include "game/server/gamerules.h"
 
 enum hgun_e
 {

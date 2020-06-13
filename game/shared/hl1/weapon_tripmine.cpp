@@ -13,15 +13,15 @@
 *
 ****/
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
-#include "effects.h"
-#include "gamerules.h"
+#include "game/server/extdll.h"
+#include "game/server/util.h"
+#include "game/server/cbase.h"
+#include "game/server/monsters.h"
+#include "game/server/weapons.h"
+#include "game/server/nodes.h"
+#include "game/server/player.h"
+#include "game/server/effects.h"
+#include "game/server/gamerules.h"
 
 #define	TRIPMINE_PRIMARY_VOLUME		450
 

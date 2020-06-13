@@ -13,13 +13,13 @@
 *
 ****/
 
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "monsters.h"
-#include "weapons.h"
-#include "nodes.h"
-#include "player.h"
+#include "game/server/extdll.h"
+#include "game/server/util.h"
+#include "game/server/cbase.h"
+#include "game/server/monsters.h"
+#include "game/server/weapons.h"
+#include "game/server/nodes.h"
+#include "game/server/player.h"
 
 #define	HANDGRENADE_PRIMARY_VOLUME		450
 
