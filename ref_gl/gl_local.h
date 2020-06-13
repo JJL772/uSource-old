@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #include "engine/common/protocol.h"
 #include "dlight.h"
 #include "gl_frustum.h"
-#include "ref_api.h"
+#include "ref_int.h"
 #include "mathlib.h"
 #include "ref_params.h"
 #include "enginefeatures.h"

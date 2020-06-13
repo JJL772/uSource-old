@@ -38,7 +38,7 @@ def build(bld):
 		'../server/tripmine.cpp',
 		'../server/glock.cpp',
 		'ev_hldm.cpp', 'ammo.cpp', 'ammo_secondary.cpp', 'ammohistory.cpp',
-		'battery.cpp', 'cdll_int.cpp', 'com_weapons.cpp', 'death.cpp',
+		'battery.cpp', 'client_int.cpp', 'com_weapons.cpp', 'death.cpp',
 		'demo.cpp', 'entity.cpp', 'ev_common.cpp', 'events.cpp',
 		'flashlight.cpp', 'GameStudioModelRenderer.cpp', 'geiger.cpp',
 		'health.cpp', 'hud.cpp', 'hud_msg.cpp', 'hud_redraw.cpp',

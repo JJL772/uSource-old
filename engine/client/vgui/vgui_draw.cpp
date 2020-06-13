@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include "engine/common/common.h"
 #include "client.h"
 #include "vgui_draw.h"
-#include "vgui_api.h"
+#include "vgui_int.h"
 #include "engine/common/library.h"
 #include "keydefs.h"
 #include "ref_common.h"

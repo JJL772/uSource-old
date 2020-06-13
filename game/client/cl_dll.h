@@ -35,7 +35,7 @@ typedef int ( *pfnUserMsgHook )( const char *pszName, int iSize, void *pbuf );
 
 #include "util_vector.h"
 
-#include "cdll_int.h"
+#include "client_int.h"
 #include "cdll_dll.h"
 
 #ifndef __MSC_VER

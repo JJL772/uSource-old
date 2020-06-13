@@ -70,7 +70,7 @@ set (CLDLL_SOURCES
 	ammo_secondary.cpp
 	ammohistory.cpp
 	battery.cpp
-	cdll_int.cpp
+        client_int.cpp
 	com_weapons.cpp
 	death.cpp
 	demo.cpp

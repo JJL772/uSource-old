@@ -18,7 +18,7 @@ GNU General Public License for more details.
 
 #include <stdarg.h>
 #include "com_image.h"
-#include "vgui_api.h"
+#include "vgui_int.h"
 #include "render_api.h"
 #include "triangleapi.h"
 #include "const.h"

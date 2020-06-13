@@ -13,6 +13,6 @@
 
 typedef int (*pfnUserMsgHook)( const char *pszName, int iSize, void *pbuf );
 #include "wrect.h"
-#include "../engine/cdll_int.h"
+#include "../engine/client_int.h"
 extern cl_enginefunc_t gEngfuncs;
 #endif

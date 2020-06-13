@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "base_cmd.h"
-#include "cdll_int.h"
+#include "client_int.h"
 
 // TODO: use another hash function, as COM_HashKey depends on string length
 #define HASH_SIZE 128 // 128 * 4 * 4 == 2048 bytes
