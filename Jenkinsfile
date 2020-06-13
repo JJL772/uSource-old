@@ -18,7 +18,7 @@ pipeline {
         stage('Configure') {
             steps {
                 script {
-                    sh 'python3 waf configure -T debug -8 -W --prefix=./build-artifacts'
+                    sh 'python3 waf configure -T debug -8 -W --prefix=./build-artifacts && mkdir build-artifacts'
                 }
             }
         }
@@ -26,7 +26,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'python3 waf build -j2'
+                    sh 'python3 waf build -j2 && python3 waf install'
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                      ZIP_FILE="usource-${env.BRANCH_NAME}-$(uname)-$(uname -m)-latest.zip"
+                      ZIP_FILE="usource-$BRANCH_NAME-$(uname)-$(uname -m)-latest.zip"
                       zip -r "$ZIP_FILE" ./*
                       mv "$ZIP_FILE" "/nfs/repo/public/dist/uSource/$BRANCH_NAME/$ZIP_FILE"
                     '''
