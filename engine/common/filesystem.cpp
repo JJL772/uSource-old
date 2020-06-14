@@ -202,11 +202,11 @@ static void stringlistappend( stringlist_t *list, char *text )
 	if( list->numstrings >= list->maxstrings )
 	{
 		list->maxstrings += 4096;
-		list->strings = Mem_Realloc( fs_mempool, list->strings, list->maxstrings * sizeof( *list->strings ));
+		list->strings = (char**)Mem_Realloc( fs_mempool, list->strings, list->maxstrings * sizeof( *list->strings ));
 	}
 
 	textlen = Q_strlen( text ) + 1;
-	list->strings[list->numstrings] = Mem_Calloc( fs_mempool, textlen );
+	list->strings[list->numstrings] = (char*)Mem_Calloc( fs_mempool, textlen );
 	memcpy( list->strings[list->numstrings], text, textlen );
 	list->numstrings++;
 }
@@ -3328,8 +3328,8 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	slash = Q_strrchr( pattern, '/' );
 	backslash = Q_strrchr( pattern, '\\' );
 	colon = Q_strrchr( pattern, ':' );
-	separator = max( slash, backslash );
-	separator = max( separator, colon );
+	separator = Q_max( slash, backslash );
+	separator = Q_max( separator, colon );
 	basepathlength = separator ? (separator + 1 - pattern) : 0;
 	basepath = Mem_Calloc( fs_mempool, basepathlength + 1 );
 	if( basepathlength ) memcpy( basepath, pattern, basepathlength );

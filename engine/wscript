@@ -62,6 +62,7 @@ def build(bld):
 		'common/imagelib/*.cpp',
 		'common/soundlib/*.cpp',
 		'common/soundlib/libmpg/*.cpp',
+		'common/logsystem/*.cpp',
 		'server/*.cpp'])
 
 	# basic build: dedicated only, no dependencies
