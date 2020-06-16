@@ -339,20 +339,18 @@ qboolean Host_IsLocalGame( void )
 {
 	if( SV_Active( ))
 	{
-		return ( SV_GetMaxClients() == 1 ) ? true : false;
+		return SV_GetMaxClients() == 1;
 	}
 	else
 	{
-		return ( CL_GetMaxClients() == 1 ) ? true : false;
+		return CL_GetMaxClients() == 1;
 	}
 }
 
 qboolean Host_IsLocalClient( void )
 {
 	// only the local client have the active server
-	if( CL_Initialized( ) && SV_Initialized( ))
-		return true;
-	return false;
+	return CL_Initialized() && SV_Initialized();
 }
 
 /*
@@ -819,8 +817,9 @@ void Host_InitCommon( int argc, char **argv, const char *progname, qboolean bCha
 
 	if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS ) )
 	{
-		Sys_Warn( "SDL_Init failed: %s", SDL_GetError() );
-		host.type = HOST_DEDICATED;
+		/* Host_Error wont' actually print anything to console at this point in initialization */
+		printf("SDL_Init failed: %s\n", SDL_GetError());
+		Host_Error("SDL_Init failed: %s\n", SDL_GetError());
 	}
 	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
 
@@ -948,7 +947,7 @@ extern "C" int EXPORT Host_Main( int argc, char **argv, const char *progname, in
 	}
 
 	host_serverstate = Cvar_Get( "host_serverstate", "0", FCVAR_READ_ONLY, "displays current server state" );
-	host_maxfps = Cvar_Get( "fps_max", "72", FCVAR_ARCHIVE, "host fps upper limit" );
+	host_maxfps = Cvar_Get( "fps_max", "144", FCVAR_ARCHIVE, "host fps upper limit" );
 	host_framerate = Cvar_Get( "host_framerate", "0", 0, "locks frame timing to this value in seconds" );  
 	host_sleeptime = Cvar_Get( "sleeptime", "1", FCVAR_ARCHIVE, "milliseconds to sleep for each frame. higher values reduce fps accuracy" );
 	host_gameloaded = Cvar_Get( "host_gameloaded", "0", FCVAR_READ_ONLY, "inidcates a loaded game.dll" );
