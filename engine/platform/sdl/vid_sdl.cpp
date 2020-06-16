@@ -45,7 +45,7 @@ qboolean SW_CreateBuffer( int width, int height, uint *stride, uint *bpp, uint *
 
 	if( sw.renderer )
 	{
-		unsigned int format = SDL_GetWindowPixelFormat( host.hWnd );
+		unsigned int format = SDL_GetWindowPixelFormat( (SDL_Window*)host.hWnd );
 		SDL_RenderSetLogicalSize(sw.renderer, refState.width, refState.height);
 
 		if( sw.tex )
@@ -113,7 +113,7 @@ qboolean SW_CreateBuffer( int width, int height, uint *stride, uint *bpp, uint *
 
 	if( !sw.renderer )
 	{
-		sw.win = SDL_GetWindowSurface( host.hWnd );
+		sw.win = SDL_GetWindowSurface( (SDL_Window*)host.hWnd );
 
 		// sdl will create renderer if hw framebuffer unavailiable, so cannot fallback here
 		// if it is failed, it is not possible to draw with SDL in REF_SOFTWARE mode
@@ -157,7 +157,7 @@ void *SW_LockBuffer()
 	else
 	{
 		// ensure it not changed (do we really need this?)
-		sw.win = SDL_GetWindowSurface( host.hWnd );
+		sw.win = SDL_GetWindowSurface( (SDL_Window*)host.hWnd );
 
 		//if( !sw.win )
 			//SDL_GetWindowSurface( host.hWnd );
@@ -215,7 +215,7 @@ void SW_UnlockBuffer()
 		else // already blitted
 			SDL_UnlockSurface( sw.win );
 
-		SDL_UpdateWindowSurface( host.hWnd );
+		SDL_UpdateWindowSurface( (SDL_Window*)host.hWnd );
 	}
 }
 
@@ -245,7 +245,7 @@ static void R_InitVideoModes( void )
 	if( !modes )
 		return;
 
-	vidmodes = Mem_Malloc( host.mempool, modes * sizeof( vidmode_t ) );
+	vidmodes = static_cast<vidmode_t *>(Mem_Malloc(host.mempool, modes * sizeof(vidmode_t)));
 
 	for( i = 0; i < modes; i++ )
 	{
@@ -424,7 +424,7 @@ GL_CreateContext
 */
 qboolean GL_CreateContext( void )
 {
-	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
+	if( ( glw_state.context = SDL_GL_CreateContext( (SDL_Window*)host.hWnd ) ) == NULL)
 	{
 		Con_Reportf( S_ERROR "GL_CreateContext: %s\n", SDL_GetError());
 		return GL_DeleteContext();
@@ -440,7 +440,7 @@ GL_UpdateContext
 */
 qboolean GL_UpdateContext( void )
 {
-	if( SDL_GL_MakeCurrent( host.hWnd, glw_state.context ))
+	if( SDL_GL_MakeCurrent( (SDL_Window*)host.hWnd, glw_state.context ))
 	{
 		Con_Reportf( S_ERROR "GL_UpdateContext: %s\n", SDL_GetError());
 		return GL_DeleteContext();
@@ -454,6 +454,7 @@ qboolean VID_SetScreenResolution( int width, int height )
 	SDL_DisplayMode want, got;
 	Uint32 wndFlags = 0;
 	static string wndname;
+	int display_index = 0;
 
 	if( vid_highdpi->value ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
@@ -463,23 +464,26 @@ qboolean VID_SetScreenResolution( int width, int height )
 	want.driverdata = NULL;
 	want.format = want.refresh_rate = 0; // don't care
 
-	if( !SDL_GetClosestDisplayMode(0, &want, &got) )
+	/* Check for -display */
+	if(!Sys_GetIntFromCmdLine("-display", &display_index)) display_index = 0;
+
+	if( !SDL_GetClosestDisplayMode(display_index, &want, &got) )
 		return false;
 
 	Con_Reportf( "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
 
-	if( SDL_SetWindowDisplayMode( host.hWnd, &got) == -1 )
+	if( SDL_SetWindowDisplayMode( (SDL_Window*)host.hWnd, &got) == -1 )
 		return false;
 
-	if( SDL_SetWindowFullscreen( host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
+	if( SDL_SetWindowFullscreen( (SDL_Window*)host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
 		return false;
 
-	SDL_SetWindowBordered( host.hWnd, SDL_FALSE );
+	SDL_SetWindowBordered( (SDL_Window*)host.hWnd, SDL_FALSE );
 	//SDL_SetWindowPosition( host.hWnd, 0, 0 );
-	SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
-	SDL_SetWindowSize( host.hWnd, got.w, got.h );
+	SDL_SetWindowGrab( (SDL_Window*)host.hWnd, SDL_TRUE );
+	SDL_SetWindowSize( (SDL_Window*)host.hWnd, got.w, got.h );
 
-	SDL_GL_GetDrawableSize( host.hWnd, &got.w, &got.h );
+	SDL_GL_GetDrawableSize( (SDL_Window*)host.hWnd, &got.w, &got.h );
 
 	R_SaveVideoMode( got.w, got.h );
 	return true;
@@ -489,13 +493,13 @@ void VID_RestoreScreenResolution( void )
 {
 	if( !Cvar_VariableInteger("fullscreen") )
 	{
-		SDL_SetWindowBordered( host.hWnd, SDL_TRUE );
-		SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
+		SDL_SetWindowBordered( (SDL_Window*)host.hWnd, SDL_TRUE );
+		SDL_SetWindowGrab( (SDL_Window*)host.hWnd, SDL_FALSE );
 	}
 	else
 	{
-		SDL_MinimizeWindow( host.hWnd );
-		SDL_SetWindowFullscreen( host.hWnd, 0 );
+		SDL_MinimizeWindow( (SDL_Window*)host.hWnd );
+		SDL_SetWindowFullscreen( (SDL_Window*)host.hWnd, 0 );
 	}
 }
 
@@ -619,7 +623,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 			if( surface )
 			{
-				SDL_SetWindowIcon( host.hWnd, surface );
+				SDL_SetWindowIcon( (SDL_Window*)host.hWnd, surface );
 				SDL_FreeSurface( surface );
 				iconLoaded = true;
 			}
@@ -636,7 +640,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	}
 #endif
 
-	SDL_ShowWindow( host.hWnd );
+	SDL_ShowWindow( (SDL_Window*)host.hWnd );
 
 	if( glw_state.software )
 	{
@@ -648,7 +652,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 		if( sdl_renderer >= -1 )
 		{
-			sw.renderer = SDL_CreateRenderer( host.hWnd, sdl_renderer, 0 );
+			sw.renderer = SDL_CreateRenderer( (SDL_Window*)host.hWnd, sdl_renderer, 0 );
 			if( !sw.renderer )
 				Con_Printf( S_ERROR "failed to create SDL renderer: %s\n", SDL_GetError() );
 			else
@@ -672,7 +676,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		if( !GL_UpdateContext( ))
 		return false;
 
-		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
+		SDL_GL_GetDrawableSize( (SDL_Window*)host.hWnd, &width, &height );
 	}
 	R_SaveVideoMode( width, height );
 
@@ -691,7 +695,7 @@ void VID_DestroyWindow( void )
 	VID_RestoreScreenResolution();
 	if( host.hWnd )
 	{
-		SDL_DestroyWindow ( host.hWnd );
+		SDL_DestroyWindow ( (SDL_Window*)host.hWnd );
 		host.hWnd = NULL;
 	}
 
@@ -716,7 +720,7 @@ static void GL_SetupAttributes( void )
 
 void GL_SwapBuffers()
 {
-	SDL_GL_SwapWindow( host.hWnd );
+	SDL_GL_SwapWindow( (SDL_Window*)host.hWnd );
 }
 
 int GL_SetAttribute( int attr, int val )
@@ -900,15 +904,15 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	else
 	{
 		VID_RestoreScreenResolution();
-		if( SDL_SetWindowFullscreen( host.hWnd, 0 ) )
+		if( SDL_SetWindowFullscreen( (SDL_Window*)host.hWnd, 0 ) )
 			return rserr_invalid_fullscreen;
 #if SDL_VERSION_ATLEAST( 2, 0, 5 )
-		SDL_SetWindowResizable( host.hWnd, SDL_TRUE );
+		SDL_SetWindowResizable( (SDL_Window*)host.hWnd, SDL_TRUE );
 #endif
-		SDL_SetWindowBordered( host.hWnd, SDL_TRUE );
-		SDL_SetWindowSize( host.hWnd, width, height );
+		SDL_SetWindowBordered( (SDL_Window*)host.hWnd, SDL_TRUE );
+		SDL_SetWindowSize( (SDL_Window*)host.hWnd, width, height );
 		if( !glw_state.software )
-			SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
+			SDL_GL_GetDrawableSize( (SDL_Window*)host.hWnd, &width, &height );
 		else
 			SDL_RenderSetLogicalSize(sw.renderer, width, height);
 		R_SaveVideoMode( width, height );
