@@ -73,6 +73,12 @@ def options(opt):
 	grp.add_option('--memory-debug', action='store_true', dest='MEMORY_DEBUG', default=False,
 				   help='Enables the use of memory debugging. This will define various Mem_XXX functions as macros which will include the locations where the allocations tool place')
 
+	grp.add_option('--enable-scripting', action='store_true', dest='ENABLE_SCRIPTING', default=True,
+				   help='Enables scripting')
+
+	grp.add_option('--enable-luajit', action='store_true', dest='ENABLE_LUA', default=True,
+				   help='Enables lua scripting')
+
 	opt.load('subproject')
 
 	opt.add_subproject(subdirs())

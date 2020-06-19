@@ -36,6 +36,76 @@ model_t		*loadmodel;
 /*
 ===============================================================================
 
+			CUSTOM MODEL LOADERS
+
+===============================================================================
+*/
+
+#define MAX_MODEL_LOADERS 64
+
+struct model_loader_t
+{
+	const char* const* extensions;
+	int nextensions;
+	IModelLoader* loader;
+} g_model_loaders[MAX_MODEL_LOADERS];
+static int g_num_model_loaders = 0;
+
+IModelLoader::IModelLoader(const char* const* extensions, int nextensions)
+{
+	Assert(g_num_model_loaders < MAX_MODEL_LOADERS);
+	model_loader_t loader = {
+		extensions,
+		nextensions,
+		this
+	};
+	g_model_loaders[g_num_model_loaders] = loader;
+	g_num_model_loaders++;
+}
+
+IModelLoader::~IModelLoader()
+{
+
+}
+
+/*
+===============================================================================
+
+			CUSTOM MAP LOADERS
+
+===============================================================================
+*/
+#define MAX_MAP_LOADERS 64
+
+struct map_loader_t
+{
+	const char* const* extensions;
+	int nextensions;
+	IMapLoader* loader;
+} g_map_loaders[MAX_MAP_LOADERS];
+static int g_num_map_loaders = 0;
+
+IMapLoader::IMapLoader(const char *const *extensions, int nextensions)
+{
+	Assert(g_num_map_loaders < MAX_MAP_LOADERS);
+	map_loader_t loader = {
+		extensions,
+		nextensions,
+		this
+	};
+	g_map_loaders[g_num_map_loaders] = loader;
+	g_num_map_loaders++;
+}
+
+IMapLoader::~IMapLoader()
+{
+
+}
+
+
+/*
+===============================================================================
+
 			MOD COMMON UTILS
 
 ===============================================================================
@@ -249,13 +319,14 @@ Mod_LoadModel
 Loads a model into the cache
 ==================
 */
-model_t *Mod_LoadModel( model_t *mod, qboolean crash )
+model_t *Mod_LoadModel( model_t *mod, qboolean crash, EModelType type )
 {
 	char		tempname[MAX_QPATH];
 	fs_offset_t		length = 0;
 	qboolean		loaded;
 	byte		*buf;
 	model_info_t	*p;
+	bool            loader_used = false;
 
 	ASSERT( mod != NULL );
 
@@ -289,50 +360,102 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 	mod->type = mod_bad;
 	loadmodel = mod;
 
-	// call the apropriate loader
-	switch( *(uint *)buf )
+	/**
+	 * Check the registered model and map loaders
+	 * This is a bit of a mess!
+	 */
+	switch(type)
 	{
-	case IDSTUDIOHEADER:
-		Mod_LoadStudioModel( mod, buf, &loaded );
-		break;
-	case IDSPRITEHEADER:
-		Mod_LoadSpriteModel( mod, buf, &loaded, 0 );
-		break;
-	case IDALIASHEADER:
-		// REFTODO: move server-related code here
-		loaded = true;
-		break;
-	case Q1BSP_VERSION:
-	case HLBSP_VERSION:
-	case QBSP2_VERSION:
-		Mod_LoadBrushModel( mod, buf, &loaded );
-		// ref.dllFuncs.Mod_LoadModel( mod_brush, mod, buf, &loaded, 0 );
-		break;
-	default:
-		Mem_Free( buf );
-		if( crash ) Host_Error( "%s has unknown format\n", tempname );
-		else Con_Printf( S_ERROR "%s has unknown format\n", tempname );
-		return NULL;
-	}
-	if( loaded )
-	{
-		if( world.loading )
-			SetBits( mod->flags, MODEL_WORLD ); // mark worldmodel
-
-		if( Host_IsDedicated() )
-		{
-			if( svgame.physFuncs.Mod_ProcessUserData != NULL )
+		/* NORMAL MODELS */
+		case EModelType::NORMAL:
+			for (int i = 0; i < g_num_model_loaders; i++)
 			{
-				// let the server.dll load custom data
-				svgame.physFuncs.Mod_ProcessUserData( mod, true, buf );
+				model_loader_t ldr = g_model_loaders[i];
+				/* Loop through the registered extensions */
+				for (int j = 0; j < ldr.nextensions; j++)
+				{
+					if (Q_strcmp(COM_FileExtension(mod->name), ldr.extensions[j]) == 0 &&
+						ldr.loader->CheckBuffer(buf, length))
+					{
+						/* Use this loader */
+						loaded = ldr.loader->LoadModel(mod, buf, length);
+						loader_used = true;
+					}
+				}
 			}
-		}
-#ifndef XASH_DEDICATED
-		else
+			break;
+		/* MAP MODELS */
+		case EModelType::MAP:
+			for(int i = 0; i < g_num_map_loaders; i++)
+			{
+				map_loader_t ldr = g_map_loaders[i];
+				/* Loop through the extensions */
+				for(int j = 0; j < ldr.nextensions; j++)
+				{
+					if(Q_strcmp(COM_FileExtension(mod->name), ldr.extensions[j]) == 0 &&
+						ldr.loader->CheckBuffer(buf, length))
+					{
+						/* Use this loader */
+						loaded = ldr.loader->LoadMap(mod, buf, length);
+						loader_used = true;
+					}
+				}
+			}
+			break;
+		default:
+			Assert(0);
+			break;
+	}
+
+
+	/* Skip this block if a loader was used */
+	if(!loader_used)
+	{
+		// call the apropriate loader
+		switch (*(uint *) buf)
 		{
-			loaded = ref.dllFuncs.Mod_ProcessRenderData( mod, true, buf );
+			case IDSTUDIOHEADER:
+				Mod_LoadStudioModel(mod, buf, &loaded);
+				break;
+			case IDSPRITEHEADER:
+				Mod_LoadSpriteModel(mod, buf, &loaded, 0);
+				break;
+			case IDALIASHEADER:
+				// REFTODO: move server-related code here
+				loaded = true;
+				break;
+			case Q1BSP_VERSION:
+			case HLBSP_VERSION:
+			case QBSP2_VERSION:
+				Mod_LoadBrushModel(mod, buf, &loaded);
+				// ref.dllFuncs.Mod_LoadModel( mod_brush, mod, buf, &loaded, 0 );
+				break;
+			default:
+				Mem_Free(buf);
+				if (crash) Host_Error("%s has unknown format\n", tempname);
+				else Con_Printf(S_ERROR "%s has unknown format\n", tempname);
+				return NULL;
 		}
+		if (loaded)
+		{
+			if (world.loading)
+				SetBits(mod->flags, MODEL_WORLD); // mark worldmodel
+
+			if (Host_IsDedicated())
+			{
+				if (svgame.physFuncs.Mod_ProcessUserData != NULL)
+				{
+					// let the server.dll load custom data
+					svgame.physFuncs.Mod_ProcessUserData(mod, true, buf);
+				}
+			}
+#ifndef XASH_DEDICATED
+			else
+			{
+				loaded = ref.dllFuncs.Mod_ProcessRenderData(mod, true, buf);
+			}
 #endif
+		}
 	}
 
 	if( !loaded )

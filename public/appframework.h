@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "containers/list.h"
+
 /**
  * AppFramework and how it works
  *
@@ -101,3 +103,47 @@ namespace AppFramework
 	 */
 	void UnloadInterfaces();
 }
+
+/*
+=======================
+
+ Utility macros
+
+=======================
+*/
+
+#define EXPOSE_INTERFACE(_int) \
+extern List<IAppInterface*>* g_pInterfaces; \
+class __CStaticWrapperForInterfaces_ ## _int { \
+public:\
+	__CStaticWrapperForInterfaces_ ## _int () {\
+		if(!g_pInterfaces) g_pInterfaces = new List<IAppInterface*>();\
+		g_pInterfaces->push_back(new _int ()); \
+	}\
+}; \
+static __CStaticWrapperForInterfaces_ ## _int g_ ## _int ##_InterfaceGlobal;
+
+/* For the CreateInterface impl */
+#define MODULE_INTERFACE_IMPL() \
+List<IAppInterface*>* g_pInterfaces; \
+extern "C" EXPORT void* CreateInterface(const char* name, int* retcode) {\
+	for(auto x : *g_pInterfaces) { \
+		if(strcmp(x->GetName(), name) == 0) { \
+			*retcode = (int)EIfaceStatus::OK; \
+			return x; \
+		} \
+	} \
+	*retcode = (int)EIfaceStatus::FAILED; \
+	return 0; \
+} \
+extern "C" EXPORT iface_t* GetInterfaces(int* num) { \
+	static iface_t* __iface_list = 0;  \
+	if(!__iface_list) __iface_list = new iface_t[g_pInterfaces->size()]; \
+	int i = 0;\
+	for(auto x : g_pInterfaces) {\
+		__iface_list[i] = x; i++; \
+	}\
+	*num = g_pInterfaces->size(); \
+	return __iface_list; \
+}
+

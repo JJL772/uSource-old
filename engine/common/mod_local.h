@@ -115,6 +115,60 @@ typedef struct world_static_s
 } world_static_t;
 
 #ifndef REF_DLL
+
+/* Custom model loader class */
+/* Not actually a pure interface! be sure to call the default constructor! */
+class IModelLoader
+{
+public:
+	IModelLoader(const char* const* extensions, int nextensions);
+
+	virtual ~IModelLoader();
+
+	/**
+	 * This function should check if the specified buffer is of this format
+	 * 	you'll usually want to check signatures and versions in here
+	 * 	This is pretty much to remedy issues of files with multiple versions and the same extension
+	 * 	(e.g. bsp which has versions 20, 21, 22, etc.)
+	 * @param buf Pointer to the buffer
+	 * @param len Length of the buffer
+	 * @return
+	 */
+	virtual bool CheckBuffer(const void* buf, size_t len) = 0;
+
+	virtual bool LoadModel(model_t* mod, const void* buffer, size_t length) = 0;
+};
+
+/* Custom map loader class */
+class IMapLoader
+{
+public:
+	IMapLoader(const char* const* extensions, int nextensions);
+
+	virtual ~IMapLoader();
+
+	/**
+	 * This function should check if the specified buffer is of this format
+	 * 	you'll usually want to check signatures and versions in here
+	 * 	This is pretty much to remedy issues of files with multiple versions and the same extension
+	 * 	(e.g. bsp which has versions 20, 21, 22, etc.)
+	 * @param buf Pointer to the buffer
+	 * @param len Length of the buffer
+	 * @return
+	 */
+	virtual bool CheckBuffer(const void* buf, size_t len) = 0;
+
+	virtual bool LoadMap(model_t* map_model, const void* buffer, size_t length) = 0;
+};
+
+/* Model type enums */
+enum class EModelType
+{
+	UNKNOWN = 0,
+	NORMAL, /* Everything that isn't a map basically */
+	MAP,
+};
+
 extern world_static_t	world;
 extern byte		*com_studiocache;
 extern model_t		*loadmodel;
@@ -137,7 +191,7 @@ void Mod_LoadCacheFile( const char *path, struct cache_user_s *cu );
 void *Mod_AliasExtradata( model_t *mod );
 void *Mod_StudioExtradata( model_t *mod );
 model_t *Mod_FindName( const char *name, qboolean trackCRC );
-model_t *Mod_LoadModel( model_t *mod, qboolean crash );
+model_t *Mod_LoadModel( model_t *mod, qboolean crash, EModelType type = EModelType::NORMAL );
 model_t *Mod_ForName( const char *name, qboolean crash, qboolean trackCRC );
 qboolean Mod_ValidateCRC( const char *name, CRC32_t crc );
 void Mod_NeedCRC( const char *name, qboolean needCRC );

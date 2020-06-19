@@ -55,6 +55,14 @@ def configure(conf):
 	if conf.env.MEMORY_DEBUG:
 		conf.env.append_unique('DEFINES', 'MEMORY_DEBUG')
 
+	# Scripting?
+	if conf.env.ENABLE_SCRIPTING:
+		conf.env.append_unique('DEFINES', 'SCRIPTING_ENABLED')
+
+	# Lua?
+	if conf.env.ENABLE_LUA:
+		conf.env.append_unique('DEFINES', 'SCRIPTING_LUAJIT')
+
 def build(bld):
 	libs = [ 'public', 'mathlib' ]
 	source = bld.path.ant_glob([
@@ -94,7 +102,15 @@ def build(bld):
 		if bld.env.DEST_OS == 'linux':
 			libs.append('RT')
 
-	#
+	# Scripting support
+	if bld.env.ENABLE_SCRIPTING:
+		source = bld.path.ant_glob([
+			'common/scripting/*.cpp'
+		])
+
+	# Lua support
+	if bld.env.ENABLE_LUA:
+		libs += ['LUAJIT-5.1']
 
 	# HACK: public headers must be put before common, so we don't get wrong mathlib included
 	#includes = ['common', 'server', 'client', 'client/vgui', '.', '../public', '../common', '../pm_shared' ]
@@ -104,12 +120,12 @@ def build(bld):
 	includes.append(str(bld.env.ENGINE) + "/server")
 	includes.append(str(bld.env.ENGINE) + "/client")
 	includes.append(str(bld.env.ENGINE) + "/client/vgui")
-	#includes.append(str(bld.env.ENGINE) + "/common") Go fuck yourself
 	includes.append(str(bld.env.ENGINE))
 	includes.append(str(bld.env.PUBLIC))
 	includes.append(str(bld.env.PMSHARED))
 	includes.append(str(bld.env.COMMON))
 	includes.append('../')
+	includes.append('../thirdparty')
 
 	if bld.env.SINGLE_BINARY:
 		install_path = bld.env.BINDIR

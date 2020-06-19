@@ -39,6 +39,7 @@ GNU General Public License for more details.
 #include "input.h"
 #include "enginefeatures.h"
 #include "render_api.h"	// decallist_t
+#include "appframework.h"
 
 
 typedef void (*pfnChangeGame)( const char *progname );
@@ -1077,3 +1078,6 @@ void EXPORT Host_Shutdown( void )
 	Sys_RestoreCrashHandler();
 	Sys_CloseLog();
 }
+
+/* Things required for the appsystem */
+MODULE_INTERFACE_IMPL();
