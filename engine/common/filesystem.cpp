@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #include "library.h"
 #include "mathlib.h"
 #include "protocol.h"
+#include "public/keyvalues.h"
 
 #define FILE_COPY_SIZE		(1024 * 1024)
 #define FILE_BUFF_SIZE		(2048)
@@ -803,7 +804,7 @@ static byte *Zip_LoadFile( const char *path, fs_offset_t *sizeptr, qboolean game
 		if( header.extrafield_len )
 			FS_Seek( search->zip->handle, header.extrafield_len, SEEK_CUR );
 
-		decompressed_buffer = Mem_Malloc( search->zip->mempool, file->size + 1 );
+		decompressed_buffer = static_cast<byte *>(Mem_Malloc(search->zip->mempool, file->size + 1));
 		decompressed_buffer[file->size] = '\0';
 
 		FS_Read( search->zip->handle, decompressed_buffer, file->size );
@@ -832,8 +833,8 @@ static byte *Zip_LoadFile( const char *path, fs_offset_t *sizeptr, qboolean game
 		if( header.extrafield_len )
 			FS_Seek( search->zip->handle, header.extrafield_len, SEEK_CUR );
 
-		compressed_buffer = Mem_Malloc( search->zip->mempool, file->compressed_size + 1 );
-		decompressed_buffer = Mem_Malloc( search->zip->mempool, file->size + 1 );
+		compressed_buffer = static_cast<byte *>(Mem_Malloc(search->zip->mempool, file->compressed_size + 1));
+		decompressed_buffer = static_cast<byte *>(Mem_Malloc(search->zip->mempool, file->size + 1));
 		decompressed_buffer[file->size] = '\0';
 
 		FS_Read( search->zip->handle, compressed_buffer, file->compressed_size );
@@ -1362,7 +1363,7 @@ static void FS_WriteGameInfo( const char *filepath, gameinfo_t *GameInfo )
 		FS_Printf( f, "date\t\t\"%s\"\n", GameInfo->date );
 
 	if( Q_strlen( GameInfo->dll_path ))
-		FS_Printf( f, "dllpath\t\t\"%s\"\n", GameInfo->dll_path );	
+		FS_Printf( f, "dllpath\t\t\"%s\"\n", GameInfo->dll_path );
 
 	if( Q_strlen( GameInfo->game_dll ))
 		FS_Printf( f, "gamedll\t\t\"%s\"\n", GameInfo->game_dll );
@@ -1459,203 +1460,65 @@ void FS_ParseGenericGameInfo( gameinfo_t *GameInfo, const char *buf, const qbool
 	qboolean found_linux = false, found_osx = false;
 	string token;
 
-	while(( pfile = COM_ParseFile( pfile, token )) != NULL )
+	KeyValues* pKV = new KeyValues();
+	pKV->ParseString(buf);
+	GameInfo->keyvalues = pKV;
+
+	memcpy(GameInfo->game_dll, pKV->GetString("gamedll", ""), sizeof(GameInfo->game_dll));
+	memcpy(GameInfo->dll_path, pKV->GetString("dllpath", ""), sizeof(GameInfo->dll_path));
+	memcpy(GameInfo->game_dll_linux, pKV->GetString("gamedll_linux", ""), sizeof(GameInfo->game_dll_linux));
+	memcpy(GameInfo->game_dll_osx, pKV->GetString("gamedll_osx", ""), sizeof(GameInfo->game_dll_osx));
+	memcpy(GameInfo->title, pKV->GetString("title", pKV->GetString("game", "")), sizeof(GameInfo->title));
+	memcpy(GameInfo->falldir, pKV->GetString("fallback_dir", "valve"), sizeof(GameInfo->falldir));
+	memcpy(GameInfo->startmap, pKV->GetString("startmap", "c0a0"), sizeof(GameInfo->startmap));
+	memcpy(GameInfo->trainmap, pKV->GetString("trainmap", "t0a0"), sizeof(GameInfo->trainmap));
+	memcpy(GameInfo->game_url, pKV->GetString("url_info", ""), sizeof(GameInfo->game_url));
+	memcpy(GameInfo->update_url, pKV->GetString("url_update", pKV->GetString("url_dl", "")), sizeof(GameInfo->update_url));
+	memcpy(GameInfo->iconpath, pKV->GetString("icon", ""), sizeof(GameInfo->iconpath));
+	memcpy(GameInfo->type, pKV->GetString("type"), sizeof(GameInfo->type));
+	GameInfo->version = pKV->GetFloat("version");
+	GameInfo->size = pKV->GetInt("size");
+	GameInfo->max_edicts = pKV->GetInt("max_edicts");
+	memcpy(GameInfo->mp_entity, pKV->GetString("mpentity", ""), sizeof(GameInfo->mp_entity));
+	GameInfo->secure = pKV->GetInt("secure", 0);
+	GameInfo->nomodels = pKV->GetInt("nomodels", 0);
+	GameInfo->max_edicts = pKV->GetInt(pKV->HasKey("max_edicts") ? "max_edicts" : "edicts");
+
+	if(GameInfo->game_dll_linux[0]) found_linux = true;
+	if(GameInfo->game_dll_osx[0]) found_osx = true;
+
+	/* Only for gameinfo itself */
+	if(isGameInfo)
 	{
-		// different names in liblist/gameinfo
-		if( !Q_stricmp( token, isGameInfo ? "title" : "game" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->title );
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "fallback_dir" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->falldir );
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "startmap" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->startmap );
-			COM_StripExtension( GameInfo->startmap ); // HQ2:Amen has extension .bsp
-		}
-		// only trainmap is valid for gameinfo
-		else if( !Q_stricmp( token, "trainmap" ) ||
-			(!isGameInfo && !Q_stricmp( token, "trainingmap" )))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->trainmap );
-			COM_StripExtension( GameInfo->trainmap ); // HQ2:Amen has extension .bsp
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "url_info" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->game_url );
-		}
-		// different names
-		else if( !Q_stricmp( token, isGameInfo ? "url_update" : "url_dl" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->update_url );
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "gamedll" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
-			COM_FixSlashes( GameInfo->game_dll );
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "gamedll_linux" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
-			found_linux = true;
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "gamedll_osx" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
-			found_osx = true;
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "icon" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->iconpath );
-			COM_FixSlashes( GameInfo->iconpath );
-			COM_DefaultExtension( GameInfo->iconpath, ".ico" );
-		}
-		else if( !Q_stricmp( token, "type" ))
-		{
-			pfile = COM_ParseFile( pfile, token );
+		GameInfo->max_tents = bound(300, pKV->GetInt("max_tempents"), 2048);
+		GameInfo->max_beams = bound(64, pKV->GetInt("max_beams"), 512);
+		GameInfo->max_particles = bound(4096, pKV->GetInt("max_particles"), 32768);
+		memcpy(GameInfo->sp_entity, pKV->GetString("sp_entity", ""), sizeof(GameInfo->sp_entity));
+		memcpy(GameInfo->date, pKV->GetString("date", ""), sizeof(GameInfo->date));
 
-			if( !isGameInfo && !Q_stricmp( token, "singleplayer_only" ))
-			{
-				// TODO: Remove this ugly hack too.
-				// This was made because Half-Life has multiplayer,
-				// but for some reason it's marked as singleplayer_only.
-				// Old WON version is fine.
-				if( !Q_stricmp( GameInfo->gamefolder, "valve") )
-					GameInfo->gamemode = GAME_NORMAL;
-				else
-					GameInfo->gamemode = GAME_SINGLEPLAYER_ONLY;
-				Q_strncpy( GameInfo->type, "Single", sizeof( GameInfo->type ));
-			}
-			else if( !isGameInfo && !Q_stricmp( token, "multiplayer_only" ))
-			{
-				GameInfo->gamemode = GAME_MULTIPLAYER_ONLY;
-				Q_strncpy( GameInfo->type, "Multiplayer", sizeof( GameInfo->type ));
-			}
-			else
-			{
-				// pass type without changes
-				if( !isGameInfo )
-					GameInfo->gamemode = GAME_NORMAL;
-				Q_strncpy( GameInfo->type, token, sizeof( GameInfo->type ));
-			}
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "version" ))
-		{
-			pfile = COM_ParseFile( pfile, token );
-			GameInfo->version = Q_atof( token );
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "size" ))
-		{
-			pfile = COM_ParseFile( pfile, token );
-			GameInfo->size = Q_atoi( token );
-		}
-		else if( !Q_stricmp( token, "edicts" ))
-		{
-			pfile = COM_ParseFile( pfile, token );
-			GameInfo->max_edicts = Q_atoi( token );
-		}
-		else if( !Q_stricmp( token, "mpentity" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->mp_entity );
-		}
-		else if( !Q_stricmp( token, isGameInfo ? "mp_filter" : "mpfilter" ))
-		{
-			pfile = COM_ParseFile( pfile, GameInfo->mp_filter );
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "secure" ))
-		{
-			pfile = COM_ParseFile( pfile, token );
-			GameInfo->secure = Q_atoi( token );
-		}
-		// valid for both
-		else if( !Q_stricmp( token, "nomodels" ))
-		{
-			pfile = COM_ParseFile( pfile, token );
-			GameInfo->nomodels = Q_atoi( token );
-		}
-		else if( !Q_stricmp( token, isGameInfo ? "max_edicts" : "edicts" ))
-		{
-			pfile = COM_ParseFile( pfile, token );
-			GameInfo->max_edicts = bound( 600, Q_atoi( token ), MAX_EDICTS );
-		}
-		// only for gameinfo
-		else if( isGameInfo )
-		{
-			if( !Q_stricmp( token, "basedir" ))
-			{
-				string fs_path;
-				pfile = COM_ParseFile( pfile, fs_path );
-				if( Q_stricmp( fs_path, GameInfo->basedir ) || Q_stricmp( fs_path, GameInfo->gamefolder ))
-					Q_strncpy( GameInfo->basedir, fs_path, sizeof( GameInfo->basedir ));
-			}
-			else if( !Q_stricmp( token, "sp_entity" ))
-			{
-				pfile = COM_ParseFile( pfile, GameInfo->sp_entity );
-			}
-			else if( isGameInfo && !Q_stricmp( token, "dllpath" ))
-			{
-				pfile = COM_ParseFile( pfile, GameInfo->dll_path );
-			}
-			else if( isGameInfo && !Q_stricmp( token, "date" ))
-			{
-				pfile = COM_ParseFile( pfile, GameInfo->date );
-			}
-			else if( !Q_stricmp( token, "max_tempents" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				GameInfo->max_tents = bound( 300, Q_atoi( token ), 2048 );
-			}
-			else if( !Q_stricmp( token, "max_beams" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				GameInfo->max_beams = bound( 64, Q_atoi( token ), 512 );
-			}
-			else if( !Q_stricmp( token, "max_particles" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				GameInfo->max_particles = bound( 4096, Q_atoi( token ), 32768 );
-			}
-			else if( !Q_stricmp( token, "gamemode" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				// TODO: Remove this ugly hack too.
-				// This was made because Half-Life has multiplayer,
-				// but for some reason it's marked as singleplayer_only.
-				// Old WON version is fine.
-				if( !Q_stricmp( token, "singleplayer_only" ) && Q_stricmp( GameInfo->gamefolder, "valve") )
-					GameInfo->gamemode = GAME_SINGLEPLAYER_ONLY;
-				else if( !Q_stricmp( token, "multiplayer_only" ))
-					GameInfo->gamemode = GAME_MULTIPLAYER_ONLY;
-			}
-			else if( !Q_strnicmp( token, "ambient", 7 ))
-			{
-				int	ambientNum = Q_atoi( token + 7 );
+		string fs_path;
+		memcpy(fs_path, pKV->GetString("basedir", "valve"), sizeof(fs_path));
 
-				if( ambientNum < 0 || ambientNum > ( NUM_AMBIENTS - 1 ))
-					ambientNum = 0;
-				pfile = COM_ParseFile( pfile, GameInfo->ambientsound[ambientNum] );
-			}
-			else if( !Q_stricmp( token, "noskills" ))
-			{
-				pfile = COM_ParseFile( pfile, token );
-				GameInfo->noskills = Q_atoi( token );
-			}
-		}
+		GameInfo->noskills = pKV->GetInt("noskills", 0);
+
+		/* Fixes for the props in here */
+		if( Q_stricmp( fs_path, GameInfo->basedir ) || Q_stricmp( fs_path, GameInfo->gamefolder ))
+			Q_strncpy( GameInfo->basedir, fs_path, sizeof( GameInfo->basedir ));
+
+		if( !Q_stricmp( token, "singleplayer_only" ) && Q_stricmp( GameInfo->gamefolder, "hl1") )
+			GameInfo->gamemode = GAME_SINGLEPLAYER_ONLY;
+		else if( !Q_stricmp( token, "multiplayer_only" ))
+			GameInfo->gamemode = GAME_MULTIPLAYER_ONLY;
 	}
 
-	if( !found_linux || !found_osx )
+	/* Fix up various props */
+	COM_StripExtension(GameInfo->startmap);
+	COM_StripExtension(GameInfo->trainmap);
+	COM_FixSlashes(GameInfo->iconpath);
+	COM_DefaultExtension(GameInfo->iconpath, ".ico");
+	GameInfo->max_edicts = bound(600, GameInfo->max_edicts, MAX_EDICTS);
+
+	if( !found_linux || !found_osx)
 	{
 		// just replace extension from dll to so/dylib
 		char gamedll[64];
@@ -1670,7 +1533,7 @@ void FS_ParseGenericGameInfo( gameinfo_t *GameInfo, const char *buf, const qbool
 	}
 
 	// make sure what gamedir is really exist
-	if( !FS_SysFolderExists( va( "%s"PATH_SPLITTER"%s", host.rootdir, GameInfo->falldir )))
+	if( !FS_SysFolderExists( va( "%s" PATH_SPLITTER"%s", host.rootdir, GameInfo->falldir )))
 		GameInfo->falldir[0] = '\0';
 }
 
@@ -1851,9 +1714,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	if( !GameInfo || !FS_FileExists( gameinfo_path, false ))
 		return false; // no dest
 
-	if( FS_ReadGameInfo( gameinfo_path, gamedir, GameInfo ))
-		return true;
-	return false;
+	return FS_ReadGameInfo(gameinfo_path, gamedir, GameInfo) != 0;
 }
 
 /*
@@ -1897,7 +1758,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 	{
 		SI.clientlib[0] = 0;
 	}
-	
+
 	FS_Rescan(); // create new filesystem
 
 	Image_CheckPaletteQ1 ();
@@ -3105,7 +2966,7 @@ dll_user_t *FS_FindLibrary( const char *dllname, qboolean directpath )
 	}
 	dllpath[i] = '\0';
 
-	COM_DefaultExtension( dllpath, "."OS_LIB_EXT );	// apply ext if forget
+	COM_DefaultExtension( dllpath, "." OS_LIB_EXT );	// apply ext if forget
 	search = FS_FindFile( dllpath, &index, false );
 
 	if( !search && !directpath )
@@ -3120,7 +2981,7 @@ dll_user_t *FS_FindLibrary( const char *dllname, qboolean directpath )
 
 	// NOTE: for libraries we not fail even if search is NULL
 	// let the OS find library himself
-	hInst = Mem_Calloc( host.mempool, sizeof( dll_user_t ));	
+	hInst = static_cast<dll_user_t *>(Mem_Calloc(host.mempool, sizeof(dll_user_t)));
 
 	// save dllname for debug purposes
 	Q_strncpy( hInst->dllName, dllname, sizeof( hInst->dllName ));
@@ -3273,7 +3134,7 @@ FS_FileCopy
 */
 qboolean FS_FileCopy( file_t *pOutput, file_t *pInput, int fileSize )
 {
-	char	*buf = Mem_Malloc( fs_mempool, FILE_COPY_SIZE );
+	char	*buf = (char*)Mem_Malloc( fs_mempool, FILE_COPY_SIZE );
 	int	size, readSize;
 	qboolean	done = true;
 
@@ -3331,7 +3192,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	separator = Q_max( slash, backslash );
 	separator = Q_max( separator, colon );
 	basepathlength = separator ? (separator + 1 - pattern) : 0;
-	basepath = Mem_Calloc( fs_mempool, basepathlength + 1 );
+	basepath = static_cast<char *>(Mem_Calloc(fs_mempool, basepathlength + 1));
 	if( basepathlength ) memcpy( basepath, pattern, basepathlength );
 	basepath[basepathlength] = 0;
 
@@ -3491,7 +3352,8 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 
 		for( resultlistindex = 0; resultlistindex < resultlist.numstrings; resultlistindex++ )
 			numchars += (int)Q_strlen( resultlist.strings[resultlistindex]) + 1;
-		search = Mem_Calloc( fs_mempool, sizeof(search_t) + numchars + numfiles * sizeof( char* ));
+		search = static_cast<search_t *>(Mem_Calloc(fs_mempool,
+		                                            sizeof(search_t) + numchars + numfiles * sizeof(char *)));
 		search->filenames = (char **)((char *)search + sizeof( search_t ));
 		search->filenamesbuffer = (char *)((char *)search + sizeof( search_t ) + numfiles * sizeof( char* ));
 		search->numfilenames = (int)numfiles;

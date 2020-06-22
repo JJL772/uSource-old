@@ -114,6 +114,7 @@ typedef enum
 #include "cvar.h"
 #include "con_nprint.h"
 #include "crclib.h"
+#include "public/keyvalues.h"
 
 #define XASH_VERSION	"0.99"		// engine current version
 
@@ -123,7 +124,7 @@ typedef enum
 #define HOST_FPS		100.0		// multiplayer games typical fps
 
 #define MAX_FRAMETIME	0.25
-#define MIN_FRAMETIME	0.0001
+#define MIN_FRAMETIME	0.00001
 #define GAME_FPS		20.0
 
 #define MAX_CMD_TOKENS	80		// cmd tokens
@@ -232,6 +233,7 @@ typedef struct gameinfo_s
 	char		game_dll_osx[64];	// custom path for game.dll
 
 	qboolean	added;
+	KeyValues*      keyvalues;
 } gameinfo_t;
 
 typedef enum
@@ -780,10 +782,18 @@ void pfnResetTutorMessageDecayData( void );
 
 ==============================================================
 */
+#ifdef MEMORY_DEBUG
 #define Z_Malloc( size )		Mem_Malloc( host.mempool, size )
 #define Z_Calloc( size )		Mem_Calloc( host.mempool, size )
 #define Z_Realloc( ptr, size )	Mem_Realloc( host.mempool, ptr, size )
 #define Z_Free( ptr )		if( ptr != NULL ) Mem_Free( ptr )
+#else
+static inline void* Z_Malloc(size_t sz) { return Mem_Malloc(host.mempool, sz); };
+static inline void* Z_Calloc(size_t sz) { return Mem_Calloc(host.mempool, sz); };
+static inline void* Z_Realloc(void* ptr, size_t sz) { return Mem_Realloc(host.mempool, ptr, sz); };
+static inline void Z_Free(void* ptr) { if(ptr) Mem_Free(ptr); };
+#endif
+
 
 //
 // con_utils.c

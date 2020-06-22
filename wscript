@@ -123,7 +123,7 @@ def configure(conf):
 	conf.env.MATHLIB = str(conf.env.ROOT + "/mathlib")
 
 	# Set some opts needed by the server
-	conf.env.GAMEDIR = 'valve'
+	conf.env.GAMEDIR = 'hl1'
 	conf.env.CLIENT_DIR  = 'bin'
 	conf.env.SERVER_DIR  = 'bin'
 

@@ -40,6 +40,7 @@ GNU General Public License for more details.
 #include "enginefeatures.h"
 #include "render_api.h"	// decallist_t
 #include "appframework.h"
+#include "public/containers/list.h"
 
 
 typedef void (*pfnChangeGame)( const char *progname );

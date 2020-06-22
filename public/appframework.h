@@ -140,8 +140,8 @@ extern "C" EXPORT iface_t* GetInterfaces(int* num) { \
 	static iface_t* __iface_list = 0;  \
 	if(!__iface_list) __iface_list = new iface_t[g_pInterfaces->size()]; \
 	int i = 0;\
-	for(auto x : g_pInterfaces) {\
-		__iface_list[i] = x; i++; \
+	for(auto x : *g_pInterfaces) {\
+		__iface_list[i] = iface_t{x->GetName(), x->GetParentInterface()}; i++; \
 	}\
 	*num = g_pInterfaces->size(); \
 	return __iface_list; \

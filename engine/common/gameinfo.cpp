@@ -1,0 +1,5 @@
+/**
+
+ Parses gameinfo.txt files
+
+*/

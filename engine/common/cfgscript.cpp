@@ -82,7 +82,7 @@ cvartype_t CSCR_ParseType( parserstate_t *ps )
 	for( i = 1; i < T_COUNT; i++ )
 	{
 		if( CSCR_ExpectString( ps, cvartypes[i], false, false ))
-			return i;
+			return static_cast<cvartype_t>(i);
 	}
 
 	Con_DPrintf( S_ERROR "Cannot parse %s: Bad type %s\n", ps->filename, ps->token );
@@ -157,10 +157,8 @@ qboolean CSCR_ParseSingleCvar( parserstate_t *ps, scrvardef_t *result )
 	if( CSCR_ExpectString( ps, "SetInfo", false, false ))
 		result->flags |= FCVAR_USERINFO;
 
-	if( !CSCR_ExpectString( ps, "}", false, true ))
-		return false;
+	return CSCR_ExpectString(ps, "}", false, true) != 0;
 
-	return true;
 }
 
 /*
