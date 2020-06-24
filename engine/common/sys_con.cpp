@@ -256,7 +256,7 @@ Con_Printf
 */
 void Con_Printf( const char *szFmt, ... )
 {
-	static char	buffer[MAX_PRINT_MSG];
+	static thread_local char	buffer[MAX_PRINT_MSG];
 	va_list		args;
 
 	if( !host.allow_console )
@@ -277,7 +277,7 @@ Con_DPrintf
 */
 void Con_DPrintf( const char *szFmt, ... )
 {
-	static char	buffer[MAX_PRINT_MSG];
+	static thread_local char	buffer[MAX_PRINT_MSG];
 	va_list		args;
 
 	if( host_developer.value < DEV_NORMAL )
@@ -301,7 +301,7 @@ Con_Reportf
 */
 void Con_Reportf( const char *szFmt, ... )
 {
-	static char	buffer[MAX_PRINT_MSG];
+	static thread_local char	buffer[MAX_PRINT_MSG];
 	va_list		args;
 
 	if( host_developer.value < DEV_EXTENDED )
