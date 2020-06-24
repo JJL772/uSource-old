@@ -404,6 +404,7 @@ void Host_InitInterfaces()
 {
 	AppFramework::interface_t interfaces[] = {
 		{ENGINELIB, ILOGSYSTEM_INTERFACE},
+		{0,0},
 	};
 	
 	if(!AppFramework::AddInterfaces(interfaces)) 

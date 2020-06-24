@@ -18,4 +18,16 @@ public:
 			if(item == x) return true;
 		return false;
 	}
+
+	void remove(const T& item)
+	{
+		for(auto it = this->begin(); it != this->end(); ++it)
+		{
+			if(*it == item)
+			{
+				this->erase(it);
+				return;
+			}
+		}
+	}
 };

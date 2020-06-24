@@ -109,6 +109,8 @@ void Sys_InitLog( void )
 		mode = "a";
 	else mode = "w";
 
+	g_pLoggingSystem->SetStdout(stdout);
+
 	// create log if needed
 	if( s_ld.log_active )
 	{
@@ -215,6 +217,7 @@ void Sys_PrintLog( const char *pMsg )
 				colored[len++] = *msg++;
 		}
 		colored[len] = 0;
+
 		printf( "\033[34m%s\033[0m%s\033[0m", logtime, colored );
 
 	}
@@ -309,4 +312,67 @@ void Con_Reportf( const char *szFmt, ... )
 	va_end( args );
 
 	Sys_Print( buffer );
+}
+
+
+void Con_Reportf(const char* channel, const char* fmt, ...)
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list args;
+	va_start( args, fmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), fmt, args );
+	va_end( args );
+	g_pLoggingSystem->Log(g_pLoggingSystem->GetLoggingChannelForName(channel), 0, buffer);
+}
+
+void Con_Reportf(LoggingChannel_t channel, const char* fmt, ...)
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list args;
+	va_start( args, fmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), fmt, args );
+	va_end( args );
+	g_pLoggingSystem->Log(channel, 0, buffer);
+}
+
+void Con_DPrintf(const char* channel, const char* fmt, ...)
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list args;
+	if(host_developer.value < DEV_EXTENDED) return;
+	va_start( args, fmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), fmt, args );
+	va_end( args );
+	g_pLoggingSystem->Log(g_pLoggingSystem->GetLoggingChannelForName(channel), 0, buffer);
+}
+
+void Con_DPrintf(LoggingChannel_t channel, const char* fmt, ...)
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list args;
+	if(host_developer.value < DEV_EXTENDED) return;
+	va_start( args, fmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), fmt, args );
+	va_end( args );
+	g_pLoggingSystem->Log(channel, 0, buffer);
+}
+
+void Con_Printf(const char* channel, const char* fmt, ...)
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list args;
+	va_start( args, fmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), fmt, args );
+	va_end( args );
+	g_pLoggingSystem->Log(g_pLoggingSystem->GetLoggingChannelForName(channel), 0, buffer);
+}
+
+void Con_Printf(LoggingChannel_t channel, const char* fmt, ...) 
+{
+	static char	buffer[MAX_PRINT_MSG];
+	va_list args;
+	va_start( args, fmt );
+	Q_vsnprintf( buffer, sizeof( buffer ), fmt, args );
+	va_end( args );
+	g_pLoggingSystem->Log(channel, 0, buffer);
 }

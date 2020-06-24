@@ -25,17 +25,38 @@ public:
 
 	/* verbosity is the minimum verbosity a message must have in order to be shown */
 	virtual LoggingChannel_t CreateLoggingChannel(const char* name, int verbosity, char color[3]) = 0;
+	virtual LoggingChannel_t CreateLoggingChannel(LoggingChannel_t id, const char* name, int verbo, char color[3]) = 0;
 	virtual LoggingChannel_t GetLoggingChannelForName(const char* name) = 0;
 
 
-	virtual void Log(LoggingChannel_t channel, int verbosity, const char* fmt, ...) = 0;
-	virtual void Warn(LoggingChannel_t channel, int verbosity, const char* fmt, ...) = 0;
-	virtual void Error(LoggingChannel_t channel, int verbosity, const char* fmt, ...) = 0;
+	virtual void Log(LoggingChannel_t channel, int verbosity, const char* fmt) = 0;
+	virtual void Warn(LoggingChannel_t channel, int verbosity, const char* fmt) = 0;
+	virtual void Error(LoggingChannel_t channel, int verbosity, const char* fmt) = 0;
 
 	/* Sets the standard file streams */
 	virtual void SetStdin(FILE* stream) = 0;
 	virtual void SetStdout(FILE* stream) = 0;
+
+	/* Adds or removes streams */
+	virtual void AddStdin(FILE* stream) = 0;
+	virtual void AddStdout(FILE* stream) = 0;
+	virtual void RemoveStdin(FILE* stream) = 0;
+	virtual void RemoveStdout(FILE* steam) = 0;
 };
+
+/*
+=======================
+
+ Default logging channels 
+
+=======================
+*/
+#define LOGCHAN_GENERAL 0 /* General info */
+#define LOGCHAN_WARN	1 /* General warns */
+#define LOGCHAN_ERROR	2 /* General errors */
+#define LOGCHAN_FATAL	3 /* General fatal errors */
+
+#define LOGVERBO_LOWEST 0
 
 /*
 =======================

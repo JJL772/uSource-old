@@ -552,8 +552,8 @@ void Sys_Print( const char *pMsg )
 		Wcon_WinPrint( buffer );
 	}
 #endif
-
-	Sys_PrintLog( pMsg );
+	g_pLoggingSystem->Log(LOGCHAN_GENERAL, LOGVERBO_LOWEST, pMsg);
+	//Sys_PrintLog( pMsg );
 
 	// Rcon_Print( pMsg );
 }

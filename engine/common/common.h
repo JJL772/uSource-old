@@ -37,6 +37,9 @@ XASH SPECIFIC			- sort of hack that works only in Xash3D not in GoldSrc
 #include "backends.h"
 #include "defaults.h"
 
+/* Interface includes */
+#include "log_int.h"
+
 #include <stdio.h>
 #include <stdlib.h> // rand, adbs
 #include <stdarg.h> // va
@@ -45,6 +48,14 @@ XASH SPECIFIC			- sort of hack that works only in Xash3D not in GoldSrc
 #include <stddef.h> // size_t
 #else
 #include <sys/types.h> // off_t
+#endif
+
+#if defined(__APPLE__) || defined(__unix__)
+	#define ENGINELIB    "libxash." OS_LIB_EXT
+	#define PUBLICLIB    "libpublic." OS_LIB_EXT
+#elif _WIN32
+	#define ENGINELIB    "xash.dll"
+	#define PUBLICLIB    "public.dll"
 #endif
 
 // configuration
@@ -172,6 +183,9 @@ extern convar_t	host_developer;
 extern convar_t	*host_limitlocal;
 extern convar_t	*host_framerate;
 extern convar_t	*host_maxfps;
+
+/* interfaces */
+extern ILogSystem* g_pLoggingSystem;
 
 /*
 ==============================================================
@@ -751,9 +765,12 @@ void pfnGetGameDir( char *szGetGameDir );
 int pfnDecalIndex( const char *m );
 int pfnGetModelType( model_t *mod );
 int pfnIsMapValid( char *filename );
+void Con_Reportf(LoggingChannel_t channel, const char* fmt, ...) _format(2);
 void Con_Reportf( const char *szFmt, ... ) _format( 1 );
 void Con_DPrintf( const char *fmt, ... ) _format( 1 );
+void Con_DPrintf(LoggingChannel_t channel, const char* fmt, ...) _format(2);
 void Con_Printf( const char *szFmt, ... ) _format( 1 );
+void Con_Printf(LoggingChannel_t channel, const char* fmt, ...) _format(2);
 int pfnNumberOfEntities( void );
 int pfnIsInGame( void );
 float pfnTime( void );
