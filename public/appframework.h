@@ -141,6 +141,10 @@ static __CStaticWrapperForInterfaces_ ## _int g_ ## _int ##_InterfaceGlobal;
 #define MODULE_INTERFACE_IMPL() \
 List<IAppInterface*>* g_pInterfaces; \
 extern "C" EXPORT void* CreateInterface(const char* name, int* retcode) {\
+	if(!g_pInterfaces) {\
+		*retcode = (int)EIfaceStatus::FAILED; \
+		return nullptr; \
+	} \
 	for(auto x : *g_pInterfaces) { \
 		if(strcmp(x->GetName(), name) == 0) { \
 			*retcode = (int)EIfaceStatus::OK; \
