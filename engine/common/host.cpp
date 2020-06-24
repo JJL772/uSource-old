@@ -42,6 +42,11 @@ GNU General Public License for more details.
 #include "appframework.h"
 #include "public/containers/list.h"
 
+/* Interface includes */
+#include "log_int.h"
+
+/* Interface globals */
+ILogSystem* g_pLoggingSystem;
 
 typedef void (*pfnChangeGame)( const char *progname );
 
@@ -289,7 +294,7 @@ void Host_Exec_f( void )
 		host.config_executed = true;
 
 	// adds \n\0 at end of the file
-	txt = Z_Calloc( len + 2 );
+	txt = static_cast<char *>(Z_Calloc(len + 2));
 	memcpy( txt, f, len );
 	Q_strncat( txt, "\n", len + 2 );
 	Mem_Free( f );
@@ -326,7 +331,7 @@ void Host_MemStats_f( void )
 void Host_Minimize_f( void )
 {
 #ifdef XASH_SDL
-	if( host.hWnd ) SDL_MinimizeWindow( host.hWnd );
+	if( host.hWnd ) SDL_MinimizeWindow( (SDL_Window*)host.hWnd );
 #endif
 }
 
@@ -387,6 +392,29 @@ qboolean Host_RegisterDecal( const char *name, int *count )
 	*count += 1;
 
 	return true;
+}
+
+/*
+=================
+Host_InitInterfaces
+ Handles initialization of interfaces
+=================
+*/
+void Host_InitInterfaces()
+{
+	AppFramework::interface_t interfaces[] = {
+		{ENGINELIB, ILOGSYSTEM_INTERFACE},
+	};
+	
+	if(!AppFramework::AddInterfaces(interfaces)) 
+		Host_Error("Call to AppFramework::AddInterfaces failed. Check that all module export CreateInterface and GetInterfaces!");
+
+	if(!AppFramework::LoadInterfaces())
+		Host_Error("Failed to load interfaces");
+
+	g_pLoggingSystem = static_cast<ILogSystem *>(AppFramework::FindInterface(ILOGSYSTEM_INTERFACE));
+
+
 }
 
 /*
@@ -938,6 +966,7 @@ extern "C" int EXPORT Host_Main( int argc, char **argv, const char *progname, in
 
 	pChangeGame = func;	// may be NULL
 
+	Host_InitInterfaces();
 	Host_InitCommon( argc, argv, progname, bChangeGame );
 
 	// init commands and vars

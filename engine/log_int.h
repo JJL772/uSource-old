@@ -1,7 +1,7 @@
 
+#pragma once
 
 #include "appframework.h"
-#include "common/common.h"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -24,7 +24,7 @@ public:
 	virtual void DisconnectPort(int port) = 0;
 
 	/* verbosity is the minimum verbosity a message must have in order to be shown */
-	virtual LoggingChannel_t CreateLoggingChannel(const char* name, int verbosity, color24 color) = 0;
+	virtual LoggingChannel_t CreateLoggingChannel(const char* name, int verbosity, char color[3]) = 0;
 	virtual LoggingChannel_t GetLoggingChannelForName(const char* name) = 0;
 
 
@@ -92,7 +92,7 @@ struct log_msg_register_channel_t
 {
 	log_hdr_t hdr;
 	LoggingChannel_t channel; /* Reference ID for the channel */
-	byte color[3]; /* color[0] = r, color[1] = g, color[2] = b */
+	unsigned char color[3]; /* color[0] = r, color[1] = g, color[2] = b */
 	char name[64]; /* NULL terminated string representing the name. */
 	int verbosity; /* Verbosity level */
 };

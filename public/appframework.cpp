@@ -53,7 +53,7 @@ std::list<mod_t*> g_loadedmods;
 
 bool AppFramework::AddInterface(const char *module, const char *iface)
 {
-	mod_t *_module;
+	mod_t *_module = nullptr;
 	/* Load the lib */
 	for(auto mod : g_loadedmods)
 	{
@@ -105,11 +105,11 @@ bool AppFramework::AddInterface(const char *module, const char *iface)
 	/* Loop through and check if the name matches with the passed iface */
 	for(int i = 0; i < outnum; i++)
 	{
-		if(Q_strcmp(iface_list[i].name, iface) == 0)
+		if(Q_strcmp(iface_list[i].parent, iface) == 0)
 		{
 			appsys_t appsys;
 			appsys.module = _module;
-			appsys.name = iface;
+			appsys.name = iface_list[i].name;
 			appsys.loaded = false;
 			appsys.init = false;
 			appsys.pinterface = 0;
@@ -121,6 +121,24 @@ bool AppFramework::AddInterface(const char *module, const char *iface)
 
 	/* Nein? That sucks */
 	return false;
+}
+
+bool AppFramework::AddInterfaces(std::initializer_list<interface_t> interfaces)
+{
+	for(auto x : interfaces)
+	{
+		if(!AppFramework::AddInterface(x.module, x.iface)) return false;
+	}
+	return true;
+}
+
+bool AppFramework::AddInterfaces(interface_t* interfaces)
+{
+	for(int i = 0; interfaces[i].module && interfaces[i].iface; i++)
+	{
+		if(!AppFramework::AddInterface(interfaces[i].module, interfaces[i].iface)) return false;
+	}
+	return true;
 }
 
 bool AppFramework::LoadInterfaces()
@@ -137,7 +155,9 @@ bool AppFramework::LoadInterfaces()
 
 			/* Failure! */
 			if(status == EIfaceStatus::FAILED)
+			{
 				return false;
+			}
 
 			/* Cast to the base class and call preinit, and fail if it breaks */
 			if(!((IAppInterface*)appsys.pinterface)->PreInit())

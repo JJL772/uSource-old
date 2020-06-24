@@ -3,6 +3,11 @@
 
 #include "containers/list.h"
 
+/* Make sure these dumbos are not here */
+#undef min
+#undef max 
+#include <initializer_list>
+
 /**
  * AppFramework and how it works
  *
@@ -77,6 +82,12 @@ enum EIfaceStatus
 
 namespace AppFramework
 {
+	struct interface_t
+	{
+		const char* module;
+		const char* iface;
+	};
+
 	/**
 	 * @brief Adds an interface to the load list
 	 * @param module shared object or DLL this comes from
@@ -84,6 +95,9 @@ namespace AppFramework
 	 * @return True if added, false otherwise
 	 */
 	bool AddInterface(const char *module, const char *iface);
+
+	bool AddInterfaces(std::initializer_list<interface_t> interfaces); 
+	bool AddInterfaces(interface_t* interfaces);
 
 	/**
 	 * @brief Called to load all interfaces queued for load
