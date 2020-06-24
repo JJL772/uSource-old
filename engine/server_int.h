@@ -70,7 +70,7 @@ public:
 	virtual void	SetupVisibility( struct edict_s *pViewEntity, struct edict_s *pClient, unsigned char **pvs, unsigned char **pas ) = 0; 
 	virtual void	UpdateClientData( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd ) = 0; 
 	virtual int	AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet ) = 0; 
-	virtual void	CreateBaseline( int player, int eindex, struct entity_state_s *baseline, struct edict_s *entity, int playermodelindex, vec3_t player_mins, vec3_t player_maxs ) = 0; 
+	virtual void	CreateBaseline( int player, int eindex, struct entity_state_s *baseline, struct edict_s *entity, int playermodelindex, float* player_mins, float* player_maxs ) = 0; 
 	virtual void	RegisterEncoders( void ) = 0; 
 	virtual int	GetWeaponData( struct edict_s *player, struct weapon_data_s *info ) = 0; 
  

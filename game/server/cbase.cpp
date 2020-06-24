@@ -21,6 +21,7 @@
 #include	"decals.h"
 #include	"gamerules.h"
 #include	"game.h"
+#include	"engine/server_int.h"
 
 void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
@@ -31,6 +32,278 @@ char PM_FindTextureType( char *name );
 extern Vector VecBModelOrigin( entvars_t* pevBModel );
 extern DLL_GLOBAL Vector g_vecAttackDir;
 extern DLL_GLOBAL int g_iSkillLevel;
+
+
+class CServerInterface : public IServerInterface
+{
+public:
+	virtual const char* GetParentInterface() { return ISERVER_INTERFACE; };
+
+	virtual const char* GetName() { return "CHL1Server001"; }
+
+	virtual bool PreInit() { return true; }
+
+	virtual bool Init() { return true; }
+
+	virtual void Shutdown() { };
+
+	virtual void	GameInit( void )
+	{
+		GameInit();
+	}	
+
+	virtual int	Spawn( edict_t *pent )
+	{
+		return ::DispatchSpawn(pent);
+	}
+	
+	virtual void	Think( edict_t *pent )
+	{
+		::DispatchThink(pent);
+	} 
+
+	virtual void	Use( edict_t *pentUsed, edict_t *pentOther )
+	{
+		::DispatchUse(pentUsed, pentOther);
+	}
+	
+	virtual void	Touch( edict_t *pentTouched, edict_t *pentOther )
+	{
+		::DispatchTouch(pentTouched, pentOther);
+	}
+	
+	virtual void	Blocked( edict_t *pentBlocked, edict_t *pentOther )
+	{
+		::DispatchBlocked(pentBlocked, pentOther);
+	}
+
+	virtual void	KeyValue( edict_t *pentKeyvalue, KeyValueData *pkvd )
+	{
+		::DispatchKeyValue(pentKeyvalue, pkvd);
+	}
+	
+	virtual void	Save( edict_t *pent, SAVERESTOREDATA *pSaveData )
+	{
+		::DispatchSave(pent, pSaveData);
+	} 
+
+	virtual int 	Restore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity )
+	{
+		return ::DispatchRestore(pent, pSaveData, globalEntity);
+	}
+
+	virtual void	SetAbsBox( edict_t *pent )
+	{
+		::DispatchObjectCollsionBox(pent);
+	}
+ 
+	virtual void	SaveWriteFields( SAVERESTOREDATA* pSaveData, const char* pname, void* pBaseData, TYPEDESCRIPTION* pFields, int cnt )
+	{
+		::SaveWriteFields(pSaveData, pname, pBaseData, pFields, cnt);
+	}
+
+	virtual void	SaveReadFields( SAVERESTOREDATA* data, const char* c, void* v, TYPEDESCRIPTION* pFields, int cnt)
+	{
+		::SaveReadFields(data, c, v, pFields, cnt);
+	}
+	
+	virtual void	SaveGlobalState( SAVERESTOREDATA * data )
+	{
+		::SaveGlobalState(data);
+	}
+	
+	virtual void	RestoreGlobalState( SAVERESTOREDATA * data )
+	{
+		::RestoreGlobalState(data);
+	}
+	
+	virtual void	ResetGlobalState( void )
+	{
+		::ResetGlobalState();
+	}
+ 
+	virtual qboolean	ClientConnect( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[128] )
+	{
+		return ::ClientConnect(pEntity, pszName, pszAddress, szRejectReason);
+	}
+
+	virtual void	ClientDisconnect( edict_t *pEntity )
+	{
+		::ClientDisconnect(pEntity);
+	}
+	
+	virtual void	ClientKill( edict_t *pEntity )
+	{
+		::ClientKill(pEntity);
+	}
+	
+	virtual void	ClientPutInServer( edict_t *pEntity )
+	{
+		::ClientPutInServer(pEntity);
+	}
+	
+	virtual void	ClientCommand( edict_t *pEntity )
+	{
+		::ClientCommand(pEntity);
+	} 
+
+	virtual void	ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
+	{
+		::ClientUserInfoChanged(pEntity, infobuffer);
+	}
+	
+	virtual void	ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
+	{
+		::ServerActivate(pEdictList, edictCount, clientMax);
+	}
+	
+	virtual void	ServerDeactivate( void )
+	{
+		::ServerDeactivate();
+	} 
+
+	virtual void	PlayerPreThink( edict_t *pEntity )
+	{
+		::PlayerPreThink(pEntity);
+	}
+	
+	virtual void	PlayerPostThink( edict_t *pEntity )
+	{
+		::PlayerPostThink(pEntity);
+	}
+
+	virtual void	StartFrame( void )
+	{
+		::StartFrame();
+	}
+	
+	virtual void	ParmsNewLevel( void )
+	{
+		::ParmsNewLevel();
+	} 
+
+	virtual void	ParmsChangeLevel( void )
+	{
+		::ParmsChangeLevel();
+	}
+ 
+	// Returns string describing current .dll.  E.g., TeamFotrress 2, Half-Life
+	virtual const char     *GetGameDescription( void ) 
+	{
+		return ::GetGameDescription();
+	}
+
+
+	// Notify dll about a player customization.
+	virtual void	PlayerCustomization( edict_t *pEntity, customization_t *pCustom )
+	{
+		::PlayerCustomization(pEntity, pCustom);
+	}
+
+	virtual void	SpectatorConnect( edict_t *pEntity )
+	{
+		::SpectatorConnect(pEntity);
+	}
+	
+	virtual void	SpectatorDisconnect( edict_t *pEntity )
+	{
+		::SpectatorDisconnect(pEntity);
+	}
+
+	virtual void	SpectatorThink( edict_t *pEntity ) 
+	{
+		::SpectatorThink(pEntity);
+	}
+
+	// Notify game .dll that engine is going to shut down. Allows mod authors to set a breakpoint.
+	virtual void	Sys_Error( const char *error_string )
+	{
+		::Sys_Error(error_string);
+	}
+
+	virtual void	PM_Move( struct playermove_s *ppmove, qboolean server )
+	{
+		::PM_Move(ppmove, server);
+	}
+	
+	virtual void	PM_Init( struct playermove_s *ppmove )
+	{
+		::PM_Init(ppmove);
+	}
+
+	virtual char	PM_FindTextureType( char *name )
+	{
+		return ::PM_FindTextureType(name);
+	}
+	
+	virtual void	SetupVisibility( struct edict_s *pViewEntity, struct edict_s *pClient, unsigned char **pvs, unsigned char **pas )
+	{
+		::SetupVisibility(pViewEntity, pClient, pvs, pas);
+	}
+
+	virtual void	UpdateClientData( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd )
+	{
+		::UpdateClientData(ent, sendweapons, cd);
+	}
+
+	virtual int	AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet )
+	{
+		return ::AddToFullPack(state, e, ent, host, hostflags, player, pSet);
+	}
+
+	virtual void	CreateBaseline( int player, int eindex, struct entity_state_s *baseline, struct edict_s *entity, int playermodelindex, float* player_mins, float* player_maxs ) 
+	{
+		::CreateBaseline(player, eindex, baseline, entity, playermodelindex, player_mins, player_maxs);
+	}
+
+	virtual void	RegisterEncoders( void )
+	{
+		::RegisterEncoders();
+	} 
+
+	virtual int	GetWeaponData( struct edict_s *player, struct weapon_data_s *info )
+	{
+		return ::GetWeaponData(player, info);
+	}
+ 
+	virtual void	CmdStart( const edict_t *player, const struct usercmd_s *cmd, unsigned int random_seed )
+	{
+		::CmdStart(player, cmd, random_seed);
+	}
+
+	virtual void	CmdEnd( const edict_t *player )
+	{
+		::CmdEnd(player);
+	}
+
+	virtual int	ConnectionlessPacket ( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size )
+	{
+		return ::ConnectionlessPacket(net_from, args, response_buffer, response_buffer_size);
+	}
+
+	virtual int	GetHullBounds( int hullnumber, float *mins, float *maxs )
+	{
+		return ::GetHullBounds(hullnumber, mins, maxs);
+	}
+ 
+	virtual void	CreateInstancedBaselines ( void )
+	{
+		::CreateInstancedBaselines();
+	}
+
+	virtual int	InconsistentFile( const struct edict_s *player, const char *filename, char *disconnect_message )
+	{
+		return ::InconsistentFile(player, filename, disconnect_message);
+	}
+ 
+	virtual int	AllowLagCompensation( void )
+	{
+		return ::AllowLagCompensation();
+	}
+}; 
+
+EXPOSE_INTERFACE(CServerInterface);
+MODULE_INTERFACE_IMPL();
 
 static DLL_FUNCTIONS gFunctionTable =
 {
