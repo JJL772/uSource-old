@@ -209,7 +209,7 @@ qboolean SV_RunThink( edict_t *ent )
 						// by a trigger with a local time.
 		ent->v.nextthink = 0.0f;
 		svgame.globals->time = thinktime;
-		svgame.dllFuncs.pfnThink( ent );
+		g_pServerInterface->Think( ent );
 	}
 
 	if( FBitSet( ent->v.flags, FL_KILLME ))
@@ -248,7 +248,7 @@ qboolean SV_PlayerRunThink( edict_t *ent, float frametime, double time )
 
 		ent->v.nextthink = 0.0f;
 		svgame.globals->time = thinktime;
-		svgame.dllFuncs.pfnThink( ent );
+		g_pServerInterface->Think( ent );
 	}
 
 	if( FBitSet( ent->v.flags, FL_KILLME ))
@@ -283,13 +283,13 @@ void SV_Impact( edict_t *e1, edict_t *e2, trace_t *trace )
 	if( e1->v.solid != SOLID_NOT )
 	{
 		SV_CopyTraceToGlobal( trace );
-		svgame.dllFuncs.pfnTouch( e1, e2 );
+		g_pServerInterface->Touch( e1, e2 );
 	}
 
 	if( e2->v.solid != SOLID_NOT )
 	{
 		SV_CopyTraceToGlobal( trace );
-		svgame.dllFuncs.pfnTouch( e2, e1 );
+		g_pServerInterface->Touch( e2, e1 );
 	}
 }
 
@@ -1190,7 +1190,7 @@ void SV_Physics_Pusher( edict_t *ent )
 
 	// if the pusher has a "blocked" function, call it
 	// otherwise, just stay in place until the obstacle is gone
-	if( pBlocker ) svgame.dllFuncs.pfnBlocked( ent, pBlocker );
+	if( pBlocker ) g_pServerInterface->Blocked( ent, pBlocker );
 
 	for( i = 0; i < 3; i++ )
 	{
@@ -1202,7 +1202,7 @@ void SV_Physics_Pusher( edict_t *ent )
 	{
 		ent->v.nextthink = 0.0f;
 		svgame.globals->time = sv.time;
-		svgame.dllFuncs.pfnThink( ent );
+		g_pServerInterface->Think( ent );
 	}
 }
 
@@ -1784,7 +1784,7 @@ void SV_Physics( void )
 	svgame.globals->time = sv.time;
 
 	// let the progs know that a new frame has started
-	svgame.dllFuncs.pfnStartFrame();
+	g_pServerInterface->StartFrame();
 
 	// treat each object in turn
 	for( i = 0; i < svgame.numEntities; i++ )

@@ -110,7 +110,7 @@ void SV_SysError( const char *error_string )
 	Log_Printf( "FATAL ERROR (shutting down): %s\n", error_string );
 
 	if( svgame.hInstance != NULL )
-		svgame.dllFuncs.pfnSys_Error( error_string );
+		g_pServerInterface->Sys_Error(error_string);
 }
 
 /*
@@ -1890,7 +1890,7 @@ static void pfnMakeStatic( edict_t *ent )
 
 	// fill the entity state
 	state = &svs.static_entities[sv.num_static_entities];	// allocate a new one
-	svgame.dllFuncs.pfnCreateBaseline( false, NUM_FOR_EDICT( ent ), state, ent, 0, vec3_origin, vec3_origin );
+	g_pServerInterface->CreateBaseline(false, NUM_FOR_EDICT(ent), state, ent, 0, vec3_origin, vec3_origin);
 	state->messagenum = ent->v.model; // member modelname
 
 	if( SV_CreateStaticEntity( &sv.signon, sv.num_static_entities ))
@@ -3082,11 +3082,12 @@ void SV_AllocStringPool( void )
 	if( Sys_CheckParm( "-str64dup" ) )
 		str64.allowdup = true;
 
-#ifdef USE_MMAP
+#if 0
 	{
 		size_t pagesize = sysconf( _SC_PAGESIZE );
 		int arrlen = (str64.maxstringarray * 2) & ~(pagesize - 1);
-		void *base = reinterpret_cast<void *>(svgame.dllFuncs.pfnGameInit);
+		//void *base = reinterpret_cast<void *>(svgame.dllFuncs.pfnGameInit);
+		void* base = reinterpret_cast<void*>((uintptr_t)g_pServerInterface + sizeof(IServerInterface) + 8192); // God help my soul 
 		void *start = (void*)((uintptr_t)svgame.hInstance - (uintptr_t)arrlen);
 
 		while( (uintptr_t)start - (uintptr_t)base > INT_MIN )
@@ -3130,7 +3131,7 @@ void SV_AllocStringPool( void )
 		}
 	}
 #else
-	ptr = str64.staticstringarray = Mem_Calloc(host.mempool, str64.maxstringarray * 2);
+	ptr = str64.staticstringarray = (char*)Mem_Calloc(host.mempool, str64.maxstringarray * 2);
 #endif
 
 	str64.pstringarray = static_cast<char *>(ptr);
@@ -4850,7 +4851,7 @@ qboolean SV_ParseEdict( char **pfile, edict_t *ent )
 		if( !pkvd[i].fHandled )
 		{
 			pkvd[i].szClassName = classname;
-			svgame.dllFuncs.pfnKeyValue( ent, &pkvd[i] );
+			g_pServerInterface->KeyValue(ent, &pkvd[i]);
 		}
 
 		// no reason to keep this data
@@ -4909,7 +4910,7 @@ void SV_LoadFromFile( const char *mapname, char *entities )
 			if( !SV_ParseEdict( &entities, ent ))
 				continue;
 
-			if( svgame.dllFuncs.pfnSpawn( ent ) == -1 )
+			if(g_pServerInterface->Spawn(ent) == -1)
 			{
 				// game rejected the spawn
 				if( !FBitSet( ent->v.flags, FL_KILLME ))
@@ -5050,15 +5051,6 @@ qboolean SV_LoadProgs( const char *name )
 	GetEntityAPI2 = (APIFUNCTION2)COM_GetProcAddress( svgame.hInstance, "GetEntityAPI2" );
 	GiveNewDllFuncs = (NEW_DLL_FUNCTIONS_FN)COM_GetProcAddress( svgame.hInstance, "GetNewDLLFunctions" );
 
-	if( !GetEntityAPI && !GetEntityAPI2 )
-	{
-		COM_FreeLibrary( svgame.hInstance );
-		Con_Printf( S_ERROR "SV_LoadProgs: failed to get address of GetEntityAPI proc\n" );
-		svgame.hInstance = NULL;
-		Mem_FreePool(&svgame.mempool);
-		return false;
-	}
-
 	GiveFnptrsToDll = (GIVEFNPTRSTODLL)COM_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
 
 	if( !GiveFnptrsToDll )
@@ -5087,32 +5079,46 @@ qboolean SV_LoadProgs( const char *name )
 
 	version = INTERFACE_VERSION;
 
-	if( GetEntityAPI2 )
-	{
-		if( !GetEntityAPI2( &svgame.dllFuncs, &version ))
-		{
-			Con_Printf( S_WARN "SV_LoadProgs: interface version %i should be %i\n", INTERFACE_VERSION, version );
+	/* Tell the AppFramework system to use our custom loadlibrary/freelibrary functions */
+	AppFramework::SetLoadLibrary([](const char* lib) -> void* {
+		return COM_LoadLibrary(lib, 0, false);
+	});
+	AppFramework::SetFreeLibrary([](void* lib) {
+		COM_FreeLibrary(lib);
+	});
 
-			// fallback to old API
-			if( !GetEntityAPI( &svgame.dllFuncs, version ))
-			{
-				COM_FreeLibrary( svgame.hInstance );
-				Con_Printf( S_ERROR "SV_LoadProgs: couldn't get entity API\n" );
-				svgame.hInstance = NULL;
-				Mem_FreePool(&svgame.mempool);
-				return false;
-			}
-		}
-		else Con_Reportf( "SV_LoadProgs: ^2initailized extended EntityAPI ^7ver. %i\n", version );
-	}
-	else if( !GetEntityAPI( &svgame.dllFuncs, version ))
+	/* Load the server interface */
+	if(!AppFramework::AddInterface(name, ISERVER_INTERFACE))
 	{
+		Host_Error("SV_LoadProgs: failed to call AppFramework::AddInterface: %s\n", AppFramework::GetLastError());
 		COM_FreeLibrary( svgame.hInstance );
-		Con_Printf( S_ERROR "SV_LoadProgs: couldn't get entity API\n" );
 		svgame.hInstance = NULL;
 		Mem_FreePool(&svgame.mempool);
 		return false;
 	}
+
+	if(!AppFramework::LoadInterfaces())
+	{
+		Host_Error("SV_LoadProgs: Failed to call AppFramework::LoadInterfaces: %s\n", AppFramework::GetLastError());
+		COM_FreeLibrary( svgame.hInstance );
+		svgame.hInstance = NULL;
+		Mem_FreePool(&svgame.mempool);
+		return false;
+	}
+
+	g_pServerInterface = static_cast<IServerInterface*>(AppFramework::FindInterface(ISERVER_INTERFACE));
+
+	if(!g_pServerInterface)
+	{
+		Host_Error("SV_LoadProgs: Call to FindInterface failed: %s\n", AppFramework::GetLastError());
+		COM_FreeLibrary( svgame.hInstance );
+		svgame.hInstance = NULL;
+		Mem_FreePool(&svgame.mempool);
+		return false;
+	}
+
+	/* Reset the library loaders to default */
+	AppFramework::ClearCustomFunctions();
 
 	SV_InitOperatorCommands();
 	Mod_InitStudioAPI();
@@ -5141,10 +5147,10 @@ qboolean SV_LoadProgs( const char *name )
 	SV_AllocStringPool();
 
 	// fire once
-	Con_Printf( "Dll loaded for game ^2\"%s\"\n", svgame.dllFuncs.pfnGetGameDescription( ));
+	Con_Printf( "Dll loaded for game ^2\"%s\"\n", g_pServerInterface->GetGameDescription( ));
 
 	// all done, initialize game
-	svgame.dllFuncs.pfnGameInit();
+	g_pServerInterface->GameInit();
 
 	// initialize pm_shared
 	SV_InitClientMove();
@@ -5152,7 +5158,7 @@ qboolean SV_LoadProgs( const char *name )
 	Delta_Init ();
 
 	// register custom encoders
-	svgame.dllFuncs.pfnRegisterEncoders();
+	g_pServerInterface->RegisterEncoders();
 
 	return true;
 }

@@ -33,7 +33,6 @@ extern Vector VecBModelOrigin( entvars_t* pevBModel );
 extern DLL_GLOBAL Vector g_vecAttackDir;
 extern DLL_GLOBAL int g_iSkillLevel;
 
-
 class CServerInterface : public IServerInterface
 {
 public:
@@ -49,7 +48,7 @@ public:
 
 	virtual void	GameInit( void )
 	{
-		GameInit();
+		::GameDLLInit();
 	}	
 
 	virtual int	Spawn( edict_t *pent )
@@ -305,102 +304,7 @@ public:
 EXPOSE_INTERFACE(CServerInterface);
 MODULE_INTERFACE_IMPL();
 
-static DLL_FUNCTIONS gFunctionTable =
-{
-	GameDLLInit,				//pfnGameInit
-	DispatchSpawn,				//pfnSpawn
-	DispatchThink,				//pfnThink
-	DispatchUse,				//pfnUse
-	DispatchTouch,				//pfnTouch
-	DispatchBlocked,			//pfnBlocked
-	DispatchKeyValue,			//pfnKeyValue
-	DispatchSave,				//pfnSave
-	DispatchRestore,			//pfnRestore
-	DispatchObjectCollsionBox,	//pfnAbsBox
-
-	SaveWriteFields,			//pfnSaveWriteFields
-	SaveReadFields,				//pfnSaveReadFields
-
-	SaveGlobalState,			//pfnSaveGlobalState
-	RestoreGlobalState,			//pfnRestoreGlobalState
-	ResetGlobalState,			//pfnResetGlobalState
-
-	ClientConnect,				//pfnClientConnect
-	ClientDisconnect,			//pfnClientDisconnect
-	ClientKill,					//pfnClientKill
-	ClientPutInServer,			//pfnClientPutInServer
-	ClientCommand,				//pfnClientCommand
-	ClientUserInfoChanged,		//pfnClientUserInfoChanged
-	ServerActivate,				//pfnServerActivate
-	ServerDeactivate,			//pfnServerDeactivate
-
-	PlayerPreThink,				//pfnPlayerPreThink
-	PlayerPostThink,			//pfnPlayerPostThink
-
-	StartFrame,					//pfnStartFrame
-	ParmsNewLevel,				//pfnParmsNewLevel
-	ParmsChangeLevel,			//pfnParmsChangeLevel
-
-	GetGameDescription,         //pfnGetGameDescription    Returns string describing current .dll game.
-	PlayerCustomization,        //pfnPlayerCustomization   Notifies .dll of new customization for player.
-
-	SpectatorConnect,			//pfnSpectatorConnect      Called when spectator joins server
-	SpectatorDisconnect,        //pfnSpectatorDisconnect   Called when spectator leaves the server
-	SpectatorThink,				//pfnSpectatorThink        Called when spectator sends a command packet (usercmd_t)
-
-	Sys_Error,					//pfnSys_Error				Called when engine has encountered an error
-
-	PM_Move,					//pfnPM_Move
-	PM_Init,					//pfnPM_Init				Server version of player movement initialization
-	reinterpret_cast<char (*)(char *)>(PM_FindTextureType),			//pfnPM_FindTextureType
-
-	SetupVisibility,			//pfnSetupVisibility        Set up PVS and PAS for networking for this client
-	UpdateClientData,			//pfnUpdateClientData       Set up data sent only to specific client
-	AddToFullPack,				//pfnAddToFullPack
-	CreateBaseline,				//pfnCreateBaseline			Tweak entity baseline for network encoding, allows setup of player baselines, too.
-	RegisterEncoders,			//pfnRegisterEncoders		Callbacks for network encoding
-	GetWeaponData,				//pfnGetWeaponData
-	CmdStart,					//pfnCmdStart
-	CmdEnd,						//pfnCmdEnd
-	ConnectionlessPacket,		//pfnConnectionlessPacket
-	GetHullBounds,				//pfnGetHullBounds
-	CreateInstancedBaselines,   //pfnCreateInstancedBaselines
-	InconsistentFile,			//pfnInconsistentFile
-	AllowLagCompensation,		//pfnAllowLagCompensation
-};
-
 static void SetObjectCollisionBox( entvars_t *pev );
-
-#ifndef _WIN32
-extern "C" {
-#endif
-int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion )
-{
-	if( !pFunctionTable || interfaceVersion != INTERFACE_VERSION )
-	{
-		return FALSE;
-	}
-	
-	memcpy( pFunctionTable, &gFunctionTable, sizeof(DLL_FUNCTIONS) );
-	return TRUE;
-}
-
-int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
-{
-	if( !pFunctionTable || *interfaceVersion != INTERFACE_VERSION )
-	{
-		// Tell engine what version we had, so it can figure out who is out of date.
-		*interfaceVersion = INTERFACE_VERSION;
-		return FALSE;
-	}
-
-	memcpy( pFunctionTable, &gFunctionTable, sizeof(DLL_FUNCTIONS) );
-	return TRUE;
-}
-
-#ifndef _WIN32
-}
-#endif
 
 int DispatchSpawn( edict_t *pent )
 {

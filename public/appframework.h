@@ -7,6 +7,7 @@
 #undef min
 #undef max 
 #include <initializer_list>
+#include <functional>
 
 /**
  * AppFramework and how it works
@@ -27,6 +28,10 @@
  * Interfaces are loaded into interface "slots". Basically you have an interface implementation, such as IEngineFilesystem001, which
  * is an implementation of IFilesystem001. So, when you load IEngineFilesystem001, it's loaded into the IFilesystem001 slot. When other modules lookup interfaces,
  * they refer to the "slot" name, in this case IFilesystem001, and the IEngineFilesystem001 implementation is returned.
+ * 
+ * Implementation NOTES:
+ *  - AppFramework acts as a state machine, so it should only be called from the main thread
+ *  - There are some pretty terrible hacks in here, which does make me somewhat sad 
  */
 
 class IAppInterface
@@ -100,6 +105,12 @@ namespace AppFramework
 	bool AddInterfaces(interface_t* interfaces);
 
 	/**
+	 * @brief Gets the last error that happened or empty string
+	 * @return last error
+	 */ 
+	const char* GetLastError();
+
+	/**
 	 * @brief Called to load all interfaces queued for load
 	 * @return True if OK, false if something failed
 	 */
@@ -116,6 +127,13 @@ namespace AppFramework
 	 * @brief Unloads all added interfaces
 	 */
 	void UnloadInterfaces();
+
+	/**
+	 * Set a custom LoadLibrary/FreeLibrary function
+	 */ 
+	void SetLoadLibrary(std::function<void*(const char*)> fn);
+	void SetFreeLibrary(std::function<void(void*)> fn);
+	void ClearCustomFunctions();
 }
 
 /*

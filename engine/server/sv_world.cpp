@@ -568,7 +568,7 @@ void SV_TouchLinks( edict_t *ent, areanode_t *node )
 		if( !sv.playersonly )
 		{
 			svgame.globals->time = sv.time;
-			svgame.dllFuncs.pfnTouch( touch, ent );
+			g_pServerInterface->Touch( touch, ent );
 		}
 	}
 	
@@ -639,7 +639,7 @@ void SV_LinkEdict( edict_t *ent, qboolean touch_triggers )
 	if( !SV_IsValidEdict( ent )) return;		// never add freed ents
 
 	// set the abs box
-	svgame.dllFuncs.pfnSetAbsBox( ent );
+	g_pServerInterface->SetAbsBox( ent );
 
 	if( ent->v.movetype == MOVETYPE_FOLLOW && SV_IsValidEdict( ent->v.aiment ))
 	{

@@ -160,7 +160,7 @@ qboolean SV_ShouldUnlagForPlayer( sv_client_t *cl )
 		return false;
 
 	// unlag disabled globally
-	if( !svgame.dllFuncs.pfnAllowLagCompensation() || !sv_unlag.value )
+	if( !g_pServerInterface->AllowLagCompensation() || !sv_unlag.value )
 		return false;
 
 	if( !FBitSet( cl->flags, FCL_LAG_COMPENSATION ))
@@ -594,7 +594,7 @@ void SV_InitClientMove( void )
 	// enumerate client hulls
 	for( i = 0; i < MAX_MAP_HULLS; i++ )
 	{
-		if( svgame.dllFuncs.pfnGetHullBounds( i, host.player_mins[i], host.player_maxs[i] ))
+		if( g_pServerInterface->GetHullBounds( i, host.player_mins[i], host.player_maxs[i] ))
 			Con_Reportf( "SV: hull%i, player_mins: %g %g %g, player_maxs: %g %g %g\n", i,
 			host.player_mins[i][0], host.player_mins[i][1], host.player_mins[i][2],
 			host.player_maxs[i][0], host.player_maxs[i][1], host.player_maxs[i][2] );
@@ -636,7 +636,7 @@ void SV_InitClientMove( void )
 	svgame.pmove->PM_TraceSurface = pfnTraceSurface;
 
 	// initalize pmove
-	svgame.dllFuncs.pfnPM_Init( svgame.pmove );
+	g_pServerInterface->PM_Init( svgame.pmove );
 }
 
 static void PM_CheckMovingGround( edict_t *ent, float frametime )
@@ -1061,7 +1061,7 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed )
 	if( !FBitSet( cl->flags, FCL_FAKECLIENT ))
 		SV_SetupMoveInterpolant( cl );
 
-	svgame.dllFuncs.pfnCmdStart( cl->edict, ucmd, random_seed );
+	g_pServerInterface->CmdStart( cl->edict, ucmd, random_seed );
 
 	frametime = ((double)ucmd->msec / 1000.0 );
 	cl->timebase += frametime;
@@ -1086,7 +1086,7 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed )
 	}
 
 	svgame.globals->time = cl->timebase;
-	svgame.dllFuncs.pfnPlayerPreThink( clent );
+	g_pServerInterface->PlayerPreThink( clent );
 	SV_PlayerRunThink( clent, frametime, cl->timebase );
 
 	// If conveyor, or think, set basevelocity, then send to client asap too.
@@ -1097,7 +1097,7 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed )
 	SV_SetupPMove( svgame.pmove, cl, ucmd, cl->physinfo );
 
 	// motor!
-	svgame.dllFuncs.pfnPM_Move( svgame.pmove, true );
+	g_pServerInterface->PM_Move( svgame.pmove, true );
 
 	// copy results back to client
 	SV_FinishPMove( svgame.pmove, cl );
@@ -1135,8 +1135,8 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed )
 	svgame.globals->frametime = frametime;
 
 	// run post-think
-	svgame.dllFuncs.pfnPlayerPostThink( clent );
-	svgame.dllFuncs.pfnCmdEnd( clent );
+	g_pServerInterface->PlayerPostThink( clent );
+	g_pServerInterface->CmdEnd( clent );
 
 	if( !FBitSet( cl->flags, FCL_FAKECLIENT ))
 	{

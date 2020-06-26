@@ -484,7 +484,7 @@ typedef struct
 	int	(*pfnAllowLagCompensation)( void );
 } DLL_FUNCTIONS;
 
-extern DLL_FUNCTIONS		gEntityInterface;
+//extern DLL_FUNCTIONS		gEntityInterface;
 
 // Current version.
 #define NEW_DLL_FUNCTIONS_VERSION	1

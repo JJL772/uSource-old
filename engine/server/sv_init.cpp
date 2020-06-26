@@ -24,6 +24,8 @@ server_t		sv;	// local server
 server_static_t	svs;	// persistant server info
 svgame_static_t	svgame;	// persistant game info
 
+IServerInterface* g_pServerInterface;
+
 /*
 ================
 SV_AddResource
@@ -438,12 +440,14 @@ void SV_CreateBaseline( void )
 			base->entityType = ENTITY_BEAM;
 		else base->entityType = ENTITY_NORMAL;
 
-		svgame.dllFuncs.pfnCreateBaseline( delta_type, entnum, base, pEdict, playermodel, host.player_mins[0], host.player_maxs[0] );
+		//svgame.dllFuncs.pfnCreateBaseline( delta_type, entnum, base, pEdict, playermodel, host.player_mins[0], host.player_maxs[0] );
+		g_pServerInterface->CreateBaseline(delta_type, entnum, base, pEdict, playermodel, host.player_mins[0], host.player_maxs[0]);
 		sv.last_valid_baseline = entnum;
 	}
 
 	// create the instanced baselines
-	svgame.dllFuncs.pfnCreateInstancedBaselines();
+	//svgame.dllFuncs.pfnCreateInstancedBaselines();
+	g_pServerInterface->CreateInstancedBaselines();
 
 	// now put the baseline into the signon message.
 	MSG_BeginServerCmd( &sv.signon, svc_spawnbaseline );
@@ -534,7 +538,8 @@ void SV_ActivateServer( int runPhysics )
 
 	// Activate the DLL server code
 	svgame.globals->time = sv.time;
-	svgame.dllFuncs.pfnServerActivate( svgame.edicts, svgame.numEntities, svs.maxclients );
+	//svgame.dllFuncs.pfnServerActivate( svgame.edicts, svgame.numEntities, svs.maxclients );
+	g_pServerInterface->ServerActivate(svgame.edicts, svgame.numEntities, svs.maxclients);
 
 	SV_SetStringArrayMode( true );
 
@@ -633,7 +638,8 @@ void SV_DeactivateServer( void )
 		return;
 
 	svgame.globals->time = sv.time;
-	svgame.dllFuncs.pfnServerDeactivate();
+	//svgame.dllFuncs.pfnServerDeactivate();
+	g_pServerInterface->ServerDeactivate();
 	Host_SetServerState( ss_dead );
 
 	SV_FreeEdicts ();
@@ -869,7 +875,8 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot, qboolean ba
 
 	// let's not have any servers with no name
 	if( !COM_CheckString( hostname.string ))
-		Cvar_Set( "hostname", svgame.dllFuncs.pfnGetGameDescription ? svgame.dllFuncs.pfnGetGameDescription() : FS_Title( ));
+		Cvar_Set("hostname", g_pServerInterface->GetGameDescription() ? g_pServerInterface->GetGameDescription() : FS_Title());
+		//Cvar_Set( "hostname", svgame.dllFuncs.pfnGetGameDescription ? svgame.dllFuncs.pfnGetGameDescription() : FS_Title( ));
 
 	if( startspot )
 	{

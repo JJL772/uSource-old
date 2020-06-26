@@ -552,7 +552,7 @@ void SV_DropClient( sv_client_t *cl, qboolean crash )
 
 		if( cl->edict && cl->state == cs_spawned )
 		{
-			svgame.dllFuncs.pfnClientDisconnect( cl->edict );
+			g_pServerInterface->ClientDisconnect( cl->edict );
 		}
 
 		if( !FBitSet( cl->flags, FCL_FAKECLIENT ) )
@@ -1278,27 +1278,22 @@ void SV_PutClientInServer( sv_client_t *cl )
 			ent->v.fixangle = 0;
 		}
 
-		if( svgame.dllFuncs.pfnParmsChangeLevel )
-		{
-			SAVERESTOREDATA	levelData;
-			string		name;
-			int		i;
 
-			memset( &levelData, 0, sizeof( levelData ));
-			svgame.globals->pSaveData = &levelData;
-			svgame.dllFuncs.pfnParmsChangeLevel();
-
-			MSG_BeginServerCmd( &msg, svc_restore );
-			Q_snprintf( name, sizeof( name ), "%s%s.HL2", DEFAULT_SAVE_DIRECTORY, sv.name );
-			COM_FixSlashes( name );
-			MSG_WriteString( &msg, name );
-			MSG_WriteByte( &msg, levelData.connectionCount );
-
-			for( i = 0; i < levelData.connectionCount; i++ )
-				MSG_WriteString( &msg, levelData.levelList[i].mapName );
-
-			svgame.globals->pSaveData = NULL;
-		}
+		SAVERESTOREDATA	levelData;
+		string		name;
+		int		i;
+		memset( &levelData, 0, sizeof( levelData ));
+		svgame.globals->pSaveData = &levelData;
+		g_pServerInterface->ParmsChangeLevel();
+		MSG_BeginServerCmd( &msg, svc_restore );
+		Q_snprintf( name, sizeof( name ), "%s%s.HL2", DEFAULT_SAVE_DIRECTORY, sv.name );
+		COM_FixSlashes( name );
+		MSG_WriteString( &msg, name );
+		MSG_WriteByte( &msg, levelData.connectionCount );
+		for( i = 0; i < levelData.connectionCount; i++ )
+			MSG_WriteString( &msg, levelData.levelList[i].mapName );
+			
+		svgame.globals->pSaveData = NULL;
 
 		// reset weaponanim
 		MSG_BeginServerCmd( &msg, svc_weaponanim );
@@ -1325,7 +1320,7 @@ void SV_PutClientInServer( sv_client_t *cl )
 
 		// fisrt entering
 		svgame.globals->time = sv.time;
-		svgame.dllFuncs.pfnClientPutInServer( ent );
+		g_pServerInterface->ClientPutInServer( ent );
 
 		if( sv.background )	// don't attack player in background mode
 			SetBits( ent->v.flags, FL_GODMODE|FL_NOTARGET );
@@ -1558,14 +1553,14 @@ static qboolean SV_New_f( sv_client_t *cl )
 
 	// if the client was connected, tell the game .dll to disconnect him/her.
 	if(( cl->state == cs_spawned ) && cl->edict )
-		svgame.dllFuncs.pfnClientDisconnect( cl->edict );
+		g_pServerInterface->ClientDisconnect( cl->edict );
 
 	Q_snprintf( szName, sizeof( szName ), "%s", cl->name );
 	Q_snprintf( szAddress, sizeof( szAddress ), "%s", NET_AdrToString( cl->netchan.remote_address ));
 	Q_snprintf( szRejectReason, sizeof( szRejectReason ), "Connection rejected by game\n");
 
 	// Allow the game dll to reject this client.
-	if( !svgame.dllFuncs.pfnClientConnect( cl->edict, szName, szAddress, szRejectReason ))
+	if( !g_pServerInterface->ClientConnect( cl->edict, szName, szAddress, szRejectReason ))
 	{
 		// reject the connection and drop the client.
 		SV_RejectConnection( cl->netchan.remote_address, "%s\n", szRejectReason );
@@ -1756,7 +1751,7 @@ void SV_UserinfoChanged( sv_client_t *cl )
 	}
 
 	// call prog code to allow overrides
-	svgame.dllFuncs.pfnClientUserInfoChanged( cl->edict, cl->userinfo );
+	g_pServerInterface->ClientUserInfoChanged( cl->edict, cl->userinfo );
 
 	val = Info_ValueForKey( cl->userinfo, "name" );
 	Q_strncpy( cl->name, val, sizeof( cl->name ));
@@ -1878,7 +1873,7 @@ static qboolean SV_Kill_f( sv_client_t *cl )
 		return true;
 	}
 
-	svgame.dllFuncs.pfnClientKill( cl->edict );
+	g_pServerInterface->ClientKill( cl->edict );
 
 	return true;
 }
@@ -2110,7 +2105,7 @@ void SV_ExecuteClientCommand( sv_client_t *cl, char *s )
 	if( !u->name && sv.state == ss_active )
 	{
 		// custom client commands
-		svgame.dllFuncs.pfnClientCommand( cl->edict );
+		g_pServerInterface->ClientCommand( cl->edict );
 
 		if( !Q_strcmp( Cmd_Argv( 0 ), "fullupdate" ))
 		{
@@ -2232,7 +2227,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( pcmd, "s" )) SV_AddToMaster( from, msg );
 	else if( !Q_strcmp( pcmd, "T" "Source" )) SV_TSourceEngineQuery( from );
 	else if( !Q_strcmp( pcmd, "i" )) NET_SendPacket( NS_SERVER, 5, "\xFF\xFF\xFF\xFFj", from ); // A2A_PING
-	else if( svgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
+	else if( g_pServerInterface->ConnectionlessPacket( &from, args, buf, &len ))
 	{
 		// user out of band message (must be handled in CL_ConnectionlessPacket)
 		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, (byte*)buf );

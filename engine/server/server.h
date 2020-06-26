@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include "engine/common/netchan.h"
 #include "custom.h"
 #include "engine/common/world.h"
+#include "server_int.h"
 
 //=============================================================================
 
@@ -374,6 +375,8 @@ typedef struct
 } server_static_t;
 
 //=============================================================================
+
+extern IServerInterface* g_pServerInterface;
 
 extern	server_static_t	svs;			// persistant server info
 extern	server_t		sv;			// local server

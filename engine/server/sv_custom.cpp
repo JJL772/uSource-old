@@ -45,7 +45,7 @@ void SV_CreateCustomizationList( sv_client_t *cl )
 			if( COM_CreateCustomization( &cl->customdata, pResource, -1, FCUST_FROMHPAK|FCUST_WIPEDATA, &pCust, &nLumps ))
 			{
 				pCust->nUserData2 = nLumps;
-				svgame.dllFuncs.pfnPlayerCustomization( cl->edict, pCust );
+				g_pServerInterface->PlayerCustomization( cl->edict, pCust );
 			}
 			else
 			{
@@ -178,7 +178,7 @@ void SV_ParseConsistencyResponse( sv_client_t *cl, sizebuf_t *msg )
 		char	dropmessage[256];
 
 		dropmessage[0] = 0;
-		if( svgame.dllFuncs.pfnInconsistentFile( cl->edict, sv.resources[badresindex - 1].szFileName, dropmessage ))
+		if( g_pServerInterface->InconsistentFile( cl->edict, sv.resources[badresindex - 1].szFileName, dropmessage ))
 		{
 			if( COM_CheckString( dropmessage ))
 				SV_ClientPrintf( cl, "%s", dropmessage );

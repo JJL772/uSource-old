@@ -34,22 +34,50 @@ void* GetProcAddress(void* hmod, const char* sym)
 	return dlsym(hmod, sym);
 }
 
-void* LoadLibraryA(const char* lib)
-{
-	return dlopen(lib, RTLD_LAZY);
-}
-
-void FreeLibrary(void* lib)
-{
-	dlclose(lib);
-}
-
 #else
 #include <windows.h>
 #endif
 
 std::list<appsys_t> g_appsystems;
 std::list<mod_t*> g_loadedmods;
+char g_last_error[1024] = {(char)0};
+
+std::function<void*(const char*)> g_load_library = [](const char* lib) -> void* { return dlopen(lib, RTLD_LAZY); };
+std::function<void(void*)> g_free_library = [](void* lib) -> void { dlclose(lib); };
+
+const char* AppFramework::GetLastError()
+{
+	return g_last_error;
+}
+
+void AppFramework::SetLoadLibrary(std::function<void*(const char*)> fn)
+{
+	g_load_library = fn;
+}
+
+void AppFramework::SetFreeLibrary(std::function<void(void*)> fn)
+{
+	g_free_library = fn;
+}
+
+void AppFramework::ClearCustomFunctions()
+{
+#ifdef _POSIX 
+	g_load_library = [](const char* lib) -> void* { return dlopen(lib, RTLD_LAZY); };
+	g_free_library = [](void* lib) -> void { dlclose(lib); };
+#endif 
+}
+
+void* _LoadLibraryA(const char* lib)
+{
+	return g_load_library(lib);
+}
+
+void _FreeLibrary(void* lib)
+{
+	g_free_library(lib);
+}
+
 
 bool AppFramework::AddInterface(const char *module, const char *iface)
 {
@@ -68,11 +96,12 @@ bool AppFramework::AddInterface(const char *module, const char *iface)
 	if(!_module)
 	{
 		_module = new mod_t();
-		_module->handle = LoadLibraryA(module);
+		_module->handle = _LoadLibraryA(module);
 
 		if(!_module->handle)
 		{
 			delete _module;
+			Q_snprintf(g_last_error, sizeof(g_last_error), "Failed to load module %s", module);
 			return false;
 		}
 
@@ -83,8 +112,9 @@ bool AppFramework::AddInterface(const char *module, const char *iface)
 		/* Functions not exported?? */
 		if(!_module->pGetInterfaces || !_module->pCreateInterface)
 		{
-			FreeLibrary(_module->handle);
+			_FreeLibrary(_module->handle);
 			delete _module;
+			Q_snprintf(g_last_error, sizeof(g_last_error), "Failed to find CreateInterface or GetInterfaces in %s", module);
 			return false;
 		}
 
@@ -99,6 +129,7 @@ bool AppFramework::AddInterface(const char *module, const char *iface)
 	/* No interfaces? */
 	if(outnum <= 0 || iface_list == nullptr)
 	{
+		Q_snprintf(g_last_error, sizeof(g_last_error), "Number of interfaces is 0, or iface_list is nullptr in module %s while loading %s", module, iface);
 		return false;
 	}
 
@@ -120,6 +151,7 @@ bool AppFramework::AddInterface(const char *module, const char *iface)
 	}
 
 	/* Nein? That sucks */
+	Q_snprintf(g_last_error, sizeof(g_last_error), "Interface %s not found in %s", iface, module);
 	return false;
 }
 
@@ -156,12 +188,14 @@ bool AppFramework::LoadInterfaces()
 			/* Failure! */
 			if(status == EIfaceStatus::FAILED)
 			{
+				Q_snprintf(g_last_error, sizeof(g_last_error), "Failed to call CreateInterface on interface %s (parent is %s) from module %s", appsys.name, appsys.parent, appsys.module->filename);
 				return false;
 			}
 
 			/* Cast to the base class and call preinit, and fail if it breaks */
 			if(!((IAppInterface*)appsys.pinterface)->PreInit())
 			{
+				Q_snprintf(g_last_error, sizeof(g_last_error), "PreInit returned false in interface %s", appsys.name);
 				return false;
 			}
 
@@ -178,6 +212,7 @@ bool AppFramework::LoadInterfaces()
 			/* pinterface should be valid here */
 			if(!((IAppInterface*)appsys.pinterface)->Init())
 			{
+				Q_snprintf(g_last_error, sizeof(g_last_error), "Init returned false in interface %s", appsys.name);
 				return false;
 			}
 

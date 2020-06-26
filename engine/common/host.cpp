@@ -402,6 +402,14 @@ Host_InitInterfaces
 */
 void Host_InitInterfaces()
 {
+	/* Set custom DLL loader here */
+	AppFramework::SetLoadLibrary([](const char* lib) -> void* {
+		return LoadLibrary(lib);
+	});
+	AppFramework::SetFreeLibrary([](void* lib) {
+		FreeLibrary(lib);
+	});
+
 	AppFramework::interface_t interfaces[] = {
 		{ENGINELIB, ILOGSYSTEM_INTERFACE},
 		{0,0},
@@ -415,7 +423,7 @@ void Host_InitInterfaces()
 
 	g_pLoggingSystem = static_cast<ILogSystem *>(AppFramework::FindInterface(ILOGSYSTEM_INTERFACE));
 
-
+	AppFramework::ClearCustomFunctions();
 }
 
 /*

@@ -87,7 +87,7 @@ static void SV_AddEntitiesToPacket( edict_t *pViewEnt, edict_t *pClient, client_
 		cl->num_viewents = 0;
 	}
 
-	svgame.dllFuncs.pfnSetupVisibility( pViewEnt, pClient, &clientpvs, &clientphs );
+	g_pServerInterface->SetupVisibility( pViewEnt, pClient, &clientpvs, &clientphs );
 	if( !clientpvs ) fullvis = true;
 
 	// g-cont: of course we can send world but not want to do it :-)
@@ -123,7 +123,7 @@ static void SV_AddEntitiesToPacket( edict_t *pViewEnt, edict_t *pClient, client_
 		state = &ents->entities[ents->num_entities];
 
 		// add entity to the net packet
-		if( svgame.dllFuncs.pfnAddToFullPack( state, e, ent, pClient, sv.hostflags, player, pset ))
+		if( g_pServerInterface->AddToFullPack( state, e, ent, pClient, sv.hostflags, player, pset ))
 		{
 			// to prevent adds it twice through portals
 			SETVISBIT( ents->sended, e );
@@ -587,7 +587,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	memset( &frame->clientdata, 0, sizeof( frame->clientdata ));
 
 	// update clientdata_t
-	svgame.dllFuncs.pfnUpdateClientData( clent, FBitSet( cl->flags, FCL_LOCAL_WEAPONS ), &frame->clientdata );
+	g_pServerInterface->UpdateClientData( clent, FBitSet( cl->flags, FCL_LOCAL_WEAPONS ), &frame->clientdata );
 
 	MSG_BeginServerCmd( msg, svc_clientdata );
 	if( FBitSet( cl->flags, FCL_HLTV_PROXY )) return;	// don't send more nothing
@@ -609,7 +609,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	// write clientdata_t
 	MSG_WriteClientData( msg, from_cd, to_cd, sv.time );
 
-	if( FBitSet( cl->flags, FCL_LOCAL_WEAPONS ) && svgame.dllFuncs.pfnGetWeaponData( clent, frame->weapondata ))
+	if( FBitSet( cl->flags, FCL_LOCAL_WEAPONS ) && g_pServerInterface->GetWeaponData( clent, frame->weapondata ))
 	{
 		memset( &nullwd, 0, sizeof( nullwd ));
 
