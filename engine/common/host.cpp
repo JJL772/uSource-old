@@ -44,6 +44,11 @@ GNU General Public License for more details.
 
 /* Interface includes */
 #include "log_int.h"
+#include "efx_int.h"
+#include "net_int.h"
+#include "engine_int.h"
+#include "event_int.h"
+#include "demo_int.h"
 
 /* Interface globals */
 ILogSystem* g_pLoggingSystem;
@@ -412,6 +417,12 @@ void Host_InitInterfaces()
 
 	AppFramework::interface_t interfaces[] = {
 		{ENGINELIB, ILOGSYSTEM_INTERFACE},
+		/* Below are interfaces needed by the client */
+		/* They are loaded here because I don't want to need to figure out the engine name in the client dll */
+		{ENGINELIB, IDEMOAPI_INTERFACE},
+		{ENGINELIB, IEFX_INTERFACE},
+		{ENGINELIB, IEVENTINTERFACE_INTERFACE},
+		{ENGINELIB, INETAPI_INTERFACE},
 		{0,0},
 	};
 	
