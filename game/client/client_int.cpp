@@ -30,8 +30,14 @@
 #endif
 
 #include "pm_shared.h"
+#include "ref_params.h"
 
 #include <string.h>
+
+IEngineDemo* g_pDemoAPI = nullptr;
+IEngineEvents* g_pEventAPI = nullptr;
+IEngineEfx* g_pEfxAPI = nullptr;
+IEngineNetAPI* g_pNetAPI = nullptr;
 
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;
@@ -50,6 +56,254 @@ int __MsgFunc_Bhopcap( const char *pszName, int iSize, void *pbuf )
 
 	return 1;
 }
+
+class CHL1Client : public IClientInterface
+{
+public:
+	virtual const char* GetParentInterface() { return ICLIENTINTERFACE_INTERFACE; };
+	virtual const char* GetName() { return "CHL1Client001"; };
+	virtual bool PreInit() { return true; };
+
+	virtual bool Init()
+	{
+		g_pDemoAPI = (IEngineDemo*)AppFramework::FindInterface(IDEMOAPI_INTERFACE);
+		g_pEfxAPI = (IEngineEfx*)AppFramework::FindInterface(IEFX_INTERFACE);
+		g_pEventAPI = (IEngineEvents*)AppFramework::FindInterface(IEVENTINTERFACE_INTERFACE);
+		g_pNetAPI = (IEngineNetAPI*)AppFramework::FindInterface(INETAPI_INTERFACE);
+		return true;
+	}
+
+	virtual void Shutdown() {};
+
+	virtual int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
+	{
+
+	}
+
+	virtual int VidInit( void )
+	{
+
+	}
+
+	virtual int Redraw( float flTime, int intermission )
+	{
+
+	}
+
+	virtual int UpdateClientData( client_data_t *cdata, float flTime )
+	{
+
+	}
+
+	virtual void Reset( void )
+	{
+
+	}
+
+	virtual void PlayerMove( struct playermove_s *ppmove, int server )
+	{
+
+	}
+
+	virtual void PlayerMoveInit( struct playermove_s *ppmove )
+	{
+
+	}
+
+	virtual char PlayerMoveTexture( char *name )
+	{
+
+	}
+
+	virtual void IN_ActivateMouse( void )
+	{
+
+	}
+
+	virtual void IN_DeactivateMouse( void )
+	{
+
+	}
+
+	virtual void IN_MouseEvent( int mstate )
+	{
+
+	}
+
+	virtual void IN_ClearStates( void )
+	{
+
+	}
+
+	virtual void IN_Accumulate( void )
+	{
+
+	}
+
+	virtual void CL_CreateMove( float frametime, struct usercmd_s *cmd, int active )
+	{
+
+	}
+
+	virtual int CL_IsThirdPerson( void )
+	{
+
+	}
+
+	virtual void CL_CameraOffset( float *ofs )
+	{
+
+	}
+
+	virtual void *KB_Find( const char *name )
+	{
+
+	}
+
+	virtual void CAM_Think( void )
+	{
+
+	}
+
+	virtual void CalcRefdef( ref_params_t *pparams )
+	{
+
+	}
+
+	virtual int AddEntity( int type, cl_entity_t *ent, const char *modelname )
+	{
+
+	}
+
+	virtual void CreateEntities( void )
+	{
+
+	}
+
+	virtual void DrawNormalTriangles( void )
+	{
+
+	}
+
+	virtual void DrawTransparentTriangles( void )
+	{
+
+	}
+
+	virtual void StudioEvent( const struct mstudioevent_s *event, const cl_entity_t *entity )
+	{
+
+	}
+
+	virtual void PostRunCmd( struct local_state_s *from, struct local_state_s *to, usercmd_t *cmd, int runfuncs, double time, unsigned int random_seed )
+	{
+
+	}
+
+	virtual void Shutdown( void )
+	{
+
+	}
+
+	virtual void TxferLocalOverrides( entity_state_t *state, const clientdata_t *client )
+	{
+
+	}
+
+	virtual void ProcessPlayerState( entity_state_t *dst, const entity_state_t *src )
+	{
+
+	}
+
+	virtual void TxferPredictionData( entity_state_t *ps, const entity_state_t *pps, clientdata_t *pcd, const clientdata_t *ppcd, weapon_data_t *wd, const weapon_data_t *pwd )
+	{
+
+	}
+
+	virtual void Demo_ReadBuffer( int size, byte *buffer )
+	{
+
+	}
+
+	virtual int ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *buffer, int *size )
+	{
+
+	}
+
+	virtual int GetHullBounds( int hullnumber, float *mins, float *maxs )
+	{
+
+	}
+
+	virtual void Frame( double time )
+	{
+
+	}
+
+	virtual int Key_Event( int eventcode, int keynum, const char *pszCurrentBinding )
+	{
+
+	}
+
+	virtual void TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( cl_entity_t *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp ))
+	{
+
+	}
+
+	virtual cl_entity_t *GetUserEntity( int index )
+	{
+
+	}
+
+	virtual void VoiceStatus( int entindex, qboolean bTalking )
+	{
+
+	}
+
+	virtual void DirectorMessage( int iSize, void *pbuf )
+	{
+
+	}
+
+	virtual int GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio )
+	{
+
+	}
+
+	virtual void ChatInputPosition( int *x, int *y )
+	{
+
+	}
+
+	virtual int GetRenderInterface( int version, render_api_t *renderfuncs, render_interface_t *callback )
+	{
+
+	}
+
+	virtual void	ClipMoveToEntity( struct physent_s *pe, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, struct pmtrace_s *tr )
+	{
+
+	}
+
+	virtual int TouchEvent( int type, int fingerID, float x, float y, float dx, float dy )
+	{
+
+	}
+
+	virtual void MoveEvent( float forwardmove, float sidemove )
+	{
+
+	}
+
+	virtual void LookEvent( float relyaw, float relpitch )
+	{
+
+	}
+
+};
+
+EXPOSE_INTERFACE(CHL1Client);
+MODULE_INTERFACE_IMPL();
 
 /*
 ========================== 

@@ -48,6 +48,17 @@ typedef int ( *pfnUserMsgHook )( const char *pszName, int iSize, void *pbuf );
   #define XASH_64BIT
 #endif
 
+/* Various interfaces */
+#include "net_int.h"
+#include "efx_int.h"
+#include "event_int.h"
+#include "demo_int.h"
+
+extern IEngineDemo* g_pDemoAPI;
+extern IEngineEvents* g_pEventAPI;
+extern IEngineEfx* g_pEfxAPI;
+extern IEngineNetAPI* g_pNetAPI;
+
 extern cl_enginefunc_t gEngfuncs;
 #include "../engine/mobility_int.h"
 extern mobile_engfuncs_t *gMobileEngfuncs;
