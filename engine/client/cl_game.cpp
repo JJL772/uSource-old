@@ -30,6 +30,13 @@ GNU General Public License for more details.
 #include "sound.h"		// SND_STOP_LOOPING
 #include "platform/platform.h"
 
+/* Interfaces */
+#include "engine_int.h"
+#include "efx_int.h"
+#include "net_int.h"
+#include "event_int.h"
+#include "demo_int.h"
+
 #define MAX_LINELENGTH	80
 #define MAX_TEXTCHANNELS	8		// must be power of two (GoldSrc uses 4 channels)
 #define TEXT_MSGNAME	"TextMessage%i"
@@ -3624,6 +3631,388 @@ static void GAME_EXPORT VGui_ViewportPaintBackground( int extents[4] )
 // shared between client and server			
 triangleapi_t gTriApi;
 
+class CEngineEfxAPI : public IEngineEfx 
+{
+public:
+	virtual const char* GetParentInterface() { return IEFX_INTERFACE; };
+	virtual const char* GetName() { return "CEngineEfxAPI001"; };
+	virtual bool PreInit() { return true; };
+	virtual bool Init() { return true; };
+	virtual void Shutdown() { };
+
+	virtual particle_t	*AllocParticle( void (*callback)( struct particle_s *particle, float frametime ))
+	{
+		return R_AllocParticle(callback);
+	}
+
+	virtual void		BlobExplosion( const float *org )
+	{
+		R_BlobExplosion(org);
+	}
+
+	virtual void		Blood( const float *org, const float *dir, int pcolor, int speed )
+	{
+		R_Blood(org, dir, pcolor, speed);
+	}
+
+	virtual void		BloodSprite( const float *org, int colorindex, int modelIndex, int modelIndex2, float size )
+	{
+		R_BloodSprite(org, colorindex, modelIndex, modelIndex2, size);
+	}
+
+	virtual void		BloodStream( const float *org, const float *dir, int pcolor, int speed )
+	{
+		R_BloodStream(org, dir, pcolor, speed);
+	}
+
+	virtual void		BreakModel( const float *pos, const float *size, const float *dir, float random, float life, int count, int modelIndex, char flags )
+	{
+		R_BreakModel(pos, size, dir, random, life, count, modelIndex, flags);
+	}
+
+	virtual void		Bubbles( const float *mins, const float *maxs, float height, int modelIndex, int count, float speed )
+	{
+		R_Bubbles(mins, maxs, height, modelIndex, count, speed);
+	}
+
+	virtual void		BubbleTrail( const float *start, const float *end, float height, int modelIndex, int count, float speed )
+	{
+		R_BubbleTrail(start, end, height, modelIndex, count, speed);
+	}
+
+	virtual void		BulletImpactParticles( const float *pos )
+	{
+		R_BulletImpactParticles(pos);
+	}
+
+	virtual void		EntityParticles( struct cl_entity_s *ent )
+	{
+		R_EntityParticles(ent);
+	}
+
+	virtual void		Explosion( float *pos, int model, float scale, float framerate, int flags )
+	{
+		R_Explosion(pos, model, scale, framerate, flags);
+	}
+
+	virtual void		FizzEffect( struct cl_entity_s *pent, int modelIndex, int density )
+	{
+		R_FizzEffect(pent, modelIndex, density);
+	}
+
+	virtual void		FireField( float *org, int radius, int modelIndex, int count, int flags, float life )
+	{
+		R_FireField(org, radius, modelIndex, count, flags, life);
+	}
+
+	virtual void		FlickerParticles( const float *org )
+	{
+		R_FlickerParticles(org);
+	}
+
+	virtual void		FunnelSprite( const float *org, int modelIndex, int reverse )
+	{
+		R_FunnelSprite(org, modelIndex, reverse);
+	}
+
+	virtual void		Implosion( const float *end, float radius, int count, float life )
+	{
+		R_Implosion(end, radius, count, life);
+	}
+
+	virtual void		LargeFunnel( const float *org, int reverse )
+	{
+		R_LargeFunnel(org, reverse);
+	}
+
+	virtual void		LavaSplash( const float *org )
+	{
+		R_LavaSplash(org);
+	}
+
+	virtual void		MultiGunshot( const float *org, const float *dir, const float *noise, int count, int decalCount, int *decalIndices )
+	{
+		R_MultiGunshot(org, dir, noise, count, decalCount, decalIndices);
+	}
+
+	virtual void		MuzzleFlash( const float *pos1, int type )
+	{
+		R_MuzzleFlash(pos1, type);
+	}
+
+	virtual void		ParticleBox( const float *mins, const float *maxs, unsigned char r, unsigned char g, unsigned char b, float life )
+	{
+		R_ParticleBox(mins, maxs, r, g, b, life);
+	}
+
+	virtual void		ParticleBurst( const float *pos, int size, int color, float life )
+	{
+		R_ParticleBurst(pos, size, color, life);
+	}
+
+	virtual void		ParticleExplosion( const float *org )
+	{
+		R_ParticleExplosion(org);
+	}
+
+	virtual void		ParticleExplosion2( const float *org, int colorStart, int colorLength )
+	{
+		R_ParticleExplosion2(org, colorStart, colorLength);
+	}
+
+	virtual void		ParticleLine( const float *start, const float *end, unsigned char r, unsigned char g, unsigned char b, float life )
+	{
+		R_ParticleLine(start, end, r, g, b, life);
+	}
+
+	virtual void		PlayerSprites( int client, int modelIndex, int count, int size )
+	{
+		R_PlayerSprites(client, modelIndex, count, size);
+	}
+
+	virtual void		Projectile( const float *origin, const float *velocity, int modelIndex, int life, int owner, void (*hitcallback)( struct tempent_s *ent, struct pmtrace_s *ptr ) )
+	{
+		R_Projectile(origin, velocity, modelIndex, life, owner, hitcallback);
+	}
+
+	virtual void		RicochetSound( const float *pos )
+	{
+		R_RicochetSound(pos);
+	}
+
+	virtual void		RicochetSprite( const float *pos, struct model_s *pmodel, float duration, float scale )
+	{
+		R_RicochetSprite(pos, pmodel, duration, scale);
+	}
+
+	virtual void		RocketFlare( const float *pos )
+	{
+		R_RocketFlare(pos);
+	}
+
+	virtual void		RocketTrail( float *start, float *end, int type )
+	{
+		R_RocketTrail(start, end, type);
+	}
+
+	virtual void		RunParticleEffect( const float *org, const float *dir, int color, int count )
+	{
+		R_RunParticleEffect(org, dir, color, count);
+	}
+
+	virtual void		ShowLine( const float *start, const float *end )
+	{
+		R_ShowLine(start, end);
+	}
+
+	virtual void		SparkEffect( const float *pos, int count, int velocityMin, int velocityMax )
+	{
+		R_SparkEffect(pos, count, velocityMin, velocityMax);
+	}
+
+	virtual void		SparkShower( const float *pos )
+	{
+		R_SparkShower(pos);
+	}
+
+	virtual void		SparkStreaks( const float *pos, int count, int velocityMin, int velocityMax )
+	{
+		R_SparkStreaks(pos, count, velocityMin, velocityMax);
+	}
+
+	virtual void		Spray( const float *pos, const float *dir, int modelIndex, int count, int speed, int spread, int rendermode )
+	{
+		R_Spray(pos, dir, modelIndex, count, speed, spread, rendermode);
+	}
+
+	virtual void		Sprite_Explode( TEMPENTITY *pTemp, float scale, int flags )
+	{
+		R_Sprite_Explode(pTemp, scale, flags);
+	}
+
+	virtual void		Sprite_Smoke( TEMPENTITY *pTemp, float scale )
+	{
+		R_Sprite_Smoke(pTemp, scale);
+	}
+
+	virtual void		Sprite_Spray( const float *pos, const float *dir, int modelIndex, int count, int speed, int iRand )
+	{
+		R_Sprite_Spray(pos, dir, modelIndex, count, speed, iRand);
+	}
+
+	virtual void		Sprite_Trail( int type, float *start, float *end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed )
+	{
+		R_Sprite_Trail(type, start, end, modelIndex, count, life, size, amplitude, renderamt, speed);
+	}
+
+	virtual void		Sprite_WallPuff( TEMPENTITY *pTemp, float scale )
+	{
+		R_Sprite_WallPuff(pTemp, scale);
+	}
+
+	virtual void		StreakSplash( const float *pos, const float *dir, int color, int count, float speed, int velocityMin, int velocityMax )
+	{
+		R_StreakSplash(pos, dir, color, count, speed, velocityMin, velocityMax);
+	}
+
+	virtual void		TracerEffect( const float *start, const float *end )
+	{
+		R_TracerEffect(start, end);
+	}
+
+	virtual void		UserTracerParticle( float *org, float *vel, float life, int colorIndex, float length, unsigned char deathcontext, void (*deathfunc)( struct particle_s *particle ))
+	{
+		R_UserTracerParticle(org, vel, life, colorIndex, length, deathcontext, deathfunc);
+	}
+
+	virtual particle_t	*TracerParticles( float *org, float *vel, float life )
+	{
+		return R_TracerParticles(org, vel, life);
+	}
+
+	virtual void		TeleportSplash( const float *org )
+	{
+		R_TeleportSplash(org);
+	}
+
+	virtual void		TempSphereModel( const float *pos, float speed, float life, int count, int modelIndex )
+	{
+		R_TempSphereModel(pos, speed, life, count, modelIndex);
+	}
+
+	virtual TEMPENTITY	*TempModel( const float *pos, const float *dir, const float *angles, float life, int modelIndex, int soundtype )
+	{
+		return R_TempModel(pos, dir, angles, life, modelIndex, soundtype);
+	}
+
+	virtual TEMPENTITY	*DefaultSprite( const float *pos, int spriteIndex, float framerate )
+	{
+		return R_DefaultSprite(pos, spriteIndex, framerate);
+	}
+
+	virtual TEMPENTITY	*TempSprite( float *pos, const float *dir, float scale, int modelIndex, int rendermode, int renderfx, float a, float life, int flags )
+	{
+		return R_TempSprite(pos, dir, scale, modelIndex, rendermode, renderfx, a, life, flags);
+	}
+
+	virtual int		Draw_DecalIndex( int id )
+	{
+		return CL_DecalIndex(id);
+	}
+
+	virtual int		Draw_DecalIndexFromName( const char *name )
+	{
+		return CL_DecalIndexFromName(name);
+	}
+
+	virtual void		DecalShoot( int textureIndex, int entity, int modelIndex, float *position, int flags )
+	{
+		CL_DecalShoot(textureIndex, entity, modelIndex, position, flags);
+	}
+
+	virtual void		AttachTentToPlayer( int client, int modelIndex, float zoffset, float life )
+	{
+		R_AttachTentToPlayer(client, modelIndex, zoffset, life);
+	}
+
+	virtual void		KillAttachedTents( int client )
+	{
+		R_KillAttachedTents(client);
+	}
+
+	virtual BEAM		*BeamCirclePoints( int type, float *start, float *end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
+	{
+		return R_BeamCirclePoints(type, start, end, modelIndex, life, width, amplitude, brightness, speed, startFrame, framerate, r, g, b);
+	}
+
+	virtual BEAM		*BeamEntPoint( int startEnt, float *end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
+	{
+		return R_BeamEntPoint(startEnt, end, modelIndex, life, width, amplitude, brightness, speed, startFrame, framerate, r, g, b);
+	}
+
+	virtual BEAM		*BeamEnts( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
+	{
+		return R_BeamEnts(startEnt, endEnt, modelIndex, life, width, amplitude, brightness, speed, startFrame, framerate, r, g, b);
+	}
+
+	virtual BEAM		*BeamFollow( int startEnt, int modelIndex, float life, float width, float r, float g, float b, float brightness )
+	{
+		return R_BeamFollow(startEnt, modelIndex, life, width, r, g, b, brightness);
+	}
+
+	virtual void		BeamKill( int deadEntity )
+	{
+		R_BeamKill(deadEntity);
+	}
+
+	virtual BEAM		*BeamLightning( float *start, float *end, int modelIndex, float life, float width, float amplitude, float brightness, float speed )
+	{
+		return R_BeamLightning(start, end, modelIndex, life, width, amplitude, brightness, speed);
+	}
+
+	virtual BEAM		*BeamPoints( float *start, float *end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
+	{
+		return R_BeamPoints(start, end, modelIndex, life, width, amplitude, brightness, speed, startFrame, framerate, r, g, b);
+	}
+
+	virtual BEAM		*BeamRing( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
+	{
+		return R_BeamRing(startEnt, endEnt, modelIndex, life, width, amplitude, brightness, speed, startFrame, framerate, r, g, b);
+	}
+
+	virtual dlight_t	*CL_AllocDlight( int key )
+	{
+		return ::CL_AllocDlight(key);
+	}
+
+	virtual dlight_t	*CL_AllocElight( int key )
+	{
+		return ::CL_AllocElight(key);
+	}
+
+	virtual TEMPENTITY	*CL_TempEntAlloc( const float *org, struct model_s *model )
+	{
+		return ::CL_TempEntAlloc(org, model);
+	}
+
+	virtual TEMPENTITY	*CL_TempEntAllocNoModel( const float *org )
+	{
+		return ::CL_TempEntAllocNoModel(org);
+	}
+
+	virtual TEMPENTITY	*CL_TempEntAllocHigh( const float *org, struct model_s *model )
+	{
+		return ::CL_TempEntAllocHigh(org, model);
+	}
+
+	virtual TEMPENTITY	*CL_TentEntAllocCustom( const float *origin, struct model_s *model, int high, void (*callback)( struct tempent_s *ent, float frametime, float currenttime ))
+	{
+		return ::CL_TempEntAllocCustom(origin, model, high, callback);
+	}
+
+	virtual void		GetPackedColor( short *packed, short color )
+	{
+		R_GetPackedColor(packed, color);
+	}
+
+	virtual short		LookupColor( unsigned char r, unsigned char g, unsigned char b )
+	{
+		return R_LookupColor(r, g, b);
+	}
+
+	virtual void		DecalRemoveAll( int textureIndex )
+	{
+		CL_DecalRemoveAll(textureIndex);
+	}
+
+	virtual void		FireCustomDecal( int textureIndex, int entity, int modelIndex, float *position, int flags, float scale )
+	{
+		CL_FireCustomDecal(textureIndex, entity, modelIndex, position, flags, scale);
+	}
+
+};
+EXPOSE_INTERFACE(CEngineEfxAPI);
+
 static efx_api_t gEfxApi =
 {
 	R_AllocParticle,
@@ -3702,6 +4091,169 @@ static efx_api_t gEfxApi =
 	CL_FireCustomDecal,
 };
 
+class CEngineEventAPI : public IEngineEvents
+{
+public:
+	virtual const char* GetParentInterface() { return IEVENTINTERFACE_INTERFACE; };
+	virtual const char* GetName() { return "CEngineEventAPI001"; };
+	virtual bool PreInit() { return true; };
+	virtual bool Init() { return true; };
+	virtual void Shutdown() { };
+
+	virtual void PlaySound ( int ent, float *origin, int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
+	{
+		pfnPlaySound(ent, origin, channel, sample, volume, attenuation, fFlags, pitch);
+	}
+
+	virtual void StopSound ( int ent, int channel, const char *sample )
+	{
+		S_StopSound(ent, channel, sample);
+	}
+
+	virtual int FindModelIndex ( const char *pmodel )
+	{
+		return CL_FindModelIndex(pmodel);
+	}
+
+	virtual int IsLocal ( int playernum )
+	{
+		return pfnIsLocal(playernum);
+	}
+
+	virtual int LocalPlayerDucking ( void )
+	{
+		return pfnLocalPlayerDucking();
+	}
+
+	virtual void LocalPlayerViewheight ( float * off )
+	{
+		pfnLocalPlayerViewheight(off);
+	}
+
+	virtual void LocalPlayerBounds ( int hull, float *mins, float *maxs )
+	{
+		pfnLocalPlayerBounds(hull, mins, maxs);
+	}
+
+	virtual int IndexFromTrace( struct pmtrace_s *pTrace )
+	{
+		return pfnIndexFromTrace(pTrace);
+	}
+
+	virtual struct physent_s *GetPhysent ( int idx )
+	{
+		return pfnGetPhysent(idx);
+	}
+
+	virtual void SetUpPlayerPrediction ( int dopred, int bIncludeLocalClient )
+	{
+		CL_SetUpPlayerPrediction(dopred, bIncludeLocalClient);
+	}
+
+	virtual void PushPMStates ( void )
+	{
+		CL_PushPMStates();
+	}
+
+	virtual void PopPMStates ( void )
+	{
+		CL_PopPMStates();
+	}
+
+	virtual void SetSolidPlayers ( int playernum )
+	{
+		CL_SetSolidPlayers(playernum);
+	}
+
+	virtual void SetTraceHull ( int hull )
+	{
+		CL_SetTraceHull(hull);
+	}
+
+	virtual void PlayerTrace ( float *start, float *end, int traceFlags, int ignore_pe, struct pmtrace_s *tr )
+	{
+		CL_PlayerTrace(start, end, traceFlags, ignore_pe, tr);
+	}
+
+	virtual void WeaponAnimation ( int sequence, int body )
+	{
+		CL_WeaponAnim(sequence, body);
+	}
+
+	virtual unsigned short PrecacheEvent ( int type, const char* psz )
+	{
+		return pfnPrecacheEvent(type, psz);
+	}
+
+	virtual void PlaybackEvent ( int flags, const struct edict_s *pInvoker, unsigned short eventindex, float delay, float *origin, float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 )
+	{
+		CL_PlaybackEvent(flags, pInvoker, eventindex, delay, origin, angles, fparam1, fparam2, iparam1, iparam2, bparam1, bparam2);
+	}
+
+	virtual const char *TraceTexture ( int ground, float *vstart, float *vend )
+	{
+		return pfnTraceTexture(ground, vstart, vend);
+	}
+
+	virtual void StopAllSounds ( int entnum, int entchannel )
+	{
+		pfnStopAllSounds(entnum, entchannel);
+	}
+
+	virtual void KillEvents ( int entnum, const char *eventname )
+	{
+		pfnKillEvents(entnum, eventname);
+	}
+
+
+	virtual void PlayerTraceExt ( float *start, float *end, int traceFlags, int (*pfnIgnore) ( struct physent_s *pe ), struct pmtrace_s *tr )
+	{
+		CL_PlayerTraceExt(start, end, traceFlags, pfnIgnore, tr);
+	}
+
+	virtual const char *SoundForIndex( int index )
+	{
+		return CL_SoundFromIndex(index);
+	}
+
+	virtual struct msurface_s *TraceSurface ( int ground, float *vstart, float *vend )
+	{
+		return pfnTraceSurface(ground, vstart, vend);
+	}
+
+	virtual struct movevars_s *GetMovevars ( void )
+	{
+		return pfnGetMoveVars();
+	}
+
+	virtual struct pmtrace_s *VisTraceLine ( float *start, float *end, int flags )
+	{
+		return CL_VisTraceLine(start, end, flags);
+	}
+
+	virtual struct physent_s *GetVisent ( int idx )
+	{
+		return pfnGetVisent(idx);
+	}
+
+	virtual int TestLine( const vec3_t start, const vec3_t end, int flags )
+	{
+		return CL_TestLine(start, end, flags);
+	}
+
+	virtual void PushTraceBounds( int hullnum, const float *mins, const float *maxs )
+	{
+		CL_PushTraceBounds(hullnum, mins, maxs);
+	}
+
+	virtual void PopTraceBounds( void )
+	{
+		CL_PopTraceBounds();
+	}
+
+};
+EXPOSE_INTERFACE(CEngineEventAPI);
+
 static event_api_t gEventApi =
 {
 	EVENT_API_VERSION,
@@ -3737,6 +4289,37 @@ static event_api_t gEventApi =
 	CL_PopTraceBounds,
 };
 
+class CEngineDemoAPI : public IEngineDemo
+{
+public:
+	virtual const char* GetParentInterface() { return IDEMOAPI_INTERFACE; };
+	virtual const char* GetName() { return "CEngineDemoAPI001"; };
+	virtual bool PreInit() { return true; };
+	virtual bool Init() { return true; };
+	virtual void Shutdown() { };
+
+	virtual int IsRecording( void )
+	{
+		return Demo_IsRecording();
+	}
+
+	virtual int IsPlayingback( void )
+	{
+		return Demo_IsPlayingback();
+	}
+
+	virtual int IsTimeDemo( void )
+	{
+		return Demo_IsTimeDemo();
+	}
+
+	virtual void WriteBuffer( int size, unsigned char *buffer )
+	{
+		Demo_WriteBuffer(size, buffer);
+	}
+};
+EXPOSE_INTERFACE(CEngineDemoAPI);
+
 static demo_api_t gDemoApi =
 {
 	Demo_IsRecording,
@@ -3744,6 +4327,62 @@ static demo_api_t gDemoApi =
 	Demo_IsTimeDemo,
 	Demo_WriteBuffer,
 };
+
+class CEngineNetAPI : public IEngineNetAPI
+{
+public:
+	virtual const char* GetParentInterface() { return INETAPI_INTERFACE; };
+	virtual const char* GetName() { return "CEngineNetAPI001"; };
+	virtual bool PreInit() { return true; };
+	virtual bool Init() { return true; };
+	virtual void Shutdown() { };
+
+	virtual void InitNetworking( void )
+	{
+		NetAPI_InitNetworking();	
+	}
+	virtual void Status ( struct net_status_s *status )
+	{
+		NetAPI_Status(status);
+	}
+	virtual void SendRequest( int context, int request, int flags, double timeout, struct netadr_s *remote_address, net_api_response_func_t response )
+	{
+		NetAPI_SendRequest(context, request, flags, timeout, remote_address, response);
+	}
+	virtual void CancelRequest( int context )
+	{
+		NetAPI_CancelRequest(context);
+	}
+	virtual void CancelAllRequests( void )
+	{
+		NetAPI_CancelAllRequests();
+	}
+	virtual char* AdrToString( struct netadr_s *a )
+	{
+		return NetAPI_AdrToString(a);	
+	}
+	virtual int CompareAdr( struct netadr_s *a, struct netadr_s *b )
+	{
+		return NetAPI_CompareAdr(a, b);	
+	}
+	virtual int StringToAdr( char *s, struct netadr_s *a )
+	{
+		return NetAPI_StringToAdr(s, a);
+	}
+	virtual const char* ValueForKey( const char *s, const char *key )
+	{
+		return NetAPI_ValueForKey(s, key);		
+	}
+	virtual void RemoveKey( char *s, const char *key )
+	{
+		return NetAPI_RemoveKey(s, key);	
+	}
+	virtual void SetValueForKey( char *s, const char *key, const char *value, int maxsize )
+	{
+		NetAPI_SetValueForKey(s, key, value, maxsize);	
+	}
+};
+EXPOSE_INTERFACE(CEngineNetAPI);
 
 static net_api_t gNetApi =
 {
