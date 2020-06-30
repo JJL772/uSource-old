@@ -25,6 +25,8 @@ extern "C"
 #include "camera.h"
 #include "in_defs.h"
 #include "crtlib.h"
+#include "client_int.h"
+#include "input_mouse.h"
 //#include "view.h"
 #include <string.h>
 #include <ctype.h>
@@ -1133,3 +1135,85 @@ void DLLEXPORT HUD_Shutdown( void )
 {
 	ShutdownInput();
 }
+
+
+/*
+
+Inputsystem interface
+
+*/
+
+extern AbstractInput* currentInput;
+
+class CInputSystem : public IInputSystem
+{
+public:
+	virtual bool Init() { return true; };
+	virtual bool PreInit() { return true; };
+	virtual void Shutdown() {};
+	virtual const char* GetName() { return "CInputSystem001"; };
+	virtual const char* GetParentInterface() { return IINPUTSYSTEM_INTERFACE; };
+
+	virtual void	InitInput()
+	{
+		IN_Init();
+	}
+
+	virtual void	ShutdownInput()
+	{
+		::ShutdownInput();
+	}
+
+	virtual void	ActivateMouse( void )
+	{
+		currentInput->IN_ActivateMouse();
+	}
+
+	virtual void	DeactivateMouse( void )
+	{
+		currentInput->IN_DeactivateMouse();
+	}
+
+	virtual void	MouseEvent( int mstate )
+	{
+		currentInput->IN_MouseEvent(mstate);
+	}
+
+	virtual void	ClearStates( void )
+	{
+		currentInput->IN_ClearStates();
+	}
+
+	virtual void	Accumulate( void )
+	{
+		currentInput->IN_Accumulate();
+	}
+
+	virtual int  	TouchEvent( int type, int fingerID, float x, float y, float dx, float dy )
+	{
+		return 0;
+	}
+
+	virtual void 	MoveEvent( float forwardmove, float sidemove )
+	{
+		currentInput->IN_ClientMoveEvent(forwardmove, sidemove);
+	}
+
+	virtual void 	LookEvent( float relyaw, float relpitch )
+	{
+		currentInput->IN_ClientLookEvent(relyaw, relpitch);
+	}
+
+	virtual void*	KB_Find(const char* name)
+	{
+		return ::KB_Find(name);
+	}
+
+	virtual int	KeyEvent(int evcode, int keynum, const char* bind)
+	{
+		return HUD_Key_Event(evcode, keynum, bind);
+	}
+
+};
+
+EXPOSE_INTERFACE(CInputSystem);

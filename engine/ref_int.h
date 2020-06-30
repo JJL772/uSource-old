@@ -27,6 +27,7 @@ GNU General Public License for more details.
 #include "studio.h"
 #include "r_efx.h"
 #include "com_image.h"
+#include "appframework.h"
 
 #define REF_API_VERSION 1
 
@@ -613,5 +614,133 @@ typedef int (*REFAPI)( int version, ref_interface_t *pFunctionTable, ref_api_t* 
 
 typedef void (*REF_HUMANREADABLE_NAME)( char *out, size_t len );
 #define GET_REF_HUMANREADABLE_NAME "GetRefHumanReadableName"
+
+
+#define IREFINT_001 "IRenderBackend001"
+#define IREFINT_INTERFACE IREFINT_001
+
+class IRenderBackend : public IAppInterface
+{
+public:
+	virtual qboolean 		R_Init( void ) = 0;
+	virtual void 			R_Shutdown( void ) = 0;
+	virtual const char *		R_GetConfigName( void ) = 0;
+	virtual void 			GL_SetupAttributes( int safegl ) = 0;
+	virtual void 			GL_InitExtensions( void ) = 0;
+	virtual void 			GL_ClearExtensions( void ) = 0;
+	virtual void 			R_BeginFrame( qboolean clearScene ) = 0;
+	virtual void 			R_RenderScene( void ) = 0;
+	virtual void 			R_EndFrame( void ) = 0;
+	virtual void 			R_PushScene( void ) = 0;
+	virtual void 			R_PopScene( void ) = 0;
+	virtual void 			GL_BackendStartFrame( void ) = 0;
+	virtual void 			GL_BackendEndFrame( void ) = 0;
+	virtual void 			R_ClearScreen( void ) = 0;
+	virtual void 			R_AllowFog( qboolean allow ) = 0;
+	virtual void 			GL_SetRenderMode( int renderMode ) = 0;
+	virtual qboolean 		R_AddEntity( struct cl_entity_s *clent, int type ) = 0;
+	virtual void 			CL_AddCustomBeam( cl_entity_t *pEnvBeam ) = 0;
+	virtual void 			R_ProcessEntData( qboolean allocate ) = 0;
+	virtual void 			R_ShowTextures( void ) = 0;
+	virtual const byte *		R_GetTextureOriginalBuffer( unsigned int idx ) = 0;
+	virtual int 			GL_LoadTextureFromBuffer( const char *name, rgbdata_t *pic, texFlags_t flags, qboolean update ) = 0;
+	virtual void 			GL_ProcessTexture( int texnum, float gamma, int topColor, int bottomColor ) = 0;
+	virtual void 			R_SetupSky( const char *skyname ) = 0;
+	virtual void 			R_Set2DMode( qboolean enable ) = 0;
+	virtual void 			R_DrawStretchRaw( float x, float y, float w, float h, int cols, int rows, const byte *data, qboolean dirty ) = 0;
+	virtual void 			R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, int texnum ) = 0;
+	virtual void 			R_DrawTileClear( int texnum, int x, int y, int w, int h ) = 0;
+	virtual void 			FillRGBA( float x, float y, float w, float h, int r, int g, int b, int a ) = 0;
+	virtual void 			FillRGBABlend( float x, float y, float w, float h, int r, int g, int b, int a ) = 0;
+	virtual qboolean 		VID_ScreenShot( const char *filename, int shot_type ) = 0;
+	virtual qboolean 		VID_CubemapShot( const char *base, uint size, const float *vieworg, qboolean skyshot ) = 0;
+	virtual colorVec 		R_LightPoint( const float *p ) = 0;
+	virtual void 			R_DecalShoot( int textureIndex, int entityIndex, int modelIndex, vec3_t pos, int flags, float scale ) = 0;
+	virtual void 			R_DecalRemoveAll( int texture ) = 0;
+	virtual int 			R_CreateDecalList( struct decallist_s *pList ) = 0;
+	virtual void 			R_ClearAllDecals( void ) = 0;
+	virtual float 			R_StudioEstimateFrame( cl_entity_t *e, mstudioseqdesc_t *pseqdesc ) = 0;
+	virtual void 			R_StudioLerpMovement( cl_entity_t *e, double time, vec3_t origin, vec3_t angles ) = 0;
+	virtual void 			CL_InitStudioAPI( void ) = 0;
+	virtual void 			R_InitSkyClouds( struct mip_s *mt, struct texture_s *tx, qboolean custom_palette ) = 0;
+	virtual void 			GL_SubdivideSurface( msurface_t *fa ) = 0;
+	virtual void 			CL_RunLightStyles( void ) = 0;
+	virtual void 			R_GetSpriteParms( int *frameWidth, int *frameHeight, int *numFrames, int currentFrame, const model_t *pSprite ) = 0;
+	virtual int 			R_GetSpriteTexture( const model_t *m_pSpriteModel, int frame ) = 0;
+	virtual void 			Mod_LoadMapSprite( struct model_s *mod, const void *buffer, size_t size, qboolean *loaded ) = 0;
+	virtual qboolean 		Mod_ProcessRenderData( model_t *mod, qboolean create, const byte *buffer ) = 0;
+	virtual void 			Mod_StudioLoadTextures( model_t *mod, void *data ) = 0;
+	virtual void 			CL_DrawParticles( double frametime, particle_t *particles, float partsize ) = 0;
+	virtual void 			CL_DrawTracers( double frametime, particle_t *tracers ) = 0;
+	virtual void 			CL_DrawBeams( int fTrans , BEAM *beams ) = 0;
+	virtual qboolean 		R_BeamCull( const vec3_t start, const vec3_t end, qboolean pvsOnly ) = 0;
+	virtual int			RefGetParm( int parm, int arg ) = 0;
+	virtual void			GetDetailScaleForTexture( int texture, float *xScale, float *yScale ) = 0;
+	virtual void			GetExtraParmsForTexture( int texture, byte *red, byte *green, byte *blue, byte *alpha ) = 0;
+	virtual float			GetFrameTime( void ) = 0;
+	virtual void			R_SetCurrentEntity( struct cl_entity_s *ent ) = 0;
+	virtual void			R_SetCurrentModel( struct model_s *mod ) = 0;
+	virtual int			GL_FindTexture( const char *name ) = 0;
+	virtual const char*		GL_TextureName( unsigned int texnum ) = 0;
+	virtual const byte*		GL_TextureData( unsigned int texnum ) = 0;
+	virtual int			GL_LoadTexture( const char *name, const byte *buf, size_t size, int flags ) = 0;
+	virtual int			GL_CreateTexture( const char *name, int width, int height, const void *buffer, texFlags_t flags ) = 0;
+	virtual int			GL_LoadTextureArray( const char **names, int flags ) = 0;
+	virtual int			GL_CreateTextureArray( const char *name, int width, int height, int depth, const void *buffer, texFlags_t flags ) = 0;
+	virtual void			GL_FreeTexture( unsigned int texnum ) = 0;
+	virtual void			DrawSingleDecal( struct decal_s *pDecal, struct msurface_s *fa ) = 0;
+	virtual float*			R_DecalSetupVerts( struct decal_s *pDecal, struct msurface_s *surf, int texture, int *outCount ) = 0;
+	virtual void			R_EntityRemoveDecals( struct model_s *mod ) = 0;
+	virtual void			AVI_UploadRawFrame( int texture, int cols, int rows, int width, int height, const byte *data ) = 0;
+	virtual void			GL_Bind( int tmu, unsigned int texnum ) = 0;
+	virtual void			GL_SelectTexture( int tmu ) = 0;
+	virtual void			GL_LoadTextureMatrix( const float *glmatrix ) = 0;
+	virtual void			GL_TexMatrixIdentity( void ) = 0;
+	virtual void			GL_CleanUpTextureUnits( int last ) = 0;
+	virtual void			GL_TexGen( unsigned int coord, unsigned int mode ) = 0;
+	virtual void			GL_TextureTarget( unsigned int target ) = 0;
+	virtual void			GL_TexCoordArrayMode( unsigned int texmode ) = 0;
+	virtual void			GL_UpdateTexSize( int texnum, int width, int height, int depth ) = 0;
+	virtual void			GL_Reserved0( void ) = 0;
+	virtual void			GL_Reserved1( void ) = 0;
+	virtual void			GL_DrawParticles( const struct ref_viewpass_s *rvp, qboolean trans_pass, float frametime ) = 0;
+	virtual colorVec		LightVec( const float *start, const float *end, float *lightspot, float *lightvec ) = 0;
+	virtual struct mstudiotex_s *	StudioGetTexture ( struct cl_entity_s *e ) = 0;
+	virtual void			GL_RenderFrame( const struct ref_viewpass_s *rvp ) = 0;
+	virtual void			GL_OrthoBounds( const float *mins, const float *maxs ) = 0;
+	virtual qboolean		R_SpeedsMessage( char *out, size_t size ) = 0;
+	virtual byte*			Mod_GetCurrentVis( void ) = 0;
+	virtual void			R_NewMap( void ) = 0;
+	virtual void			R_ClearScene( void ) = 0;
+	virtual void			TriRenderMode( int mode ) = 0;
+	virtual void			Begin( int primitiveCode ) = 0;
+	virtual void			End( void ) = 0;
+	virtual void			Color4f( float r, float g, float b, float a ) = 0;
+	virtual void			Color4ub( unsigned char r, unsigned char g, unsigned char b, unsigned char a ) = 0;
+	virtual void			TexCoord2f( float u, float v ) = 0;
+	virtual void			Vertex3fv( const float *worldPnt ) = 0;
+	virtual void			Vertex3f( float x, float y, float z ) = 0;
+	virtual int			WorldToScreen( const float *world, float *screen ) = 0;
+	virtual void			Fog( float flFogColor[3], float flStart, float flEnd, int bOn ) = 0;
+	virtual void			ScreenToWorld( const float *screen, float *world  ) = 0;
+	virtual void			GetMatrix( const int pname, float *matrix ) = 0;
+	virtual void			FogParams( float flDensity, int iFogSkybox ) = 0;
+	virtual void    		CullFace( TRICULLSTYLE mode ) = 0;
+	virtual void			VGUI_DrawInit( void ) = 0;
+	virtual void			VGUI_DrawShutdown( void ) = 0;
+	virtual void			VGUI_SetupDrawingText( int *pColor ) = 0;
+	virtual void			VGUI_SetupDrawingRect( int *pColor ) = 0;
+	virtual void			VGUI_SetupDrawingImage( int *pColor ) = 0;
+	virtual void			VGUI_BindTexture( int id ) = 0;
+	virtual void			VGUI_EnableTexture( qboolean enable ) = 0;
+	virtual void			VGUI_CreateTexture( int id, int width, int height ) = 0;
+	virtual void			VGUI_UploadTexture( int id, const char *buffer, int width, int height ) = 0;
+	virtual void			VGUI_UploadTextureBlock( int id, int drawX, int drawY, const byte *rgba, int blockWidth, int blockHeight ) = 0;
+	virtual void			VGUI_DrawQuad( const vpoint_t *ul, const vpoint_t *lr ) = 0;
+	virtual void			VGUI_GetTextureSizes( int *width, int *height ) = 0;
+	virtual int			VGUI_GenerateTexture( void ) = 0;
+};
+
+
 
 #endif // REF_API

@@ -26,7 +26,7 @@ SUBDIRS = [
 	Subproject('public',      dedicated=False),
 	Subproject('game_launch', singlebin=True),
 	Subproject('ref_gl'),
-	#       Subproject('ref_soft'),
+	#Subproject('ref_soft'),
 	Subproject('mainui'),
 	Subproject('vgui_support'),
 	Subproject('engine', dedicated=False),
@@ -78,6 +78,9 @@ def options(opt):
 
 	grp.add_option('--enable-luajit', action='store_true', dest='ENABLE_LUA', default=True,
 				   help='Enables lua scripting')
+
+	grp.add_option('--enable-new-renderer', action='store_true', dest='ENABLE_RENDERER2', default=False, help='Enables the use of the new renderer')
+	grp.add_option('--enable-vulkan', action='store_true', dest='ENABLE_VULKAN', default=False, help='Enables the use of the vulkan backend')
 
 	opt.load('subproject')
 
@@ -339,7 +342,11 @@ def configure(conf):
 	conf.add_subproject('mathlib')
 	conf.recurse('game/server')
 	conf.recurse('game/client')
-#conf.add_subproject('game/client')
+
+	conf.env.ENABLE_RENDERER2 = conf.options.ENABLE_RENDERER2
+
+	if conf.options.ENABLE_RENDERER2:
+		conf.recurse('rendersystem')
 
 def build(bld):
 	for i in SUBDIRS:
@@ -357,3 +364,6 @@ def build(bld):
 	bld.recurse('game/client')
 	bld.recurse('mathlib')
 	bld.recurse('public')
+
+	if bld.env.ENABLE_RENDERER2:
+		bld.recurse('rendersystem')

@@ -31,6 +31,7 @@
 
 #include "pm_shared.h"
 #include "ref_params.h"
+#include "client_int.h"
 
 #include <string.h>
 
@@ -57,6 +58,47 @@ int __MsgFunc_Bhopcap( const char *pszName, int iSize, void *pbuf )
 	return 1;
 }
 
+extern "C" 
+{
+int	DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion );
+int	DLLEXPORT HUD_VidInit( void );
+void	DLLEXPORT HUD_Init( void );
+int	DLLEXPORT HUD_Redraw( float flTime, int intermission );
+int	DLLEXPORT HUD_UpdateClientData( client_data_t *cdata, float flTime );
+void	DLLEXPORT HUD_Reset ( void );
+void	DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server );
+void	DLLEXPORT HUD_PlayerMoveInit( struct playermove_s *ppmove );
+char	DLLEXPORT HUD_PlayerMoveTexture( char *name );
+int	DLLEXPORT HUD_ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size );
+int	DLLEXPORT HUD_GetHullBounds( int hullnumber, float *mins, float *maxs );
+void	DLLEXPORT HUD_Frame( double time );
+void	DLLEXPORT HUD_VoiceStatus(int entindex, qboolean bTalking);
+void	DLLEXPORT HUD_DirectorMessage( int iSize, void *pbuf );
+void 	DLLEXPORT HUD_MobilityInterface( mobile_engfuncs_t *gpMobileEngfuncs );
+
+/* From in_camera.cpp */
+extern void 	DLLEXPORT CAM_Think( void );
+extern int 	DLLEXPORT CL_IsThirdPerson( void );
+extern void 	DLLEXPORT CL_CameraOffset( float *ofs );
+
+extern int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname );
+extern void DLLEXPORT HUD_CreateEntities( void );
+extern void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity );
+extern void DLLEXPORT HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client );
+extern void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src );
+extern void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd );
+extern void DLLEXPORT HUD_TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( struct cl_entity_s *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp ) );
+extern struct cl_entity_s DLLEXPORT *HUD_GetUserEntity( int index );
+
+extern void DLLEXPORT HUD_DrawNormalTriangles( void );
+extern void DLLEXPORT HUD_DrawTransparentTriangles( void );
+
+extern void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams );
+
+extern void DLLEXPORT Demo_ReadBuffer( int size, unsigned char *buffer );
+
+}
+
 class CHL1Client : public IClientInterface
 {
 public:
@@ -73,231 +115,176 @@ public:
 		return true;
 	}
 
+	virtual void InitHud()
+	{
+		HUD_Init();
+	}
+
 	virtual void Shutdown() {};
 
 	virtual int Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
-	{
-
+	{	
+		return ::Initialize(pEnginefuncs, iVersion);
 	}
 
 	virtual int VidInit( void )
 	{
-
+		return HUD_VidInit();
 	}
 
 	virtual int Redraw( float flTime, int intermission )
 	{
-
+		return HUD_Redraw(flTime, intermission);
 	}
 
 	virtual int UpdateClientData( client_data_t *cdata, float flTime )
 	{
-
+		return HUD_UpdateClientData(cdata, flTime);
 	}
 
 	virtual void Reset( void )
 	{
-
+		HUD_Reset();
 	}
 
 	virtual void PlayerMove( struct playermove_s *ppmove, int server )
 	{
-
+		HUD_PlayerMove(ppmove, server);
 	}
 
 	virtual void PlayerMoveInit( struct playermove_s *ppmove )
 	{
-
+		HUD_PlayerMoveInit(ppmove);
 	}
 
 	virtual char PlayerMoveTexture( char *name )
 	{
-
-	}
-
-	virtual void IN_ActivateMouse( void )
-	{
-
-	}
-
-	virtual void IN_DeactivateMouse( void )
-	{
-
-	}
-
-	virtual void IN_MouseEvent( int mstate )
-	{
-
-	}
-
-	virtual void IN_ClearStates( void )
-	{
-
-	}
-
-	virtual void IN_Accumulate( void )
-	{
-
+		return HUD_PlayerMoveTexture(name);
 	}
 
 	virtual void CL_CreateMove( float frametime, struct usercmd_s *cmd, int active )
 	{
-
+		
 	}
 
 	virtual int CL_IsThirdPerson( void )
 	{
-
+		return ::CL_IsThirdPerson();
 	}
 
 	virtual void CL_CameraOffset( float *ofs )
 	{
-
-	}
-
-	virtual void *KB_Find( const char *name )
-	{
-
+		return ::CL_CameraOffset(ofs);
 	}
 
 	virtual void CAM_Think( void )
 	{
-
+		::CAM_Think();
 	}
 
 	virtual void CalcRefdef( ref_params_t *pparams )
 	{
-
+		::V_CalcRefdef(pparams);
 	}
 
 	virtual int AddEntity( int type, cl_entity_t *ent, const char *modelname )
 	{
-
+		return ::HUD_AddEntity(type, ent, modelname);
 	}
 
 	virtual void CreateEntities( void )
 	{
-
+		::HUD_CreateEntities();
 	}
 
 	virtual void DrawNormalTriangles( void )
 	{
-
+		::HUD_DrawNormalTriangles();
 	}
 
 	virtual void DrawTransparentTriangles( void )
 	{
-
+		::HUD_DrawTransparentTriangles();
 	}
 
 	virtual void StudioEvent( const struct mstudioevent_s *event, const cl_entity_t *entity )
 	{
-
+		::HUD_StudioEvent(event, entity);
 	}
 
 	virtual void PostRunCmd( struct local_state_s *from, struct local_state_s *to, usercmd_t *cmd, int runfuncs, double time, unsigned int random_seed )
 	{
-
+		
 	}
 
-	virtual void Shutdown( void )
+	virtual void GameShutdown( void )
 	{
-
+		
 	}
 
 	virtual void TxferLocalOverrides( entity_state_t *state, const clientdata_t *client )
 	{
-
+		::HUD_TxferLocalOverrides(state, client);
 	}
 
 	virtual void ProcessPlayerState( entity_state_t *dst, const entity_state_t *src )
 	{
-
+		::HUD_ProcessPlayerState(dst, src);
 	}
 
 	virtual void TxferPredictionData( entity_state_t *ps, const entity_state_t *pps, clientdata_t *pcd, const clientdata_t *ppcd, weapon_data_t *wd, const weapon_data_t *pwd )
 	{
-
+		::HUD_TxferPredictionData(ps, pps, pcd, ppcd, wd, pwd);
 	}
 
 	virtual void Demo_ReadBuffer( int size, byte *buffer )
 	{
-
+		::Demo_ReadBuffer(size, buffer);
 	}
 
 	virtual int ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *buffer, int *size )
 	{
-
+		return HUD_ConnectionlessPacket(net_from, args, buffer, size);
 	}
 
 	virtual int GetHullBounds( int hullnumber, float *mins, float *maxs )
 	{
-
+		return HUD_GetHullBounds(hullnumber, mins, maxs);
 	}
 
 	virtual void Frame( double time )
 	{
-
-	}
-
-	virtual int Key_Event( int eventcode, int keynum, const char *pszCurrentBinding )
-	{
-
+		HUD_Frame(time);
 	}
 
 	virtual void TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( cl_entity_t *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp ))
 	{
-
+		::HUD_TempEntUpdate(frametime, client_time, cl_gravity, ppTempEntFree, ppTempEntActive, Callback_AddVisibleEntity, Callback_TempEntPlaySound);
 	}
 
 	virtual cl_entity_t *GetUserEntity( int index )
 	{
-
+		return ::HUD_GetUserEntity(index);
 	}
 
 	virtual void VoiceStatus( int entindex, qboolean bTalking )
 	{
-
+		HUD_VoiceStatus(entindex, bTalking);
 	}
 
 	virtual void DirectorMessage( int iSize, void *pbuf )
 	{
-
-	}
-
-	virtual int GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio )
-	{
-
+		HUD_DirectorMessage(iSize, pbuf);
 	}
 
 	virtual void ChatInputPosition( int *x, int *y )
 	{
-
+		
 	}
 
-	virtual int GetRenderInterface( int version, render_api_t *renderfuncs, render_interface_t *callback )
+	virtual void ClipMoveToEntity( struct physent_s *pe, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, struct pmtrace_s *tr )
 	{
-
-	}
-
-	virtual void	ClipMoveToEntity( struct physent_s *pe, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, struct pmtrace_s *tr )
-	{
-
-	}
-
-	virtual int TouchEvent( int type, int fingerID, float x, float y, float dx, float dy )
-	{
-
-	}
-
-	virtual void MoveEvent( float forwardmove, float sidemove )
-	{
-
-	}
-
-	virtual void LookEvent( float relyaw, float relpitch )
-	{
-
+		
 	}
 
 };
@@ -312,24 +299,7 @@ MODULE_INTERFACE_IMPL();
 Called when the DLL is first loaded.
 ==========================
 */
-extern "C" 
-{
-int		DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion );
-int		DLLEXPORT HUD_VidInit( void );
-void	DLLEXPORT HUD_Init( void );
-int		DLLEXPORT HUD_Redraw( float flTime, int intermission );
-int		DLLEXPORT HUD_UpdateClientData( client_data_t *cdata, float flTime );
-void	DLLEXPORT HUD_Reset ( void );
-void	DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server );
-void	DLLEXPORT HUD_PlayerMoveInit( struct playermove_s *ppmove );
-char	DLLEXPORT HUD_PlayerMoveTexture( char *name );
-int		DLLEXPORT HUD_ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size );
-int		DLLEXPORT HUD_GetHullBounds( int hullnumber, float *mins, float *maxs );
-void	DLLEXPORT HUD_Frame( double time );
-void	DLLEXPORT HUD_VoiceStatus(int entindex, qboolean bTalking);
-void	DLLEXPORT HUD_DirectorMessage( int iSize, void *pbuf );
-void DLLEXPORT HUD_MobilityInterface( mobile_engfuncs_t *gpMobileEngfuncs );
-}
+
 
 /*
 ================================

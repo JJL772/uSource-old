@@ -22,11 +22,18 @@
 #ifndef CDLL_INT_H
 #define CDLL_INT_H
 
-
 #include "const.h"
+#include "appframework.h"
 #include <stdint.h>
 
 #define MAX_ALIAS_NAME	32
+
+/* Forward decls */
+typedef struct cl_entity_s cl_entity_t;
+typedef struct usercmd_s usercmd_t;
+typedef struct entity_state_s entity_state_t;
+typedef struct clientdata_s clientdata_t;
+typedef struct weapon_data_s weapon_data_t;
 
 typedef struct cmdalias_s
 {
@@ -314,7 +321,7 @@ class IClientInterface : public IAppInterface
 {
 public:
 	virtual int	Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion ) = 0;
-	//void	Init( void ) = 0;
+	virtual void	InitHud( void ) = 0;
 	virtual int	VidInit( void ) = 0;
 	virtual int	Redraw( float flTime, int intermission ) = 0;
 	virtual int	UpdateClientData( client_data_t *cdata, float flTime ) = 0;
@@ -322,24 +329,18 @@ public:
 	virtual void	PlayerMove( struct playermove_s *ppmove, int server ) = 0;
 	virtual void	PlayerMoveInit( struct playermove_s *ppmove ) = 0;
 	virtual char	PlayerMoveTexture( char *name ) = 0;
-	virtual void	IN_ActivateMouse( void ) = 0;
-	virtual void	IN_DeactivateMouse( void ) = 0;
-	virtual void	IN_MouseEvent( int mstate ) = 0;
-	virtual void	IN_ClearStates( void ) = 0;
-	virtual void	IN_Accumulate( void ) = 0;
 	virtual void	CL_CreateMove( float frametime, struct usercmd_s *cmd, int active ) = 0;
 	virtual int	CL_IsThirdPerson( void ) = 0;
 	virtual void	CL_CameraOffset( float *ofs ) = 0;
-	virtual void	*KB_Find( const char *name ) = 0;
 	virtual void	CAM_Think( void ) = 0;
-	virtual void	CalcRefdef( ref_params_t *pparams ) = 0;
+	virtual void	CalcRefdef( struct ref_params_s *pparams ) = 0;
 	virtual int	AddEntity( int type, cl_entity_t *ent, const char *modelname ) = 0;
 	virtual void	CreateEntities( void ) = 0;
 	virtual void	DrawNormalTriangles( void ) = 0;
 	virtual void	DrawTransparentTriangles( void ) = 0;
 	virtual void	StudioEvent( const struct mstudioevent_s *event, const cl_entity_t *entity ) = 0;
 	virtual void	PostRunCmd( struct local_state_s *from, struct local_state_s *to, usercmd_t *cmd, int runfuncs, double time, unsigned int random_seed ) = 0;
-	virtual void	Shutdown( void ) = 0;
+	virtual void	GameShutdown( void ) = 0;
 	virtual void	TxferLocalOverrides( entity_state_t *state, const clientdata_t *client ) = 0;
 	virtual void	ProcessPlayerState( entity_state_t *dst, const entity_state_t *src ) = 0;
 	virtual void	TxferPredictionData( entity_state_t *ps, const entity_state_t *pps, clientdata_t *pcd, const clientdata_t *ppcd, weapon_data_t *wd, const weapon_data_t *pwd ) = 0;
@@ -347,18 +348,32 @@ public:
 	virtual int	ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *buffer, int *size ) = 0;
 	virtual int	GetHullBounds( int hullnumber, float *mins, float *maxs ) = 0;
 	virtual void	Frame( double time ) = 0;
-	virtual int	Key_Event( int eventcode, int keynum, const char *pszCurrentBinding ) = 0;
 	virtual void	TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( cl_entity_t *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp )) = 0;
 	virtual cl_entity_t *GetUserEntity( int index ) = 0;
 	virtual void	VoiceStatus( int entindex, qboolean bTalking ) = 0;
 	virtual void	DirectorMessage( int iSize, void *pbuf ) = 0;
-	virtual int	GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio ) = 0;
 	virtual void	ChatInputPosition( int *x, int *y ) = 0;
-	virtual int	GetRenderInterface( int version, render_api_t *renderfuncs, render_interface_t *callback ) = 0;
 	virtual void	ClipMoveToEntity( struct physent_s *pe, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, struct pmtrace_s *tr ) = 0;
-	virtual int TouchEvent( int type, int fingerID, float x, float y, float dx, float dy ) = 0;
-	virtual void MoveEvent( float forwardmove, float sidemove ) = 0;
-	virtual void LookEvent( float relyaw, float relpitch ) = 0;
+};
+
+#define IINPUTSYSTEM_001 "IClientInput001"
+#define IINPUTSYSTEM_INTERFACE IINPUTSYSTEM_001
+
+class IInputSystem : public IAppInterface
+{
+public:
+	virtual void	InitInput() = 0;
+	virtual void	ShutdownInput() = 0;
+	virtual void	ActivateMouse( void ) = 0;
+	virtual void	DeactivateMouse( void ) = 0;
+	virtual void	MouseEvent( int mstate ) = 0;
+	virtual void	ClearStates( void ) = 0;
+	virtual void	Accumulate( void ) = 0;
+	virtual int  	TouchEvent( int type, int fingerID, float x, float y, float dx, float dy ) = 0;
+	virtual void 	MoveEvent( float forwardmove, float sidemove ) = 0;
+	virtual void 	LookEvent( float relyaw, float relpitch ) = 0;
+	virtual void*	KB_Find(const char* name) = 0;
+	virtual int	KeyEvent(int evcode, int keynum, const char* bind) = 0;
 };
 
 

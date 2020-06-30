@@ -17,7 +17,6 @@ GNU General Public License for more details.
 #define CLIENT_H
 
 #include "mathlib.h"
-#include "client_int.h"
 #include "menu_int.h"
 #include "cl_entity.h"
 #include "engine/common/mod_local.h"
@@ -25,13 +24,15 @@ GNU General Public License for more details.
 #include "pm_movevars.h"
 #include "ref_params.h"
 #include "render_api.h"
-#include "cdll_exp.h"
 #include "screenfade.h"
 #include "engine/common/protocol.h"
 #include "engine/common/netchan.h"
 #include "net_api.h"
 #include "engine/common/world.h"
 #include "ref_common.h"
+#include "common/usercmd.h"
+#include "client_int.h"
+#include "cdll_exp.h"
 
 // client sprite types
 #define SPR_CLIENT		0	// client sprite for temp-entities or user-textures
