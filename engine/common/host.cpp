@@ -417,12 +417,13 @@ void Host_InitInterfaces()
 
 	AppFramework::interface_t interfaces[] = {
 		{ENGINELIB, ILOGSYSTEM_INTERFACE},
-		/* Below are interfaces needed by the client */
+		/* Below are interfaces needed by other modules */
 		/* They are loaded here because I don't want to need to figure out the engine name in the client dll */
 		{ENGINELIB, IDEMOAPI_INTERFACE},
 		{ENGINELIB, IEFX_INTERFACE},
 		{ENGINELIB, IEVENTINTERFACE_INTERFACE},
 		{ENGINELIB, INETAPI_INTERFACE},
+		{ENGINELIB, IENGINEFILESYSTEM_INTERFACE},
 		{0,0},
 	};
 	

@@ -31,6 +31,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "protocol.h"
 #include "public/keyvalues.h"
+#include "engine_int.h"
 
 #define FILE_COPY_SIZE		(1024 * 1024)
 #define FILE_BUFF_SIZE		(2048)
@@ -3757,3 +3758,80 @@ static byte *W_LoadFile( const char *path, fs_offset_t *lumpsizeptr, qboolean ga
 		return W_ReadLump( search->wad, &search->wad->lumps[index], lumpsizeptr ); 
 	return NULL;
 }
+
+
+/*
+
+FILESYSTEM INTERFACE IMPLEMENTATION
+
+The internal filesystem implementation here is odd to say the least. I'd like to simply return a FILE* ptr 
+such that any file opened with the filesystem is compatible with the standard C IO functions,
+but there's some buffering being done in here. It's probably a good thing for performance, but for ease of use
+it's hardly ideal. the C stdlib should be doing buffering *anyways* so I don't think it would matter.
+If you're on Linux, OSX or a BSD operating system, the OS *should* be doing a bunch of caching in memory too.
+
+*/
+class CEngineFilesystem : public IEngineFilesystem
+{
+private:
+
+public:
+	virtual bool PreInit() { return true; };
+	virtual bool Init() { return true; };
+	virtual void Shutdown() {};
+	virtual const char* GetParentInterface() { return IENGINEFILESYSTEM_INTERFACE; };
+	virtual const char* GetName() { return "CEngineFilesystem001"; };
+
+	virtual FILE* OpenFile(const char* path, const char* mode, bool gamedironly = false) 
+	{
+		/* Perform a search to find the file if it's in one of our search paths */
+		search_t* search = FS_Search(path, 0, gamedironly);
+		if(!search) return nullptr;
+
+		if(search->numfilenames <= 0)
+		{
+			Mem_Free(search);
+			return nullptr;
+		}
+
+		/* Just return the first search entry */
+		FILE* ret = fopen(search->filenames[0], mode);
+		Mem_Free(search);
+		return ret;
+	}
+
+	virtual void CloseFile(FILE* file) 
+	{
+		Assert(file);
+		fclose(file);
+	}
+
+	virtual size_t FileSize(const char* file, bool gamedironly = false) 
+	{
+		FILE* fs = this->OpenFile(file, "r", gamedironly);
+		if(!fs) return 0;
+
+		fseek(fs, 0, SEEK_END);
+		size_t sz = ftell(fs);
+		fclose(fs);
+		return sz;
+	}
+
+	virtual bool FileExists(const char* file, bool casesensitive = false) 
+	{
+		return (bool)FS_FileExists(file, casesensitive);
+	}
+
+	virtual void AddGameDirectory(const char* dir) 
+	{
+		FS_AddGameDirectory(dir, FS_CUSTOM_PATH);
+	}
+
+	virtual void AddSearchPath(const char* dir) 
+	{
+		FS_AddGameDirectory(dir, FS_CUSTOM_PATH);
+	}
+
+};
+
+EXPOSE_INTERFACE(CEngineFilesystem);

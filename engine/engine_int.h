@@ -7,6 +7,7 @@
  */
 #pragma once
 
+
 #include "appframework.h"
 #include "eiface.h"
 
@@ -25,9 +26,15 @@
 #define IENGINEFILESYSTEM_001 "IEngineFilesystem001"
 #define IENGINEFILESYSTEM_INTERFACE IENGINEFILESYSTEM_001
 
-class IEngineFilesystem : IAppInterface
+class IEngineFilesystem : public IAppInterface
 {
-
+public:
+	virtual FILE* OpenFile(const char* path, const char* mode, bool gamedironly = false) = 0;
+	virtual void CloseFile(FILE* file) = 0;
+	virtual size_t FileSize(const char* file, bool gamedironly = false) = 0;
+	virtual bool FileExists(const char* file, bool gamedironly = false) = 0;
+	virtual void AddGameDirectory(const char* dir) = 0;
+	virtual void AddSearchPath(const char* dir) = 0;
 };
 
 class IEngineMalloc : public IAppInterface
