@@ -60,20 +60,17 @@ public:
 	virtual void TraceSphere(const float *v1, const float *v2, int fNoMonsters, float radius, edict_t *pentToSkip, TraceResult *ptr) = 0;
 };
 
+/**
+ * IEngineCvar
+ * 	Provides console variable and command managment. This interface can be use either standalone, or with some type of adapter. 
+ */ 
 class IEngineCvar : public IAppInterface
 {
 public:
-	virtual void CvarRegister(cvar_t *pCvar) = 0;
-	virtual float CvarGetFloat(const char *szVarName) = 0;
-	virtual const char *CvarGetString(const char *szVarName) = 0;
-	virtual void CvarSetFloat(const char *szVarName, float flValue) = 0;
-	virtual void CvarSetString(const char *szVarName, const char *szValue) = 0;
-	virtual void Cvar_RegisterVariable(cvar_t *variable) = 0;
-	virtual void QueryClientCvarValue(const edict_t *player, const char *cvarName) = 0;
-	virtual void QueryClientCvarValue2(const edict_t *player, const char *cvarName, int requestID) = 0;
-	virtual cvar_t *CVarGetPointer(const char *szVarName) = 0;
-	virtual void Cvar_DirectSet(struct cvar_s *var, const char *value) = 0;
-	virtual void AddServerCommand(const char *cmd_name, void (*function)(void)) = 0;
+	virtual void AddCommand(const char* cmd, void(*function)(), const char* desc, int flags) = 0;
+	virtual void RegisterCvar(const char* name, const char* default_val, const char* desc, int flags) = 0;
+	virtual const char* CvarGetString(const char* name) = 0;
+	virtual void CvarSetString(const char* name, const char* string) = 0;
 };
 
 class IEngineInterface : public IAppInterface

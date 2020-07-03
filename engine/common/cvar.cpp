@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include <math.h>	// fabs...
 #include "common.h"
 #include "base_cmd.h"
+#include "engine_int.h"
 
 convar_t	*cvar_vars = NULL; // head of list
 convar_t	*cmd_scripting;
@@ -938,3 +939,53 @@ void Cvar_Init( void )
 	Cmd_AddCommand( "reset", Cvar_Reset_f, "reset any type variable to initial value" );
 	Cmd_AddCommand( "cvarlist", Cvar_List_f, "display all console variables beginning with the specified prefix" );
 }
+
+/*
+============
+CVAR interface
+============
+*/
+class CEngineCvar : public IEngineCvar
+{
+public:
+	virtual bool PreInit() { return true; };
+	virtual bool Init() { return true; };
+	virtual void Shutdown() {};
+	virtual const char* GetParentInterface() { return IENGINECVAR_INTERFACE; };
+	virtual const char* GetName() { return "CEngineCvar001"; };
+
+	virtual void AddCommand(const char* cmd, void(*function)(), const char* desc, int flags);
+	virtual void RegisterCvar(const char* name, const char* default_val, const char* desc, int flags);
+	virtual const char* CvarGetString(const char* name);
+	virtual void CvarSetString(const char* name, const char* string);
+};
+
+void CEngineCvar::AddCommand(const char* cmd, void(*function)(), const char* desc, int flags) 
+{
+	/* Add the command with a wrapper */
+	Cmd_AddCommand(cmd, function, desc);
+}
+
+void CEngineCvar::RegisterCvar(const char* name, const char* default_val, const char* desc, int flags) 
+{
+	convar_t* var = (convar_t*)Z_Malloc(sizeof(convar_t));
+	var->name = copystring(name);
+	var->flags = flags;
+	var->string = copystring(default_val);
+	var->desc = copystring(desc);
+	Cvar_RegisterVariable(var);
+}
+
+const char* CEngineCvar::CvarGetString(const char* name) 
+{
+	convar_t* var = Cvar_FindVar(name);
+	if(!var) return "";
+	return var->string;
+}
+
+void CEngineCvar::CvarSetString(const char* name, const char* string) 
+{
+	Cvar_Set(name, string);
+}
+
+EXPOSE_INTERFACE(CEngineCvar);

@@ -485,6 +485,7 @@ void Cbuf_Execute (void);
 int Cmd_Argc( void );
 const char *Cmd_Args( void );
 const char *Cmd_Argv( int arg );
+const char**Cmd_Argl();
 void Cmd_Init( void );
 void Cmd_Unlink( int group );
 void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *cmd_desc );

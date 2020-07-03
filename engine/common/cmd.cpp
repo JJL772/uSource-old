@@ -500,6 +500,15 @@ const char *Cmd_Args( void )
 	return cmd_args;
 }
 
+/*
+============
+Cmd_Argl
+============
+*/
+const char** Cmd_Argl()
+{
+	return cmd_argv;
+}
 
 /*
 ===========================
