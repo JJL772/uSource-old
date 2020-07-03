@@ -22,6 +22,15 @@ GNU General Public License for more details.
 #include "stdio.h"
 #include "crtlib.h"
 
+#define BIT0 (1)
+#define BIT1 (2)
+#define BIT2 (4)
+#define BIT3 (8)
+#define BIT4 (16)
+#define BIT5 (32)
+#define BIT6 (64)
+#define BIT7 (128)
+
 void Q_strnupr(const char *in, char *out, size_t size_out)
 {
 	if (size_out == 0) return;
@@ -124,9 +133,9 @@ char Q_tolower(const char in)
 
 size_t Q_strncat(char *dst, const char *src, size_t size)
 {
-	register char *d = dst;
-	register const char *s = src;
-	register size_t n = size;
+	char *d = dst;
+	const char *s = src;
+	size_t n = size;
 	size_t dlen;
 
 	if (!dst || !src || !size)
@@ -408,6 +417,36 @@ int Q_strncmp(const char *s1, const char *s2, int n)
 	// strings are equal
 	return 0;
 }
+
+int Q_strcasecmp(const char* s1, const char* s2)
+{
+	int c1, c2;
+
+	if (s1 == NULL)
+	{
+		if (s2 == NULL)
+			return 0;
+		else return -1;
+	} else if (s2 == NULL)
+	{
+		return 1;
+	}
+
+	do
+	{
+		c1 = *s1++;
+		c2 = *s2++;
+
+		/* Quick and dirty lil trick. Clearing bit 5 will ensure we have lowercase */
+		//if ((c1 ^ BIT5) != (c2 ^ BIT5)) return c1 < c2 ? -1 : 1;
+		if(Q_tolower(c1) != Q_tolower(c2)) return c1 < c2 ? -1 : 1;
+
+	} while (c1);
+
+	// strings are equal
+	return 0;
+}
+
 
 static qboolean Q_starcmp(const char *pattern, const char *text)
 {

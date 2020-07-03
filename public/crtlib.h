@@ -40,6 +40,7 @@ enum
 // crtlib.c
 //
 
+int Q_strcasecmp(const char* a, const char* b);
 #define Q_strupr(in, out) Q_strnupr( in, out, 99999 )
 void Q_strnupr(const char *in, char *out, size_t size_out);
 #define Q_strlwr(in, out) Q_strnlwr( in, out, 99999 )
