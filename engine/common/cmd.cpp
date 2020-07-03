@@ -35,6 +35,7 @@ byte			cmd_text_buf[MAX_CMD_BUFFER];
 cmdalias_t		*cmd_alias;
 uint			cmd_condition;
 int			cmd_condlevel;
+bool			cmd_was_init = false;
 
 /*
 =============================================================================
@@ -54,6 +55,7 @@ void Cbuf_Init( void )
 	cmd_text.data = cmd_text_buf;
 	cmd_text.maxsize = MAX_CMD_BUFFER;
 	cmd_text.cursize = 0;
+	cmd_was_init = true;
 }
 
 /*
@@ -371,7 +373,7 @@ void Cmd_Alias_f( void )
 	{
 		cmdalias_t	*cur, *prev;
 
-		a = Z_Malloc( sizeof( cmdalias_t ));
+		a = (cmdalias_t*)Z_Malloc( sizeof( cmdalias_t ));
 
 		Q_strncpy( a->name, s, sizeof( a->name ));
 
@@ -649,7 +651,7 @@ static int Cmd_AddCommandEx( const char *funcname, const char *cmd_name, xcomman
 	}
 
 	// use a small malloc to avoid zone fragmentation
-	cmd = Z_Malloc( sizeof( cmd_t ) );
+	cmd = (cmd_t*)Z_Malloc( sizeof( cmd_t ) );
 	cmd->name = copystring( cmd_name );
 	cmd->desc = copystring( cmd_desc );
 	cmd->function = function;
@@ -1243,30 +1245,34 @@ Cmd_Init
 */
 void Cmd_Init( void )
 {
-	Cbuf_Init();
+	if(!cmd_was_init)
+	{
+		Cbuf_Init();
 
-	cmd_functions = NULL;
-	cmd_condition = 0;
-	cmd_alias = NULL;
-	cmd_args = NULL;
-	cmd_argc = 0;
+		cmd_functions = NULL;
+		cmd_condition = 0;
+		cmd_alias = NULL;
+		cmd_args = NULL;
+		cmd_argc = 0;
+		cmd_was_init = true;
 
-	// register our commands
-	Cmd_AddCommand( "echo", Cmd_Echo_f, "print a message to the console (useful in scripts)" );
-	Cmd_AddCommand( "wait", Cmd_Wait_f, "make script execution wait for some rendered frames" );
-	Cmd_AddCommand( "cmdlist", Cmd_List_f, "display all console commands beginning with the specified prefix" );
-	Cmd_AddCommand( "stuffcmds", Cmd_StuffCmds_f, "execute commandline parameters (must be present in .rc script)" );
-	Cmd_AddCommand( "apropos", Cmd_Apropos_f, "lists all console variables/commands/aliases containing the specified string in the name or description" );
+		// register our commands
+		Cmd_AddCommand( "echo", Cmd_Echo_f, "print a message to the console (useful in scripts)" );
+		Cmd_AddCommand( "wait", Cmd_Wait_f, "make script execution wait for some rendered frames" );
+		Cmd_AddCommand( "cmdlist", Cmd_List_f, "display all console commands beginning with the specified prefix" );
+		Cmd_AddCommand( "stuffcmds", Cmd_StuffCmds_f, "execute commandline parameters (must be present in .rc script)" );
+		Cmd_AddCommand( "apropos", Cmd_Apropos_f, "lists all console variables/commands/aliases containing the specified string in the name or description" );
 #ifndef XASH_DEDICATED
-	Cmd_AddCommand( "cmd", Cmd_ForwardToServer, "send a console commandline to the server" );
+		Cmd_AddCommand( "cmd", Cmd_ForwardToServer, "send a console commandline to the server" );
 #endif
-	Cmd_AddCommand( "alias", Cmd_Alias_f, "create a script function. Without arguments show the list of all alias" );
-	Cmd_AddCommand( "unalias", Cmd_UnAlias_f, "remove a script function" );
-	Cmd_AddCommand( "if", Cmd_If_f, "compare and set condition bits" );
-	Cmd_AddCommand( "else", Cmd_Else_f, "invert condition bit" );
+		Cmd_AddCommand( "alias", Cmd_Alias_f, "create a script function. Without arguments show the list of all alias" );
+		Cmd_AddCommand( "unalias", Cmd_UnAlias_f, "remove a script function" );
+		Cmd_AddCommand( "if", Cmd_If_f, "compare and set condition bits" );
+		Cmd_AddCommand( "else", Cmd_Else_f, "invert condition bit" );
 
 #if defined(XASH_HASHED_VARS)
-	Cmd_AddCommand( "basecmd_stats", BaseCmd_Stats_f, "print info about basecmd usage" );
-	Cmd_AddCommand( "basecmd_test", BaseCmd_Test_f, "test basecmd" );
+		Cmd_AddCommand( "basecmd_stats", BaseCmd_Stats_f, "print info about basecmd usage" );
+		Cmd_AddCommand( "basecmd_test", BaseCmd_Test_f, "test basecmd" );
 #endif
+	}
 }

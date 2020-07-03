@@ -20,6 +20,7 @@ GNU General Public License for more details.
 
 convar_t	*cvar_vars = NULL; // head of list
 convar_t	*cmd_scripting;
+bool		cvar_was_init = false;
 
 /*
 ============
@@ -323,7 +324,7 @@ void Cvar_LookupVars( int checkbit, void *buffer, void *ptr, setpair_t callback 
 			// NOTE: dlls cvars doesn't have description
 			if( FBitSet( var->flags, FCVAR_ALLOCATED|FCVAR_EXTENDED ))
 				callback( var->name, var->string, var->desc, ptr );
-			else callback( var->name, var->string, "", ptr );
+			else callback( var->name, var->string, (void*)"", ptr );
 		}
 	}
 }
@@ -391,7 +392,7 @@ convar_t *Cvar_Get( const char *name, const char *value, int flags, const char *
 	}
 
 	// allocate a new cvar
-	var = Z_Malloc( sizeof( *var ));
+	var = (convar_t*)Z_Malloc( sizeof( *var ));
 	var->name = copystring( name );
 	var->string = copystring( value );
 	var->def_string = copystring( value );
@@ -930,14 +931,17 @@ Reads in all archived cvars
 */
 void Cvar_Init( void )
 {
-	cvar_vars = NULL;
-	cmd_scripting = Cvar_Get( "cmd_scripting", "0", FCVAR_ARCHIVE, "enable simple condition checking and variable operations" );
-	Cvar_RegisterVariable (&host_developer); // early registering for dev 
+	if(!cvar_was_init)
+	{
+		cvar_vars = NULL;
+		cmd_scripting = Cvar_Get( "cmd_scripting", "0", FCVAR_ARCHIVE, "enable simple condition checking and variable operations" );
+		Cvar_RegisterVariable (&host_developer); // early registering for dev 
 
-	Cmd_AddCommand( "setgl", Cvar_SetGL_f, "change the value of a opengl variable" );	// OBSOLETE
-	Cmd_AddCommand( "toggle", Cvar_Toggle_f, "toggles a console variable's values (use for more info)" );
-	Cmd_AddCommand( "reset", Cvar_Reset_f, "reset any type variable to initial value" );
-	Cmd_AddCommand( "cvarlist", Cvar_List_f, "display all console variables beginning with the specified prefix" );
+		Cmd_AddCommand( "setgl", Cvar_SetGL_f, "change the value of a opengl variable" );	// OBSOLETE
+		Cmd_AddCommand( "toggle", Cvar_Toggle_f, "toggles a console variable's values (use for more info)" );
+		Cmd_AddCommand( "reset", Cvar_Reset_f, "reset any type variable to initial value" );
+		Cmd_AddCommand( "cvarlist", Cvar_List_f, "display all console variables beginning with the specified prefix" );
+	}
 }
 
 /*
@@ -958,6 +962,10 @@ public:
 	virtual void RegisterCvar(const char* name, const char* default_val, const char* desc, int flags);
 	virtual const char* CvarGetString(const char* name);
 	virtual void CvarSetString(const char* name, const char* string);
+	virtual void CvarInit();
+	virtual void CmdInit();
+	virtual int CmdArgc();
+	virtual const char** CmdArgv();
 };
 
 void CEngineCvar::AddCommand(const char* cmd, void(*function)(), const char* desc, int flags) 
@@ -986,6 +994,26 @@ const char* CEngineCvar::CvarGetString(const char* name)
 void CEngineCvar::CvarSetString(const char* name, const char* string) 
 {
 	Cvar_Set(name, string);
+}
+
+void CEngineCvar::CmdInit()
+{
+	Cmd_Init();
+}
+
+void CEngineCvar::CvarInit()
+{
+	Cvar_Init();
+}
+
+int CEngineCvar::CmdArgc()
+{
+	return Cmd_Argc();
+}
+
+const char** CEngineCvar::CmdArgv()
+{
+	return Cmd_Argl();
 }
 
 EXPOSE_INTERFACE(CEngineCvar);

@@ -71,6 +71,10 @@ public:
 	virtual void RegisterCvar(const char* name, const char* default_val, const char* desc, int flags) = 0;
 	virtual const char* CvarGetString(const char* name) = 0;
 	virtual void CvarSetString(const char* name, const char* string) = 0;
+	virtual void CvarInit() = 0;
+	virtual void CmdInit() = 0;
+	virtual int CmdArgc() = 0;
+	virtual const char** CmdArgv() = 0;
 };
 
 class IEngineInterface : public IAppInterface
