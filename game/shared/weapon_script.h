@@ -11,30 +11,38 @@
 #pragma once
 
 #include "public/keyvalues.h"
-#include "public/containers/list.h"
+#include "public/containers/array.h"
+
+#define WEAPON_SCRIPT_NAME "name"
+#define WEAPON_SCRIPT_WORLD_MODEL "world_model"
+#define WEAPON_SCRIPT_VIEW_MODEL "view_model"
+#define WEAPON_SCRIPT_EVENT_SCRIPT "event_script"
+#define WEAPON_SCRIPT_WPN_MODEL "weapon_model"
+#define WEAPON_SCRIPT_SOUNDS "sounds"
+#define WEAPON_SCRIPT_PROPS "properties"
+
+struct weapon_script_sound_t
+{
+	const char* name;
+	const char* snd;
+};
 
 class CWeaponScript
 {
 public:
 	KeyValues* m_kv;
+	KeyValues* m_props;
+	KeyValues* m_sounds;
 
 	CWeaponScript(const char* filename);
 
 	~CWeaponScript();
 
-	float GetFloatProp(const char* property, float _default = 0.0f);
+	const KeyValues& GetProperties() const;
 
-	int GetIntProp(const char* property, int _default = 0);
+	const KeyValues& GetSounds() const;
 
-	const char* GetStringProp(const char* property, const char* _default = "");
-
-	List<const char*> GetArrayProp();
-
-	List<const char*> GetHitSounds();
-
-	List<const char*> GetPrimaryFireSounds();
-
-	List<const char*> GetSecondaryFireSounds();
+	Array<weapon_script_sound_t> GetSounds();
 
 	const char* GetViewModel();
 
@@ -44,5 +52,7 @@ public:
 
 	const char* GetWeaponName();
 
-	const char* GetEvenScript();
+	const char* GetEventScript();
+
+	bool Good() const;
 };
