@@ -22,6 +22,7 @@
 #include	"gamerules.h"
 #include	"game.h"
 #include	"engine/server_int.h"
+#include	"game_shared.h"
 
 void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 

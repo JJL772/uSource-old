@@ -19,6 +19,7 @@
 #define CL_UTIL_H
 #include "exportdef.h"
 #include "cvardef.h"
+#include "mathlib/mathlib.h"
 
 #ifndef TRUE
 #define TRUE 1
@@ -81,7 +82,8 @@ inline struct cvar_s *CVAR_CREATE( const char *cv, const char *val, const int fl
 #define ServerCmd ( *gEngfuncs.pfnServerCmd )
 #define ClientCmd ( *gEngfuncs.pfnClientCmd )
 #define SetCrosshair ( *gEngfuncs.pfnSetCrosshair )
-#define AngleVectors ( *gEngfuncs.pfnAngleVectors )
+//#define AngleVectors ( *gEngfuncs.pfnAngleVectors )
+
 extern cvar_t *hud_textmode;
 extern float g_hud_text_color[3];
 inline void DrawSetTextColor( float r, float g, float b )

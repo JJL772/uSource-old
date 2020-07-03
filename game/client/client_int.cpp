@@ -22,6 +22,7 @@
 #include "cl_util.h"
 #include "netadr.h"
 #include "parsemsg.h"
+#include "game_shared.h"
 
 #if defined(GOLDSOURCE_SUPPORT) && (defined(_WIN32) || defined(__linux__) || defined(__APPLE__)) && (defined(__i386) || defined(_M_IX86))
 #define USE_VGUI_FOR_GOLDSOURCE_SUPPORT
@@ -377,6 +378,8 @@ int DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 
 	if( iVersion != CLDLL_INTERFACE_VERSION )
 		return 0;
+
+	GameSharedInit();
 
 	memcpy( &gEngfuncs, pEnginefuncs, sizeof(cl_enginefunc_t) );
 

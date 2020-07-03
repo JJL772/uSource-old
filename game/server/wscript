@@ -61,7 +61,8 @@ def build(bld):
 		'../shared/hl1/weapon_shotgun.cpp',
 		'../shared/hl1/weapon_squeakgrenade.cpp',
 		'../shared/hl1/weapon_tripmine.cpp',
-		'../shared/hl1/weapon_glock.cpp']
+		'../shared/hl1/weapon_glock.cpp',
+		'../shared/game_shared.cpp']
 		
 	if bld.env.VOICEMGR:
 		source += bld.path.parent.ant_glob([

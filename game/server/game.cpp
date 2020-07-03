@@ -16,6 +16,7 @@
 #include "eiface.h"
 #include "util.h"
 #include "game.h"
+#include "game_shared.h"
 
 cvar_t displaysoundlist = {"displaysoundlist","0"};
 
@@ -863,5 +864,7 @@ void GameDLLInit( void )
 // END REGISTER CVARS FOR SKILL LEVEL STUFF
 
 	SERVER_COMMAND( "exec skill.cfg\n" );
+
+	GameSharedInit();
 }
 
