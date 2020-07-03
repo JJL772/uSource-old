@@ -9,6 +9,7 @@
 
 
 #include "appframework.h"
+#include "public/containers/string.h"
 #include "eiface.h"
 
 #define IENGINETRACE_001 "IEngineTrace001"
@@ -33,8 +34,8 @@ public:
 	virtual void CloseFile(FILE* file) = 0;
 	virtual size_t FileSize(const char* file, bool gamedironly = false) = 0;
 	virtual bool FileExists(const char* file, bool gamedironly = false) = 0;
-	virtual void AddGameDirectory(const char* dir) = 0;
 	virtual void AddSearchPath(const char* dir) = 0;
+	virtual String GetFullPath(const char* file, bool gamedironly = false) = 0;
 };
 
 class IEngineMalloc : public IAppInterface

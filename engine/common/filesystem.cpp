@@ -3822,14 +3822,28 @@ public:
 		return (bool)FS_FileExists(file, casesensitive);
 	}
 
-	virtual void AddGameDirectory(const char* dir) 
-	{
-		FS_AddGameDirectory(dir, FS_CUSTOM_PATH);
-	}
 
 	virtual void AddSearchPath(const char* dir) 
 	{
 		FS_AddGameDirectory(dir, FS_CUSTOM_PATH);
+	}
+
+	virtual String GetFullPath(const char* file, bool gamedironly)
+	{
+		/* Perform a search to find the file if it's in one of our search paths */
+		search_t* search = FS_Search(file, 0, gamedironly);
+		if(!search) return nullptr;
+
+		if(search->numfilenames <= 0)
+		{
+			Mem_Free(search);
+			return nullptr;
+		}
+
+		/* Just return the first search entry */
+		String ret(search->filenames[0]);
+		Mem_Free(search);
+		return ret;
 	}
 
 };
