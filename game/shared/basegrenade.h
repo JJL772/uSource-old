@@ -6,7 +6,7 @@
 class CGrenade : public CBaseMonster
 {
 public:
-	void Spawn( void );
+	void Spawn( void ) override;
 
 	typedef enum { SATCHEL_DETONATE = 0, SATCHEL_RELEASE } SATCHELCODE;
 
