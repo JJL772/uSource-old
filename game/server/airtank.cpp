@@ -19,6 +19,7 @@
 #include "weapons.h"
 #include "info_node.h"
 #include "player.h"
+#include "basegrenade.h"
 
 class CAirtank : public CGrenade
 {

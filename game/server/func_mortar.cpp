@@ -27,6 +27,7 @@
 #include "weapons.h"
 #include "decals.h"
 #include "soundent.h"
+#include "basegrenade.h"
 
 class CFuncMortarField : public CBaseToggle
 {

@@ -24,6 +24,7 @@
 #include "func_door.h"
 #include "game.h"
 #include "weapons.h"
+#include "hl1/weapon_satchel.h"
 
 extern void SetMovedir( entvars_t *ev );
 

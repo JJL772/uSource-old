@@ -27,6 +27,7 @@
 #include	"weapons.h"
 #include	"soundent.h"
 #include	"game.h"
+#include	"basegrenade.h"
 
 extern DLL_GLOBAL int  g_iSkillLevel;
 

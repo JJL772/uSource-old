@@ -32,6 +32,22 @@
 #include "gamerules.h"
 #include "crtlib.h"
 
+#include "hl1/weapon_crossbow.h"
+#include "hl1/weapon_crowbar.h"
+#include "hl1/weapon_egon.h"
+#include "hl1/weapon_frag.h"
+#include "hl1/weapon_gauss.h"
+#include "hl1/weapon_glock.h"
+#include "hl1/weapon_hornetgun.h"
+#include "hl1/weapon_mp5.h"
+#include "hl1/weapon_python.h"
+#include "hl1/weapon_rpg.h"
+#include "hl1/weapon_satchel.h"
+#include "hl1/weapon_shotgun.h"
+#include "hl1/weapon_squeakgrenade.h"
+#include "hl1/weapon_tripmine.h"
+
+
 extern CGraph WorldGraph;
 extern int gEvilImpulse101;
 

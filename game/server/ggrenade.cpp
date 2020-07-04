@@ -26,6 +26,7 @@
 #include "info_node.h"
 #include "soundent.h"
 #include "decals.h"
+#include "basegrenade.h"
 
 //===================grenade
 

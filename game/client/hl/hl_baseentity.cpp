@@ -30,6 +30,7 @@ This file contains "stubs" of class member implementations so that we can predic
 #include        "info_node.h"
 #include	"soundent.h"
 #include	"skill.h"
+#include	"basegrenade.h"
 
 // Globals used by game logic
 const Vector g_vecZero = Vector( 0, 0, 0 );

@@ -18,10 +18,11 @@
 #include "game/server/util.h"
 #include "game/server/cbase.h"
 #include "ai/ai_monsters.h"
-#include "game/server/weapons.h"
+#include "weapon_satchel.h"
 #include "game/server/info_node.h"
 #include "game/server/player.h"
 #include "game/server/gamerules.h"
+#include "basegrenade.h"
 
 enum satchel_state
 {
