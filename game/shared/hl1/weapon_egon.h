@@ -6,18 +6,18 @@ class CEgon : public CBasePlayerWeapon
 {
 public:
 #ifndef CLIENT_DLL
-	int		Save( CSave &save );
-	int		Restore( CRestore &restore );
+	int		Save( CSave &save ) override;
+	int		Restore( CRestore &restore ) override;
 	static	TYPEDESCRIPTION m_SaveData[];
 #endif
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( void ) override { return 4; }
+	int GetItemInfo(ItemInfo *p) override;
+	int AddToPlayer( CBasePlayer *pPlayer ) override;
 
-	BOOL Deploy( void );
-	void Holster( int skiplocal = 0 );
+	BOOL Deploy( void ) override;
+	void Holster( int skiplocal = 0 ) override;
 
 	void UpdateEffect( const Vector &startPoint, const Vector &endPoint, float timeBlend );
 
@@ -26,8 +26,8 @@ public:
 
 	void EndAttack( void );
 	void Attack( void );
-	void PrimaryAttack( void );
-	void WeaponIdle( void );
+	void PrimaryAttack( void ) override;
+	void WeaponIdle( void ) override;
 
 	float m_flAmmoUseTime;// since we use < 1 point of ammo per update, we subtract ammo on a timer.
 

@@ -6,22 +6,22 @@ class CShotgun : public CBasePlayerWeapon
 {
 public:
 #ifndef CLIENT_DLL
-	int		Save( CSave &save );
-	int		Restore( CRestore &restore );
+	int		Save( CSave &save ) override;
+	int		Restore( CRestore &restore ) override;
 	static	TYPEDESCRIPTION m_SaveData[];
 #endif
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( ) override { return 3; }
+	int GetItemInfo(ItemInfo *p) override;
+	int AddToPlayer( CBasePlayer *pPlayer ) override;
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	BOOL Deploy( );
-	void Reload( void );
-	void WeaponTick();
-	void WeaponIdle( void );
+	void PrimaryAttack( void ) override;
+	void SecondaryAttack( void ) override;
+	BOOL Deploy( ) override;
+	void Reload( void ) override;
+	void WeaponTick() override;
+	void WeaponIdle( void ) override;
 	int m_fInReload;
 	float m_flNextReload;
 	int m_iShell;

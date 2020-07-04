@@ -5,20 +5,20 @@
 class CCrossbow : public CBasePlayerWeapon
 {
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( ) override { return 3; }
+	int GetItemInfo(ItemInfo *p) override;
 
 	void FireBolt( void );
 	void FireSniperBolt( void );
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	int AddToPlayer( CBasePlayer *pPlayer );
-	BOOL Deploy( );
-	void Holster( int skiplocal = 0 );
-	void Reload( void );
-	void WeaponIdle( void );
+	void PrimaryAttack( void ) override;
+	void SecondaryAttack( void ) override;
+	int AddToPlayer( CBasePlayer *pPlayer ) override;
+	BOOL Deploy( ) override;
+	void Holster( int skiplocal = 0 ) override;
+	void Reload( void ) override;
+	void WeaponIdle( void ) override;
 
 	int m_fInZoom; // don't save this
 

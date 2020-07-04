@@ -5,18 +5,18 @@
 class CCrowbar : public CBasePlayerWeapon
 {
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 1; }
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( void ) override { return 1; }
 	void EXPORT SwingAgain( void );
 	void EXPORT Smack( void );
-	int GetItemInfo( ItemInfo *p );
-	int AddToPlayer( CBasePlayer *pPlayer );
+	int GetItemInfo( ItemInfo *p ) override;
+	int AddToPlayer( CBasePlayer *pPlayer ) override;
 
-	void PrimaryAttack( void );
+	void PrimaryAttack( void ) override;
 	int Swing( int fFirst );
-	BOOL Deploy( void );
-	void Holster( int skiplocal = 0 );
+	BOOL Deploy( void ) override;
+	void Holster( int skiplocal = 0 ) override;
 #ifdef CROWBAR_IDLE_ANIM
 	void WeaponIdle();
 #endif

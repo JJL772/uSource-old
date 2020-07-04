@@ -5,19 +5,19 @@
 class CMP5 : public CBasePlayerWeapon
 {
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 3; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( void ) override { return 3; }
+	int GetItemInfo(ItemInfo *p) override;
+	int AddToPlayer( CBasePlayer *pPlayer ) override;
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	int SecondaryAmmoIndex( void );
-	BOOL Deploy( void );
-	void Reload( void );
-	void WeaponIdle( void );
-	BOOL IsUseable();
+	void PrimaryAttack( void ) override;
+	void SecondaryAttack( void ) override;
+	int SecondaryAmmoIndex( void ) override;
+	BOOL Deploy( void ) override;
+	void Reload( void ) override;
+	void WeaponIdle( void ) override;
+	BOOL IsUseable() override;
 	float m_flNextAnimTime;
 	int m_iShell;
 

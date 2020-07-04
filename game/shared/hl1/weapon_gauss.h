@@ -6,22 +6,22 @@ class CGauss : public CBasePlayerWeapon
 {
 public:
 #ifndef CLIENT_DLL
-	int		Save( CSave &save );
-	int		Restore( CRestore &restore );
+	int		Save( CSave &save ) override;
+	int		Restore( CRestore &restore ) override;
 	static	TYPEDESCRIPTION m_SaveData[];
 #endif
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
-	BOOL IsUseable();
-	BOOL Deploy( void );
-	void Holster( int skiplocal = 0  );
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( void ) override { return 4; }
+	int GetItemInfo(ItemInfo *p) override;
+	int AddToPlayer( CBasePlayer *pPlayer ) override;
+	BOOL IsUseable() override;
+	BOOL Deploy( void ) override;
+	void Holster( int skiplocal = 0  ) override;
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	void WeaponIdle( void );
+	void PrimaryAttack( void ) override;
+	void SecondaryAttack( void ) override;
+	void WeaponIdle( void ) override;
 
 	void StartFire( void );
 	void Fire( Vector vecOrigSrc, Vector vecDirShooting, float flDamage );

@@ -5,21 +5,21 @@
 class CTripmine : public CBasePlayerWeapon
 {
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 5; }
-	int GetItemInfo(ItemInfo *p);
-	void SetObjectCollisionBox( void )
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( void ) override { return 5; }
+	int GetItemInfo(ItemInfo *p) override;
+	void SetObjectCollisionBox( void ) override
 	{
 		//!!!BUGBUG - fix the model!
 		pev->absmin = pev->origin + Vector(-16, -16, -5);
 		pev->absmax = pev->origin + Vector(16, 16, 28); 
 	}
 
-	void PrimaryAttack( void );
-	BOOL Deploy( void );
-	void Holster( int skiplocal = 0 );
-	void WeaponIdle( void );
+	void PrimaryAttack( void ) override;
+	BOOL Deploy( void ) override;
+	void Holster( int skiplocal = 0 ) override;
+	void WeaponIdle( void ) override;
 
 	virtual BOOL UseDecrement( void )
 	{ 

@@ -6,11 +6,12 @@
 class CRpgRocket : public CGrenade
 {
 public:
-	int		Save( CSave &save );
-	int		Restore( CRestore &restore );
+	int		Save( CSave &save ) override;
+	int		Restore( CRestore &restore ) override;
 	static	TYPEDESCRIPTION m_SaveData[];
-	void Spawn( void );
-	void Precache( void );
+	void Spawn( void ) override;
+	void Precache( void ) override;
+
 	void EXPORT FollowThink( void );
 	void EXPORT IgniteThink( void );
 	void EXPORT RocketTouch( CBaseEntity *pOther );
@@ -25,27 +26,27 @@ class CRpg : public CBasePlayerWeapon
 {
 public:
 #ifndef CLIENT_DLL
-	int		Save( CSave &save );
-	int		Restore( CRestore &restore );
+	int		Save( CSave &save ) override;
+	int		Restore( CRestore &restore ) override;
 	static	TYPEDESCRIPTION m_SaveData[];
 #endif
-	void Spawn( void );
-	void Precache( void );
-	void Reload( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer( CBasePlayer *pPlayer );
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	void Reload( void ) override;
+	int iItemSlot( void ) override { return 4; }
+	int GetItemInfo(ItemInfo *p) override;
+	int AddToPlayer( CBasePlayer *pPlayer ) override;
 
-	BOOL Deploy( void );
-	BOOL CanHolster( void );
-	void Holster( int skiplocal = 0 );
+	BOOL Deploy( void ) override;
+	BOOL CanHolster( void ) override;
+	void Holster( int skiplocal = 0 ) override;
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-	void WeaponIdle( void );
+	void PrimaryAttack( void ) override;
+	void SecondaryAttack( void ) override;
+	void WeaponIdle( void ) override;
 
 	void UpdateSpot( void );
-	BOOL ShouldWeaponIdle( void ) { return TRUE; };
+	BOOL ShouldWeaponIdle( void ) override { return TRUE; };
 
 	CLaserSpot *m_pSpot;
 	int m_fSpotActive;

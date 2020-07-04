@@ -6,16 +6,16 @@
 class CHandGrenade : public CBasePlayerWeapon
 {
 public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 5; }
-	int GetItemInfo(ItemInfo *p);
+	void Spawn( void ) override;
+	void Precache( void ) override;
+	int iItemSlot( void ) override { return 5; }
+	int GetItemInfo(ItemInfo *p) override;
 
-	void PrimaryAttack( void );
-	BOOL Deploy( void );
-	BOOL CanHolster( void );
-	void Holster( int skiplocal = 0 );
-	void WeaponIdle( void );
+	void PrimaryAttack( void ) override;
+	BOOL Deploy( void ) override;
+	BOOL CanHolster( void ) override;
+	void Holster( int skiplocal = 0 ) override;
+	void WeaponIdle( void ) override;
 
 	virtual BOOL UseDecrement( void )
 	{ 
