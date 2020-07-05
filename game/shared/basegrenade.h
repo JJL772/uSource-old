@@ -34,3 +34,24 @@ public:
 
 	BOOL m_fRegisteredSound;// whether or not this grenade has issued its DANGER sound to the world sound list yet.
 };
+
+enum class EGrenateTrigger
+{
+	TIMED = 0,    /* Simple timer */
+	CONTACT,      /* Grenade explodes on contact with other surface */
+	REMOTE,       /* Manual trigger */
+};
+
+/* New base grenade class. */
+class CBaseGrenade : public CBaseEntity
+{
+public:
+	void Spawn() override;
+
+	void Explode();
+
+	EGrenateTrigger m_TriggerType;
+
+	/* In derived classes, be sure to call this */
+	virtual void OnExplode();
+};

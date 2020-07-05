@@ -240,7 +240,7 @@ def configure(conf):
 			# disable thread-safe local static initialization for C++11 code, as it cause crashes on Windows XP
 			'msvc':    ['/D_USING_V110_SDK71_', '/Zi', '/FS', '/Zc:threadSafeInit-', '/MT'],
 			'clang': ['-g', '-gdwarf-2', '-fvisibility=hidden', '-Wall', '-Wextra', '-Wno-unused-parameter', '-fpermissive', '-Wno-unused-function'],
-			'gcc': ['-g', '-fvisibility=default', '-Wno-attributes', '-Wno-write-strings', '-Wall', '-Wextra', '-Wno-unused-parameter', '-fpermissive', '-Wno-unused-function']
+			'gcc': ['-g', '-fvisibility=default', '-Wno-attributes', '-Wno-write-strings', '-Wall', '-Wextra', '-Wno-unused-parameter', '-fpermissive', '-Wno-unused-function', '-Wno-unused-variable', '-Wno-missing-field-initializers']
 		},
 		'fast': {
 			'msvc':    ['/O2', '/Oy'], #todo: check /GL /LTCG
@@ -342,6 +342,7 @@ def configure(conf):
 	conf.add_subproject('mathlib')
 	conf.recurse('game/server')
 	conf.recurse('game/client')
+	conf.recurse('tier1')
 
 	conf.env.ENABLE_RENDERER2 = conf.options.ENABLE_RENDERER2
 
@@ -364,6 +365,7 @@ def build(bld):
 	bld.recurse('game/client')
 	bld.recurse('mathlib')
 	bld.recurse('public')
+	bld.recurse('tier1')
 
 	if bld.env.ENABLE_RENDERER2:
 		bld.recurse('rendersystem')

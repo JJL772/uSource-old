@@ -7,13 +7,10 @@
 #include "game_shared.h"
 
 #include "public/appframework.h"
-
-IEngineFilesystem* g_pFilesystem;
-ILogSystem* g_pLoggingSystem;
+#include "tier1/tier1.h"
 
 void GameSharedInit() 
 {
 	/* Load our global interfaces from the engine */
-	g_pFilesystem = (IEngineFilesystem*)AppFramework::FindInterface(IENGINEFILESYSTEM_INTERFACE);
-	g_pLoggingSystem = (ILogSystem*)AppFramework::FindInterface(ILOGSYSTEM_INTERFACE);
+	ConnectTier1Libraries();
 }
