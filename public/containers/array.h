@@ -1,3 +1,4 @@
+#pragma once 
 #include "public/containers/allocator.h"
 
 /* Standard includes */
