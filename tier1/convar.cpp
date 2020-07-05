@@ -16,7 +16,7 @@ static Array<Convar*>* g_pConvarRegistrationQueue = nullptr;
 
 void Convar::RegisterAllCvars()
 {
-	if(!g_pEngineCvar) return;
+	if(!g_pEngineCvar || !g_pConvarRegistrationQueue) return;
 	g_pEngineCvar->CvarInit();
 
 	for(auto x : *g_pConvarRegistrationQueue)
