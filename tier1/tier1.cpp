@@ -1,5 +1,6 @@
 #include "tier1.h"
 #include "tier1/convar.h"
+#include "tier1/concommand.h"
 
 IEngineCvar* g_pEngineCvar;
 ILogSystem* g_pLogSystem;
@@ -12,4 +13,5 @@ void ConnectTier1Libraries()
 	g_pEngineCvar = (IEngineCvar*)AppFramework::FindInterface(IENGINECVAR_INTERFACE);
 
 	Convar::RegisterAllCvars();
+	ConCommand::RegisterAllCommands();
 }
