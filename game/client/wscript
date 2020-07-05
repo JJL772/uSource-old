@@ -38,6 +38,7 @@ def build(bld):
 		'../shared/hl1/weapon_tripmine.cpp',
 		'../shared/hl1/weapon_glock.cpp',
 		'../shared/game_shared.cpp',
+		'client_commands.cpp',
 		'ev_hldm.cpp', 'ammo.cpp', 'ammo_secondary.cpp', 'ammohistory.cpp',
 		'battery.cpp', 'client_int.cpp', 'com_weapons.cpp', 'death.cpp',
 		'demo.cpp', 'entity.cpp', 'ev_common.cpp', 'events.cpp',

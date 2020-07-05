@@ -48,6 +48,7 @@ def build(bld):
 		'triggers.cpp', 'npc/npc_turret.cpp',
 		'util.cpp', 
 		'weapons.cpp', 'world.cpp', 'xen.cpp', 'npc/npc_zombie.cpp',
+		'server_commands.cpp',
 		'../shared/hl1/weapon_crossbow.cpp',
 		'../shared/hl1/weapon_crowbar.cpp',
 		'../shared/hl1/weapon_egon.cpp',
