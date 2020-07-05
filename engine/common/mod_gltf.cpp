@@ -21,6 +21,7 @@ const char* g_gltf_extensions[] = {
 
 class CGlTfLoader : public IModelLoader
 {
+public:
 	CGlTfLoader();
 	virtual ~CGlTfLoader() {};
 
@@ -28,9 +29,10 @@ class CGlTfLoader : public IModelLoader
 
 	virtual bool CheckBuffer(const void* buf, size_t len) { return true; }
 
-	/* Singleton */
-	static CGlTfLoader g_glTfLoader;
+
 };
+/* Singleton */
+static CGlTfLoader g_glTfLoader;
 
 CGlTfLoader::CGlTfLoader() :
 	IModelLoader(g_gltf_extensions, ARRAYSIZE(g_gltf_extensions))
