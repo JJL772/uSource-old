@@ -1278,7 +1278,7 @@ static void Mod_MakeHull0( void )
 	int		i, j;
 	
 	hull = &loadmodel->hulls[0];	
-	hull->clipnodes = out = Mem_Malloc( loadmodel->mempool, loadmodel->numnodes * sizeof( *out ));	
+	hull->clipnodes = out = (mclipnode_t*)Mem_Malloc( loadmodel->mempool, loadmodel->numnodes * sizeof( *out ));	
 	in = loadmodel->nodes;
 
 	hull->firstclipnode = 0;
@@ -1397,7 +1397,7 @@ static qboolean Mod_LoadColoredLighting( dbspmodel_t *bmod )
 		return false;
 	}
 
-	loadmodel->lightdata = Mem_Malloc( loadmodel->mempool, litdatasize );
+	loadmodel->lightdata = (color24*)Mem_Malloc( loadmodel->mempool, litdatasize );
 	memcpy( loadmodel->lightdata, in + 8, litdatasize );
 	SetBits( loadmodel->flags, MODEL_COLORED_LIGHTING );
 	bmod->lightdatasize = litdatasize;
@@ -1452,7 +1452,7 @@ static void Mod_LoadDeluxemap( dbspmodel_t *bmod )
 		return;
 	}
 
-	bmod->deluxedata_out = Mem_Malloc( loadmodel->mempool, deluxdatasize );
+	bmod->deluxedata_out = (color24*)Mem_Malloc( loadmodel->mempool, deluxdatasize );
 	memcpy( bmod->deluxedata_out, in + 8, deluxdatasize );
 	bmod->deluxdatasize = deluxdatasize;
 	Mem_Free( in );
@@ -1578,7 +1578,7 @@ static void Mod_LoadSubmodels( dbspmodel_t *bmod )
 	int	i, j;
 
 	// allocate extradata for each dmodel_t
-	out = Mem_Malloc( loadmodel->mempool, bmod->numsubmodels * sizeof( *out ));
+	out = (dmodel_t*)Mem_Malloc( loadmodel->mempool, bmod->numsubmodels * sizeof( *out ));
 
 	loadmodel->numsubmodels = bmod->numsubmodels;
 	loadmodel->submodels = out;
@@ -1667,7 +1667,7 @@ static void Mod_LoadEntities( dbspmodel_t *bmod )
 	}
 
 	// make sure what we really has terminator
-	loadmodel->entities = Mem_Calloc( loadmodel->mempool, bmod->entdatasize + 1 );
+	loadmodel->entities = (char*)Mem_Calloc( loadmodel->mempool, bmod->entdatasize + 1 );
 	memcpy( loadmodel->entities, bmod->entdata, bmod->entdatasize ); // moving to private model pool
 	if( entpatch ) Mem_Free( entpatch ); // release entpatch if present
 	if( !bmod->isworld ) return;
@@ -1751,7 +1751,7 @@ static void Mod_LoadPlanes( dbspmodel_t *bmod )
 	int	i, j;
 
 	in = bmod->planes;
-	loadmodel->planes = out = Mem_Malloc( loadmodel->mempool, bmod->numplanes * sizeof( *out ));
+	loadmodel->planes = out = (mplane_t*)Mem_Malloc( loadmodel->mempool, bmod->numplanes * sizeof( *out ));
 	loadmodel->numplanes = bmod->numplanes;
 
 	for( i = 0; i < bmod->numplanes; i++, in++, out++ )
@@ -1785,7 +1785,7 @@ static void Mod_LoadVertexes( dbspmodel_t *bmod )
 	int	i;
 
 	in = bmod->vertexes;
-	out = loadmodel->vertexes = Mem_Malloc( loadmodel->mempool, bmod->numvertexes * sizeof( mvertex_t ));
+	out = loadmodel->vertexes = (mvertex_t*)Mem_Malloc( loadmodel->mempool, bmod->numvertexes * sizeof( mvertex_t ));
 	loadmodel->numvertexes = bmod->numvertexes;
 
 	if( bmod->isworld ) ClearBounds( world.mins, world.maxs );
@@ -1819,7 +1819,7 @@ static void Mod_LoadEdges( dbspmodel_t *bmod )
 	medge_t	*out;
 	int	i;
 
-	loadmodel->edges = out = Mem_Malloc( loadmodel->mempool, bmod->numedges * sizeof( medge_t ));
+	loadmodel->edges = out = (medge_t*)Mem_Malloc( loadmodel->mempool, bmod->numedges * sizeof( medge_t ));
 	loadmodel->numedges = bmod->numedges;
 
 	if( bmod->version == QBSP2_VERSION )
@@ -1851,7 +1851,7 @@ Mod_LoadSurfEdges
 */
 static void Mod_LoadSurfEdges( dbspmodel_t *bmod )
 {
-	loadmodel->surfedges = Mem_Malloc( loadmodel->mempool, bmod->numsurfedges * sizeof( dsurfedge_t ));
+	loadmodel->surfedges = (int*)Mem_Malloc( loadmodel->mempool, bmod->numsurfedges * sizeof( dsurfedge_t ));
 	memcpy( loadmodel->surfedges, bmod->surfedges, bmod->numsurfedges * sizeof( dsurfedge_t ));
 	loadmodel->numsurfedges = bmod->numsurfedges;
 }
@@ -1866,7 +1866,7 @@ static void Mod_LoadMarkSurfaces( dbspmodel_t *bmod )
 	msurface_t	**out;
 	int		i;
 
-	loadmodel->marksurfaces = out = Mem_Malloc( loadmodel->mempool, bmod->nummarkfaces * sizeof( *out ));
+	loadmodel->marksurfaces = out = (msurface_t**)Mem_Malloc( loadmodel->mempool, bmod->nummarkfaces * sizeof( *out ));
 	loadmodel->nummarksurfaces = bmod->nummarkfaces;
 
 	if( bmod->version == QBSP2_VERSION )
@@ -1940,7 +1940,7 @@ static void Mod_LoadTextures( dbspmodel_t *bmod )
 		if( in->dataofs[i] == -1 )
 		{
 			// create default texture (some mods requires this)
-			tx = Mem_Calloc( loadmodel->mempool, sizeof( *tx ));
+			tx = (texture_t*)Mem_Calloc( loadmodel->mempool, sizeof( *tx ));
 			loadmodel->textures[i] = tx;
 
 			Q_strncpy( tx->name, "*default", sizeof( tx->name ));
@@ -1958,7 +1958,7 @@ static void Mod_LoadTextures( dbspmodel_t *bmod )
 
 		if( !mt->name[0] )
 			Q_snprintf( mt->name, sizeof( mt->name ), "miptex_%i", i );
-		tx = Mem_Calloc( loadmodel->mempool, sizeof( *tx ));
+		tx = (texture_t*)Mem_Calloc( loadmodel->mempool, sizeof( *tx ));
 		loadmodel->textures[i] = tx;
 
 		// convert to lowercase
@@ -2210,7 +2210,7 @@ static void Mod_LoadTexInfo( dbspmodel_t *bmod )
 	dtexinfo_t	*in;
 
 	// trying to load faceinfo
-	faceinfo = fout = Mem_Calloc( loadmodel->mempool, bmod->numfaceinfo * sizeof( *fout ));
+	faceinfo = fout = (mfaceinfo_t*)Mem_Calloc( loadmodel->mempool, bmod->numfaceinfo * sizeof( *fout ));
 	fin = bmod->faceinfo;
 
 	for( i = 0; i < bmod->numfaceinfo; i++, fin++, fout++ )
@@ -2221,7 +2221,7 @@ static void Mod_LoadTexInfo( dbspmodel_t *bmod )
 		fout->groupid = fin->groupid;
 	}
 
-	loadmodel->texinfo = out = Mem_Calloc( loadmodel->mempool, bmod->numtexinfo * sizeof( *out ));
+	loadmodel->texinfo = out = (mtexinfo_t*)Mem_Calloc( loadmodel->mempool, bmod->numtexinfo * sizeof( *out ));
 	loadmodel->numtexinfo = bmod->numtexinfo;
 	in = bmod->texinfo;
 
@@ -2257,8 +2257,8 @@ static void Mod_LoadSurfaces( dbspmodel_t *bmod )
 	mextrasurf_t	*info;
 	msurface_t	*out;
 
-	loadmodel->surfaces = out = Mem_Calloc( loadmodel->mempool, bmod->numsurfaces * sizeof( msurface_t ));
-	info = Mem_Calloc( loadmodel->mempool, bmod->numsurfaces * sizeof( mextrasurf_t ));
+	loadmodel->surfaces = out = (msurface_t*)Mem_Calloc( loadmodel->mempool, bmod->numsurfaces * sizeof( msurface_t ));
+	info = (mextrasurf_t*)Mem_Calloc( loadmodel->mempool, bmod->numsurfaces * sizeof( mextrasurf_t ));
 	loadmodel->numsurfaces = bmod->numsurfaces;
 
 	// predict samplecount based on bspversion
@@ -2617,7 +2617,7 @@ Mod_LoadVisibility
 */
 static void Mod_LoadVisibility( dbspmodel_t *bmod )
 {
-	loadmodel->visdata = Mem_Malloc( loadmodel->mempool, bmod->visdatasize );
+	loadmodel->visdata = (byte*)Mem_Malloc( loadmodel->mempool, bmod->visdatasize );
 	memcpy( loadmodel->visdata, bmod->visdata, bmod->visdatasize );
 }
 
@@ -2636,7 +2636,7 @@ static void Mod_LoadLightVecs( dbspmodel_t *bmod )
 		return;
 	}
 
-	bmod->deluxedata_out = Mem_Malloc( loadmodel->mempool, bmod->deluxdatasize );
+	bmod->deluxedata_out = (color24*)Mem_Malloc( loadmodel->mempool, bmod->deluxdatasize );
 	memcpy( bmod->deluxedata_out, bmod->deluxdata, bmod->deluxdatasize );
 }
 
@@ -2654,7 +2654,7 @@ static void Mod_LoadShadowmap( dbspmodel_t *bmod )
 		return;
 	}
 
-	bmod->shadowdata_out = Mem_Malloc( loadmodel->mempool, bmod->shadowdatasize );
+	bmod->shadowdata_out = (byte*)Mem_Malloc( loadmodel->mempool, bmod->shadowdatasize );
 	memcpy( bmod->shadowdata_out, bmod->shadowdata, bmod->shadowdatasize );
 }
 
@@ -2687,7 +2687,7 @@ static void Mod_LoadLighting( dbspmodel_t *bmod )
 		}
 		break;
 	case 3:	// load colored lighting
-		loadmodel->lightdata = Mem_Malloc( loadmodel->mempool, bmod->lightdatasize );
+		loadmodel->lightdata = (color24*)Mem_Malloc( loadmodel->mempool, bmod->lightdatasize );
 		memcpy( loadmodel->lightdata, bmod->lightdata, bmod->lightdatasize );
 		SetBits( loadmodel->flags, MODEL_COLORED_LIGHTING );
 		break;
@@ -2920,7 +2920,7 @@ void Mod_LoadBrushModel( model_t *mod, const void *buffer, qboolean *loaded )
 	loadmodel->type = mod_brush;
 
 	// loading all the lumps into heap
-	if( !Mod_LoadBmodelLumps( buffer, world.loading ))
+	if( !Mod_LoadBmodelLumps( (const byte*)buffer, world.loading ))
 		return; // there were errors
 
 	if( world.loading ) worldmodel = mod;
@@ -3040,7 +3040,7 @@ int Mod_ReadLump( const char *filename, const int lump, void **lumpdata, int *lu
 		return LUMP_LOAD_NOT_EXIST;
 	}
 
-	data = malloc( extrahdr->lumps[lump].filelen + 1 );
+	data = (byte*)malloc( extrahdr->lumps[lump].filelen + 1 );
 	length = extrahdr->lumps[lump].filelen;
 
 	if( !data )
