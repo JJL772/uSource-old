@@ -2852,6 +2852,7 @@ check for possible errors
 */
 qboolean Mod_TestBmodelLumps( const char *name, const byte *mod_base, qboolean silent )
 {
+	return true; /* Temp */
 	dheader_t	*header = (dheader_t *)mod_base;
 	int	i, flags = LUMP_TESTONLY;
 
