@@ -569,7 +569,7 @@ model_t *Mod_LoadWorld( const char *name, qboolean preload )
 	// load the newmap
 	world.loading = true;
 	pworld = Mod_FindName( name, false );
-	if( preload ) Mod_LoadModel( pworld, true );
+	if( preload ) Mod_LoadModel( pworld, true, EModelType::MAP );
 	world.loading = false;
 
 	ASSERT( pworld == mod_known );
