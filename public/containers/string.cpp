@@ -28,6 +28,8 @@ String::String(String &&other)
 {
 	this->_length = other._length;
 	this->_string = other._string;
+	other._string = nullptr;
+	other._length = 0;
 }
 
 String::String(const char *str) 
